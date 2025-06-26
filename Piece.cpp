@@ -1,396 +1,236 @@
 #include "Piece.h"
 
-Piece::Piece() 
-	: position(4,0) // default pos
+//-------------------------------------------------------------
+//			PIECE CONTRUCTOR
+//-------------------------------------------------------------
+Piece::Piece(bool player1Side)
+	: initialPos(0,0), 
+	  currentPos(0,0) // default pos
 {
 	id = 0;
-	rotationState = 1;  // 1 :0° , 2:90° , 3:180° , 4:270°
-	size = 3;	// block size (3x3)
-	leftBoundary = 0;
-	rightBoundary = size;
-	downBoundary = size;
-	InitBlock();
+	player1 = player1Side;
+
+	pieceImage = LoadTexture("assets/images/black_queen.png");
+
+	//InitPiece
 }
 
 
-Piece::Piece(Piece const& p) : position(p.position.col, p.position.row)
+//-------------------------------------------------------------
+//			Copy Constructor
+//-------------------------------------------------------------
+Piece::Piece(Piece const& p) : 
+	initialPos(p.initialPos.col, p.initialPos.row),
+	currentPos(p.currentPos.col, p.currentPos.row)
 {
 	id = p.id;
-	rotationState = p.rotationState;  // 1 :0° , 2:90° , 3:180° , 4:270°
-	size = p.size;	// block size (3x3)
-	leftBoundary = p.leftBoundary;
-	rightBoundary = p.rightBoundary;
-	downBoundary = p.downBoundary;
-	//block[][]
-	for (int i = 0; i < size; i++)
-	{
-		for (int j = 0; j < size; j++)
-		{
-			block[i][j] = p.block[i][j];
-		}
-	}
+
+	//InitPiece
+	pieceImage = p.pieceImage;
+	
+
 }
 
-
-int Piece::getRotationState()
-{
-	return this->rotationState;
-}
-
-int Piece::getSize()
-{
-	return this->size;
-}
+//-------------------------------------------------------------
+//				Adiitional functions
+//-------------------------------------------------------------
 
 int Piece::getId()
 {
 	return this->id;
 }
 
-void Piece::InitBlock()
+//-------------------------------------------------------------
+void Piece::InitPiece()
 {
-	for (int i = 0; i < size; i++)
-	{
-		for (int j=0; j < size; j++)
-		{
-			block[i][j] = 0;
-		}
-	}
+
 }
 
-
-void Piece::Print()
+//-------------------------------------------------------------
+Position Piece::GetInitialPosition()
 {
-	for (int i = 0; i < size; i++)
-	{
-		for (int j = 0; j < size; j++)
-		{
-			std::cout << block[i][j] << " ";
-		}
-		std::cout << std::endl;
-	}
+	return initialPos;
 }
 
-void Piece::setRotationState(int rotation)
+//-------------------------------------------------------------
+Position Piece::GetCurrentPosition()
 {
-	this->rotationState = rotation;
-	this->InitBlock(); // reset to empty (0)
-	this->FillBlock(); // refill block
+	return currentPos;
 }
 
-Position Piece::getPosition()
+//-------------------------------------------------------------
+void Piece::SetInitialPosition(Position pos)
 {
-	return position;
+	initialPos = pos;
 }
 
-void Piece::setPosition(Position pos)
+//-------------------------------------------------------------
+void Piece::SetCurrentPosition(Position pos)
 {
-	position = pos;
+	currentPos = pos;
 }
 
-int Piece::getLeftBound()
+//-------------------------------------------------------------
+bool Piece::IsPlayer1Side()
 {
-	return leftBoundary;
+	return player1;
 }
 
-int Piece::getRigtBound()
+//-------------------------------------------------------------
+void Piece::Draw()
 {
-	return rightBoundary;
+	Vector2 currentPos;
+	currentPos.x = GetCurrentPosition().col;
+	currentPos.y = GetCurrentPosition().row;
+
+	if(player1)
+		DrawTexture(pieceImage, currentPos.x + 10 , currentPos.y + 10 , WHITE); 
+	else
+		DrawTexture(pieceImage, currentPos.x + 10 , currentPos.y + 10  , WHITE);
+	
+	//10: marge de la grid ,
+	//7: 1/2 diff(sizecell,sizepic)
 }
 
-int Piece::getDownBound()
-{
-	return downBoundary;
-}
+//-------------------------------------------------------------
+//			Pion
+//-------------------------------------------------------------
 
-L_piece::L_piece() : Piece()
+Pion::Pion(bool player1Side) : Piece(player1Side)
 {
 	id = 1;
-	size = 3;
-	FillBlock();
+
+	//InitPiece
+	if (player1Side)
+		pieceImage = LoadTexture("assets/images/pionb.png");
+	else
+		pieceImage = LoadTexture("assets/images/pionN.png");
 }
 
 // copy constructor
-L_piece::L_piece(L_piece const& p) : Piece(p)
+Pion::Pion(Pion const& p) : Piece(p)
 {
 }
 
-L_piece* L_piece::Clone() const
+Pion* Pion::Clone() const
 {
-	return new L_piece(*this);
+	return new Pion(*this);
 }
 
-void L_piece::FillBlock()
-{
-	switch (rotationState)
-	{
-	case 2 : // 90°
-		block[0][2] = id;
-		block[1][0] = id;
-		block[1][1] = id;
-		block[1][2] = id;
+//-------------------------------------------------------------
+//			Fou
+//-------------------------------------------------------------
 
-		leftBoundary = 0;
-		rightBoundary = 2;
-		downBoundary = 1;
-		break;
-	case 3 : // 180°
-		block[0][0] = id;
-		block[0][1] = id;
-		block[1][1] = id;
-		block[2][1] = id;
-		//bounds
-		leftBoundary = 0;
-		rightBoundary = 1;
-		downBoundary = 2;
-		break;
-	case 4 : //270°
-		block[0][0] = id;
-		block[0][1] = id;
-		block[0][2] = id;
-		block[1][0] = id;
-		//bounds
-		leftBoundary = 0;
-		rightBoundary = 2;
-		downBoundary = 1;
-		break;
-	default:  // 0°
-		block[0][0] = id;
-		block[1][0] = id;
-		block[2][0] = id;
-		block[2][1] = id;
-		//bounds
-		leftBoundary = 0;
-		rightBoundary = 1;
-		downBoundary = 2;
-		break;
-	}
-
-}
-
-I_piece::I_piece() : Piece()
+Fou::Fou(bool player1Side) : Piece(player1Side)
 {
 	id = 2;
-	size = 3; //4 
-	FillBlock();
+	//InitPiece
+	if (player1Side)
+		pieceImage = LoadTexture("assets/images/foub.png");
+	else
+		pieceImage = LoadTexture("assets/images/fouN.png");
 }
 
 // copy constructor
-I_piece::I_piece(I_piece const& p) : Piece(p)
+Fou::Fou(Fou const& p) : Piece(p)
 {
 }
 
-I_piece* I_piece::Clone() const
+Fou* Fou::Clone() const
 {
-	return new I_piece(*this);
+	return new Fou(*this);
 }
 
-void I_piece::FillBlock()
-{
-	// only two states
-	if (rotationState == 1 || rotationState == 3) // 0° or 180°
-	{
-		block[0][1] = id;
-		block[1][1] = id;
-		block[2][1] = id;
-		//bounds
-		leftBoundary = 1;
-		rightBoundary = 1;
-		downBoundary = 2;
-	}
-	else if (rotationState == 2 || rotationState == 4) // 90° or 270°
-	{
-		block[1][0] = id;
-		block[1][1] = id;
-		block[1][2] = id;
-		//bounds
-		leftBoundary = 1;
-		rightBoundary = 2;
-		downBoundary = 1;
-	}
-}
+//-------------------------------------------------------------
+//			Cavalier
+//-------------------------------------------------------------
 
-Z_piece::Z_piece():Piece()
+Cavalier::Cavalier(bool player1Side):Piece( player1Side)
 {
-	
 	id = 3;
-	size = 3;
-	FillBlock();
+	//InitPiece
+	if (player1Side)
+		pieceImage = LoadTexture("assets/images/cavalierb.png");
+	else
+		pieceImage = LoadTexture("assets/images/cavalierN.png");
 }
 
 // copy constructor
-Z_piece::Z_piece(Z_piece const& p) : Piece(p)
+Cavalier::Cavalier(Cavalier const& p) : Piece(p)
 {
 }
 
-Z_piece* Z_piece::Clone() const
+Cavalier* Cavalier::Clone() const
 {
-	return new Z_piece(*this);
+	return new Cavalier(*this);
 }
+//-------------------------------------------------------------
+//				Tour
+//-------------------------------------------------------------
 
-void Z_piece::FillBlock()
-{
-	// only two states
-	if (rotationState == 1 || rotationState == 3) // 0° or 180°
-	{
-		block[0][0] = id;
-		block[0][1] = id;
-		block[1][1] = id;
-		block[1][2] = id;
-		//bounds
-		leftBoundary = 0;
-		rightBoundary = 2;
-		downBoundary = 1;
-	}
-	else if (rotationState == 2 || rotationState == 4) // 90° or 270°
-	{
-		block[2][0] = id;
-		block[0][1] = id;
-		block[1][1] = id;
-		block[1][0] = id;
-		//bounds
-		leftBoundary = 0;
-		rightBoundary = 1;
-		downBoundary = 2;
-	}
-}
-
-S_piece::S_piece() :Piece()
+Tour::Tour(bool player1Side) :Piece( player1Side)
 {
 	id = 4;
-	size = 3;
-	FillBlock();
+	//InitPiece
+	if (player1Side)
+		pieceImage = LoadTexture("assets/images/tourb.png");
+	else
+		pieceImage = LoadTexture("assets/images/tourN.png");
 }
 
 // copy constructor
-S_piece::S_piece(S_piece const& p) : Piece(p)
+Tour::Tour(Tour const& p) : Piece(p)
 {
 }
 
-S_piece* S_piece::Clone() const
+Tour* Tour::Clone() const
 {
-	return new S_piece(*this);
+	return new Tour(*this);
 }
 
-void S_piece::FillBlock()
-{
-	//only two states
-	if (rotationState == 1 || rotationState == 3) // 0° or 180°
-	{
-		block[0][1] = id;
-		block[0][2] = id;
-		block[1][1] = id;
-		block[1][0] = id;
-		//bounds
-		leftBoundary = 0;
-		rightBoundary = 2;
-		downBoundary = 1;
-	}
-	else if (rotationState == 2 || rotationState == 4) // 90° or 270°
-	{
-		block[0][0] = id;
-		block[1][0] = id;
-		block[1][1] = id;
-		block[2][1] = id;
-		//bounds
-		leftBoundary = 0;
-		rightBoundary = 1;
-		downBoundary = 2;
-	}
-}
+//-------------------------------------------------------------
+//				Dame
+//-------------------------------------------------------------
 
-O_piece::O_piece() :Piece()
+Dame::Dame(bool player1Side) :Piece( player1Side)
 {
 	id = 5;
-	size = 3;
-	FillBlock();
+	//InitPiece
+	if (player1Side)
+		pieceImage = LoadTexture("assets/images/dameb.png");
+	else
+		pieceImage = LoadTexture("assets/images/dameN.png");
 }
 
 // copy constructor
-O_piece::O_piece(O_piece const& p) : Piece(p)
+Dame::Dame(Dame const& p) : Piece(p)
 {
 }
 
-O_piece* O_piece::Clone() const
+Dame* Dame::Clone() const
 {
-	return new O_piece(*this);
+	return new Dame(*this);
 }
 
-void O_piece::FillBlock()
-{
-	// same state for each rotationState
-	block[0][0] = id;
-	block[0][1] = id;
-	block[1][0] = id;
-	block[1][1] = id;
-	//bounds
-	leftBoundary = 0;
-	rightBoundary = 1;
-	downBoundary = 1;
-}
+//-------------------------------------------------------------
+//			Roi
+//-------------------------------------------------------------
 
-T_piece::T_piece() : Piece()
+Roi::Roi(bool player1Side) : Piece( player1Side)
 {
 	id = 6;
-	size = 3;
-	FillBlock();
+	//InitPiece
+	if (player1Side)
+		pieceImage = LoadTexture("assets/images/roib.png");
+	else
+		pieceImage = LoadTexture("assets/images/roiN.png");
 }
 // copy constructor
-T_piece::T_piece(T_piece const& p) : Piece(p)
+Roi::Roi(Roi const& p) : Piece(p)
 {
 }
 
-T_piece* T_piece::Clone() const
+Roi* Roi::Clone() const
 {
-	return new T_piece(*this);
-}
-
-void T_piece::FillBlock()
-{
-	
-
-	switch (rotationState)
-	{
-	case 2: // 90°
-		block[0][0] = id;
-		block[1][0] = id;
-		block[2][0] = id;
-		block[1][1] = id;
-		//bounds
-		leftBoundary = 0;
-		rightBoundary = 1;
-		downBoundary = 2;
-		break;
-	case 3: // 180°
-		block[2][2] = id;
-		block[2][1] = id;
-		block[2][0] = id;
-		block[1][1] = id;
-		//bounds
-		leftBoundary = 0;
-		rightBoundary = 2;
-		downBoundary = 2;
-		break;
-	case 4: //270°
-		block[0][2] = id;
-		block[1][2] = id;
-		block[2][2] = id;
-		block[1][1] = id;
-		//bounds
-		leftBoundary = 1;
-		rightBoundary = 2;
-		downBoundary = 2;
-		break;
-	default:  // 0°
-		block[0][0] = id;
-		block[0][1] = id;
-		block[0][2] = id;
-		block[1][1] = id;
-		//bounds
-		leftBoundary = 0;
-		rightBoundary = 2;
-		downBoundary = 1;
-		break;
-	}
-	
+	return new Roi(*this);
 }

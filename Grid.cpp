@@ -1,6 +1,6 @@
 #include "Grid.h"
 
-Grid::Grid(int nRows, int nCols, int cSize)
+Grid::Grid(int nRows, int nCols, int cSize, Color c1, Color c2)
 {
 	// rand
 	std::srand(std::time(nullptr));
@@ -8,6 +8,8 @@ Grid::Grid(int nRows, int nCols, int cSize)
 	numRows = nRows;
 	numCols = nCols;
 	cellSize = cSize; // pixels
+	color1 = c1;
+	color2 = c2;
 
 	//draw grid margins
 	leftMargin = 0;
@@ -15,6 +17,8 @@ Grid::Grid(int nRows, int nCols, int cSize)
 
 	Initialize(); // set grid to 0
 }
+
+
 
 void Grid::Initialize()
 {
@@ -87,9 +91,9 @@ Color Grid::ApplyCellColors(int row, int col)
 
 	if ((row % 2 == 0 && col % 2 != 0) ||
 		(row % 2 != 0 && col % 2 == 0))
-		cellColor = BLACK;
+		cellColor = color1;
 	else
-		cellColor = WHITE;
+		cellColor = color2;
 
 	return cellColor;
 }

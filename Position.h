@@ -3,7 +3,7 @@
 class Position
 {
 public:
-	Position(int c, int r);
+	Position(int r, int c);
 	int row;
 	int col;
 };

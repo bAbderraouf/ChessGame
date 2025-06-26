@@ -1,94 +1,106 @@
 #pragma once
 #include <iostream>
 #include "Position.h"
+#include <raylib.h>
 
+//-------------------------------------------------------------
+//				Base Class
+//-------------------------------------------------------------
 class Piece 
 {
 public :
-	Piece();
+	Piece(bool player1Side);
 	virtual ~Piece() = default;
+
 	Piece(Piece const& p); // copy constructor
 	int id;
-	int block[3][3]; // pour tester a modifier (vector)
 
 	virtual Piece* Clone() const = 0;
-	virtual int getRotationState();
-	virtual int getSize();
 	virtual int getId();
-	virtual void InitBlock();
-	virtual void FillBlock() = 0;
-	virtual void Print();
-	virtual void setRotationState(int rotation);
-	virtual Position getPosition();
-	virtual void setPosition(Position pos);
-	virtual int getLeftBound();
-	virtual int getRigtBound();
-	virtual int getDownBound();
+	virtual void InitPiece();
+
+	virtual Position GetInitialPosition();
+	virtual Position GetCurrentPosition();
+	virtual void SetInitialPosition(Position pos);
+	virtual void SetCurrentPosition(Position pos);
+	virtual bool IsPlayer1Side();
+	virtual void Draw();
 
 
 protected:
-	int rotationState; //  1 :0° , 2:90° , 3:180° , 4:270°
-	int size; // block size
-	Position position;  // pos on the grid
+	Position currentPos , initialPos;  // pos on the grid
+	Texture pieceImage;
+	bool player1;
 	
-	//---------------------------
-	// ajouter une variable pour les boundaries top, left, down and right
-	int leftBoundary, rightBoundary, downBoundary;
 };
 
-class L_piece :public Piece
+//-------------------------------------------------------------
+//				Pion
+//-------------------------------------------------------------
+class Pion :public Piece
 {
 public:
-	L_piece();
-	L_piece (L_piece const& p); // copy constructor
-	L_piece* Clone() const override;
-	void FillBlock() override;
+	Pion(bool player1Side);
+	Pion(Pion const& p); // copy constructor
+	Pion* Clone() const override;
 };
 
-class I_piece :public Piece
+//-------------------------------------------------------------
+//				Fou
+//-------------------------------------------------------------
+class Fou :public Piece
 {
 public:
-	I_piece();
-	I_piece(I_piece const& p); // copy constructor
-	I_piece* Clone() const override;
-	void FillBlock() override;
-	 
-};
-class Z_piece :public Piece
-{
-public:
-	Z_piece();
-	Z_piece(Z_piece const& p); // copy constructor
-	Z_piece* Clone() const override;
-	void FillBlock() override;
+	Fou(bool player1Side);
+	Fou(Fou const& p); // copy constructor
+	Fou* Clone() const override;
 	 
 };
 
-class S_piece :public Piece
+//-------------------------------------------------------------
+//					Cavalier
+//-------------------------------------------------------------
+class Cavalier :public Piece
 {
 public:
-	S_piece();
-	S_piece(S_piece const& p); // copy constructor
-	S_piece* Clone() const override;
-	void FillBlock() override;
-	 
-};
-class O_piece :public Piece
-{
-public:
-	O_piece();
-	O_piece(O_piece const& p); // copy constructor
-	O_piece* Clone() const override;
-	void FillBlock() override;
+	Cavalier(bool player1Side);
+	Cavalier(Cavalier const& p); // copy constructor
+	Cavalier* Clone() const override;
 	 
 };
 
-class T_piece :public Piece
+//-------------------------------------------------------------
+//					Tour
+//-------------------------------------------------------------
+class Tour :public Piece
 {
 public:
-	T_piece();
-	T_piece(T_piece const& p); // copy constructor
-	T_piece* Clone() const override;
-	void FillBlock() override;
+	Tour(bool player1Side);
+	Tour(Tour const& p); // copy constructor
+	Tour* Clone() const override;
+	 
+};
+
+//-------------------------------------------------------------
+//					Dame
+//-------------------------------------------------------------
+class Dame :public Piece
+{
+public:
+	Dame(bool player1Side);
+	Dame(Dame const& p); // copy constructor
+	Dame* Clone() const override;
+	 
+};
+
+//-------------------------------------------------------------
+//					Roi
+//-------------------------------------------------------------
+class Roi :public Piece
+{
+public:
+	Roi(bool player1Side);
+	Roi(Roi const& p); // copy constructor
+	Roi* Clone() const override;
 	
 };

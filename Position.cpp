@@ -1,6 +1,6 @@
 #include "Position.h"
 
-Position::Position(int c, int r)
+Position::Position(int r, int c)
 {
 	row = r;
 	col = c;

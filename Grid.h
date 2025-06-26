@@ -13,7 +13,7 @@
 class Grid
 {
 public:
-	Grid(int nRows, int nCols, int cSize);
+	Grid(int nRows, int nCols, int cSize,  Color c1, Color c2);
 	void Initialize();
 	void PrintValues();
 	void Draw();
@@ -22,12 +22,14 @@ public:
 	int getNumCols();
 	void SetMargins(int left, int top);
 	Color ApplyCellColors(int row, int col);
-	int grid[20][10]; // 20 rows and 10 collumns
+	int grid[8][8]; // 8 rows and 8 collumns
 
 private:
 	int numRows;  // columns number
 	int numCols;
 	int cellSize;
+	Color color1, color2;
+
 
 	// draw margins
 	int leftMargin,

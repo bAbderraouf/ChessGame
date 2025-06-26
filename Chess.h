@@ -11,7 +11,7 @@ class Chess : public Game
 {
 public :
 
-	Chess(int w, int h, int fps, int nRows, int nCols, int cSize);
+	Chess(int w, int h, int fps, int nRows, int nCols, int cSize, Color c1, Color c2);
 	~Chess();
 
 	//----------------------
@@ -28,6 +28,8 @@ public :
 	void setGameFPS(int fps);
 	void AddPieceToGrid(Piece& const piece );
 	void EreasePieceFromGrid(Piece& const piece);
+	void DrawPlayerPieces(std::vector<std::unique_ptr<Piece>> const &player);
+	std::vector<std::unique_ptr<Piece>> InitPlayersPieces(bool player1Side);
 
 private:
 	Grid* grid;
@@ -41,6 +43,10 @@ private:
 	int numRows;
 	int numCols;
 	int cellSize;
+	Color color1, color2;
+
+	//pieces
+	std::vector<std::unique_ptr<Piece>> player1, player2;
 	
 };
 
