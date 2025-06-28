@@ -17,20 +17,26 @@ public :
 
 	virtual Piece* Clone() const = 0;
 	virtual int getId();
+	virtual std::string GetName();
+
 	virtual void InitPiece();
 
 	virtual Position GetInitialPosition();
 	virtual Position GetCurrentPosition();
+	virtual Position GetCenterOfPiecePosition();
 	virtual void SetInitialPosition(Position pos);
 	virtual void SetCurrentPosition(Position pos);
 	virtual bool IsPlayer1Side();
 	virtual void Draw();
+	virtual Rectangle GetImageBounds();
 
 
 protected:
 	Position currentPos , initialPos;  // pos on the grid
-	Texture pieceImage;
+	Texture pieceTexture;
 	bool player1;
+	std::string name;
+
 	
 };
 

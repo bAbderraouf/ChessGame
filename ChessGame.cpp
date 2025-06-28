@@ -10,10 +10,9 @@
 
 int main()
 {
-	double	lastTime = 0,
-		currentTime = 0,
-		timeInterval = 0.25;
+	double	lastTime = 0, currentTime = 0, 	timeInterval = 0.25; 
 
+	// list of colors to change theme
 	Color	brown = { 128, 43, 0 ,255},
 			brown2 = { 225, 135, 64, 255 },
 			beige = { 255, 204, 156,255 },
@@ -21,13 +20,17 @@ int main()
 			ligthBlue = { 204, 204, 255, 255 }, // with blue
 			vdarkBlue = { 0, 0, 102 , 255},
 
-			color1 = brown2,
-			color2 = beige,
-			background = brown;
-	int w = 800, h = 620, nRows = 8, nCols = 8, cSize = 75, fps = 60;
+			color1 = ligthBlue,
+			color2 = BLUE,
+			background = vdarkBlue;
+	int w = 800, h = 620, nRows = 8, nCols = 8, cSize = 75, fps = 60 , leftMargin = 10, topMargin = 10;
 
-
-	Chess chessGame(w, h, fps, nRows, nCols, cSize , color1, color2); 
+	//--------------------
+	// window : w, h, fps  
+	//----------------------------------------------------------------------
+	// grid : nRows, nCols, cSize ,leftMargin, topMargin,  color1, color2
+	//----------------------------------------------------------------------
+	Chess chessGame(w, h, fps, nRows, nCols, cSize, leftMargin, topMargin, color1, color2);
 
 	// tests
 	Image queenIm = LoadImage("assets/images/black_queen.png");
@@ -37,31 +40,37 @@ int main()
 
 	while (WindowShouldClose() == false)
 	{
+		//--------------
 		// check inputs 
+		//--------------
 		chessGame.Input();
 
+		//-----------------
 		//update gameMusic
+		//-----------------
 		//UpdateMusicStream(chessGame.GetGameMusic());
 
+		//---------
 		// update
-		currentTime = GetTime();
-		if (currentTime - lastTime > timeInterval)
+		//---------
+		// Set Game speed 
+		// (no need to set game speed in chess game)
+		//currentTime = GetTime();
+		//if (currentTime - lastTime > timeInterval)
 		{
-			lastTime = currentTime;
+			//lastTime = currentTime;
 			chessGame.Update();
 		}
 
+		//---------
 		// draw
+		//---------
 		BeginDrawing();
 		ClearBackground(background);
 		chessGame.Draw();
-		//DrawTexture(queen, 10 + 75 * 4 , 10 + 75 * 7 , YELLOW);
-		//DrawTexture(queen, 10 + 75 * 4, 10 + 75 * 0, RED);
-		//DrawTexture(queen, 10 + 75 * 7, 10 + 75 * 7, GRAY);
 		EndDrawing();
 
 	}
 
-	UnloadTexture(queen);
 	CloseWindow();
 }

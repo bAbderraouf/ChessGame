@@ -10,8 +10,7 @@
 class Chess : public Game
 {
 public :
-
-	Chess(int w, int h, int fps, int nRows, int nCols, int cSize, Color c1, Color c2);
+	Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin, int tMargin, Color c1, Color c2);
 	~Chess();
 
 	//----------------------
@@ -30,6 +29,9 @@ public :
 	void EreasePieceFromGrid(Piece& const piece);
 	void DrawPlayerPieces(std::vector<std::unique_ptr<Piece>> const &player);
 	std::vector<std::unique_ptr<Piece>> InitPlayersPieces(bool player1Side);
+	void MovePiece(Piece& piece, Position step);
+	void DragPiece();
+	int GetSelectedPiece(std::vector<std::unique_ptr<Piece>> const &player);
 
 private:
 	Grid* grid;
@@ -43,10 +45,18 @@ private:
 	int numRows;
 	int numCols;
 	int cellSize;
+	int leftMargin, topMargin;
 	Color color1, color2;
 
 	//pieces
 	std::vector<std::unique_ptr<Piece>> player1, player2;
+
+	//flags
+	bool    flag_isPlayer1Turn,
+		    flag_leftMouseButtonPressed, 
+			flag_rightMouseButtonPressed,
+			flag_leftMouseButtonDown,
+			flag_leftMouseButtonReleased;
 	
 };
 

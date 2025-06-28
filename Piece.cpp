@@ -10,7 +10,7 @@ Piece::Piece(bool player1Side)
 	id = 0;
 	player1 = player1Side;
 
-	pieceImage = LoadTexture("assets/images/black_queen.png");
+	pieceTexture = LoadTexture("assets/images/black_queen.png");
 
 	//InitPiece
 }
@@ -26,7 +26,7 @@ Piece::Piece(Piece const& p) :
 	id = p.id;
 
 	//InitPiece
-	pieceImage = p.pieceImage;
+	pieceTexture = p.pieceTexture;
 	
 
 }
@@ -58,6 +58,17 @@ Position Piece::GetCurrentPosition()
 	return currentPos;
 }
 
+Position Piece::GetCenterOfPiecePosition()
+{
+	Position centerOfPiece(0, 0);
+
+	//calculate center pos
+	centerOfPiece.row = currentPos.row + pieceTexture.height / 2;
+	centerOfPiece.col = currentPos.col + pieceTexture.width / 2;
+
+	return centerOfPiece;
+}
+
 //-------------------------------------------------------------
 void Piece::SetInitialPosition(Position pos)
 {
@@ -84,12 +95,22 @@ void Piece::Draw()
 	currentPos.y = GetCurrentPosition().row;
 
 	if(player1)
-		DrawTexture(pieceImage, currentPos.x + 10 , currentPos.y + 10 , WHITE); 
+		DrawTexture(pieceTexture, currentPos.x  , currentPos.y  , WHITE); 
 	else
-		DrawTexture(pieceImage, currentPos.x + 10 , currentPos.y + 10  , WHITE);
+		DrawTexture(pieceTexture, currentPos.x  , currentPos.y  , WHITE);
 	
-	//10: marge de la grid ,
-	//7: 1/2 diff(sizecell,sizepic)
+}
+
+Rectangle Piece::GetImageBounds()
+{
+	/*-----------------------------------------------------
+	raylib doesnt contains GlobalBounds function.
+	Manual calcuation : 
+		 - position.x, position.y → coin supérieur gauche de l'image.
+		 - texture.width, texture.height → dimensions de l'image.
+	--------------------------------------------------------*/
+
+	return Rectangle{ (float)currentPos.col, (float)currentPos.row, (float)pieceTexture.width, (float)pieceTexture.height};
 }
 
 //-------------------------------------------------------------
@@ -102,9 +123,9 @@ Pion::Pion(bool player1Side) : Piece(player1Side)
 
 	//InitPiece
 	if (player1Side)
-		pieceImage = LoadTexture("assets/images/pionb.png");
+		pieceTexture = LoadTexture("assets/images/pionb.png");
 	else
-		pieceImage = LoadTexture("assets/images/pionN.png");
+		pieceTexture = LoadTexture("assets/images/pionN.png");
 }
 
 // copy constructor
@@ -126,9 +147,9 @@ Fou::Fou(bool player1Side) : Piece(player1Side)
 	id = 2;
 	//InitPiece
 	if (player1Side)
-		pieceImage = LoadTexture("assets/images/foub.png");
+		pieceTexture = LoadTexture("assets/images/foub.png");
 	else
-		pieceImage = LoadTexture("assets/images/fouN.png");
+		pieceTexture = LoadTexture("assets/images/fouN.png");
 }
 
 // copy constructor
@@ -150,9 +171,9 @@ Cavalier::Cavalier(bool player1Side):Piece( player1Side)
 	id = 3;
 	//InitPiece
 	if (player1Side)
-		pieceImage = LoadTexture("assets/images/cavalierb.png");
+		pieceTexture = LoadTexture("assets/images/cavalierb.png");
 	else
-		pieceImage = LoadTexture("assets/images/cavalierN.png");
+		pieceTexture = LoadTexture("assets/images/cavalierN.png");
 }
 
 // copy constructor
@@ -173,9 +194,9 @@ Tour::Tour(bool player1Side) :Piece( player1Side)
 	id = 4;
 	//InitPiece
 	if (player1Side)
-		pieceImage = LoadTexture("assets/images/tourb.png");
+		pieceTexture = LoadTexture("assets/images/tourb.png");
 	else
-		pieceImage = LoadTexture("assets/images/tourN.png");
+		pieceTexture = LoadTexture("assets/images/tourN.png");
 }
 
 // copy constructor
@@ -197,9 +218,9 @@ Dame::Dame(bool player1Side) :Piece( player1Side)
 	id = 5;
 	//InitPiece
 	if (player1Side)
-		pieceImage = LoadTexture("assets/images/dameb.png");
+		pieceTexture = LoadTexture("assets/images/dameb.png");
 	else
-		pieceImage = LoadTexture("assets/images/dameN.png");
+		pieceTexture = LoadTexture("assets/images/dameN.png");
 }
 
 // copy constructor
@@ -221,9 +242,9 @@ Roi::Roi(bool player1Side) : Piece( player1Side)
 	id = 6;
 	//InitPiece
 	if (player1Side)
-		pieceImage = LoadTexture("assets/images/roib.png");
+		pieceTexture = LoadTexture("assets/images/roib.png");
 	else
-		pieceImage = LoadTexture("assets/images/roiN.png");
+		pieceTexture = LoadTexture("assets/images/roiN.png");
 }
 // copy constructor
 Roi::Roi(Roi const& p) : Piece(p)
