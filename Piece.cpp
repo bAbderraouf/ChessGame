@@ -4,13 +4,16 @@
 //			PIECE CONTRUCTOR
 //-------------------------------------------------------------
 Piece::Piece(bool player1Side)
-	: initialPos(0,0), 
-	  currentPos(0,0) // default pos
+	: initialPos(0, 0),
+	pos(0, 0), // default pos
+	centerPos(0, 0)
 {
 	id = 0;
 	player1 = player1Side;
+	flag_isSelected = false;
 	pieceName = "";
 	imageSize = 75; // real image size
+	centerPos = GetCenterOfPiecePosition();
 
 	//InitPiece
 	LoadPieceImage();
@@ -24,7 +27,8 @@ Piece::Piece(bool player1Side)
 //-------------------------------------------------------------
 Piece::Piece(Piece const& p) : 
 	initialPos(p.initialPos.col, p.initialPos.row),
-	currentPos(p.currentPos.col, p.currentPos.row)
+	pos(p.pos.col, p.pos.row),
+	centerPos(p.centerPos.col, p.centerPos.row)
 {
 	id = p.id;
 	pieceName = p.pieceName;
@@ -63,18 +67,18 @@ Position Piece::GetInitialPosition()
 }
 
 //-------------------------------------------------------------
-Position Piece::GetCurrentPosition()
+Position Piece::GetPosition()
 {
-	return currentPos;
+	return pos;
 }
 
 Position Piece::GetCenterOfPiecePosition()
 {
 	Position centerOfPiece(0, 0);
 
-	//calculate center pos
-	centerOfPiece.row = currentPos.row + pieceTexture.height / 2;
-	centerOfPiece.col = currentPos.col + pieceTexture.width / 2;
+	//calculate the center pos
+	centerOfPiece.row = pos.row + pieceTexture.height / 2;
+	centerOfPiece.col = pos.col + pieceTexture.width / 2;
 
 	return centerOfPiece;
 }
@@ -86,9 +90,22 @@ void Piece::SetInitialPosition(Position pos)
 }
 
 //-------------------------------------------------------------
-void Piece::SetCurrentPosition(Position pos)
+void Piece::SetPosition(Position pos)
 {
-	currentPos = pos;
+	this->pos = pos;
+}
+
+void Piece::SetCenterOfPiecePosition(Position pos)
+{
+	centerPos = pos;
+
+	// convert center pos to normal pos
+	Position normalPos(0, 0);
+	normalPos.row = centerPos.row - pieceTexture.height / 2;
+	normalPos.col = centerPos.col - pieceTexture.width / 2;
+
+	//set corresponding normal pos
+	SetPosition(normalPos);
 }
 
 //-------------------------------------------------------------
@@ -100,14 +117,14 @@ bool Piece::IsPlayer1Side()
 //-------------------------------------------------------------
 void Piece::Draw()
 {
-	Vector2 currentPos;
-	currentPos.x = GetCurrentPosition().col;
-	currentPos.y = GetCurrentPosition().row;
+	Vector2 pos;
+	pos.x = GetPosition().col;
+	pos.y = GetPosition().row;
 
 	if(player1)
-		DrawTexture(pieceTexture, currentPos.x  , currentPos.y  , WHITE); 
+		DrawTexture(pieceTexture, pos.x  , pos.y  , WHITE); 
 	else
-		DrawTexture(pieceTexture, currentPos.x  , currentPos.y  , WHITE);
+		DrawTexture(pieceTexture, pos.x  , pos.y  , WHITE);
 	
 }
 
@@ -120,7 +137,7 @@ Rectangle Piece::GetImageBounds()
 		 - texture.width, texture.height → dimensions de l'image.
 	--------------------------------------------------------*/
 
-	return Rectangle{ (float)currentPos.col, (float)currentPos.row, (float)pieceTexture.width, (float)pieceTexture.height};
+	return Rectangle{ (float)pos.col, (float)pos.row, (float)pieceTexture.width, (float)pieceTexture.height};
 }
 
 void Piece::SetImageSize(int size)
@@ -151,6 +168,16 @@ void Piece::LoadPieceImage()
 
 	//set texture
 	pieceTexture = LoadTextureFromImage(pieceImage);
+}
+
+void Piece::SetSlected(bool selected)
+{
+	flag_isSelected = selected;
+}
+
+bool Piece::IsSelected()
+{
+	return flag_isSelected;
 }
 
 //-------------------------------------------------------------

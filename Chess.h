@@ -32,6 +32,7 @@ public :
 	void MovePiece(Piece& piece, Position step);
 	void DragPiece();
 	int GetSelectedPiece(std::vector<std::unique_ptr<Piece>> const &player);
+	void SetCenterPieceToCursorPosition(Piece& piece , Position const &cursorPos);
 
 private:
 	Grid* grid;
@@ -50,6 +51,7 @@ private:
 
 	//pieces
 	std::vector<std::unique_ptr<Piece>> player1, player2;
+	int selectdPieceID;
 
 	//Board case
 	struct infoCase 
@@ -66,10 +68,11 @@ private:
 
 	//flags
 	bool    flag_isPlayer1Turn,
-		    flag_leftMouseButtonPressed, 
+			flag_leftMouseButtonPressed,
 			flag_rightMouseButtonPressed,
 			flag_leftMouseButtonDown,
-			flag_leftMouseButtonReleased;
+			flag_leftMouseButtonReleased,
+			flag_isAnyPieceSelected;
 	
 };
 

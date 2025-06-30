@@ -41,6 +41,7 @@ void Chess::Init()
 	player1 = InitPlayersPieces(true); // player 1
 	player2 = InitPlayersPieces(false); // player 2
 
+	selectdPieceID = -1; // no piece is selected
 
 	//case info
 	/*
@@ -60,6 +61,7 @@ void Chess::Init()
 	flag_rightMouseButtonPressed = false;
 	flag_leftMouseButtonDown = false;
 	flag_leftMouseButtonReleased = false;
+	flag_isAnyPieceSelected = false;
 
 }
 
@@ -110,6 +112,20 @@ void Chess::Update()
 		
 		DragPiece();
 	}
+
+	//----------------------
+	// piece released
+	//----------------------
+	if (flag_leftMouseButtonReleased)
+	{
+		flag_leftMouseButtonReleased = false;
+
+		flag_isAnyPieceSelected = false;
+
+		selectdPieceID = -1; // no selected piece
+
+	}
+
 	//----------------------
 	// change player side  (after each finished move)
 	//----------------------
@@ -191,43 +207,43 @@ std::vector<std::unique_ptr<Piece>>  Chess::InitPlayersPieces(bool player1Side)
 		// position(row,col) where :
 		// row: (cellIdx * cellSize) + topMargin , coll:( cellIdx * cellSize) + leftMargin 
 
-		vectOfPieces[0]->SetCurrentPosition(Position(6 * cellSize + topMargin, 0 * cellSize + leftMargin)); //pion left
-		vectOfPieces[1]->SetCurrentPosition(Position(6 * cellSize + topMargin, 1 * cellSize + leftMargin));
-		vectOfPieces[2]->SetCurrentPosition(Position(6 * cellSize + topMargin, 2 * cellSize + leftMargin));
-		vectOfPieces[3]->SetCurrentPosition(Position(6 * cellSize + topMargin, 3 * cellSize + leftMargin));
-		vectOfPieces[4]->SetCurrentPosition(Position(6 * cellSize + topMargin, 4 * cellSize + leftMargin));
-		vectOfPieces[5]->SetCurrentPosition(Position(6 * cellSize + topMargin, 5 * cellSize + leftMargin));
-		vectOfPieces[6]->SetCurrentPosition(Position(6 * cellSize + topMargin, 6 * cellSize + leftMargin));
-		vectOfPieces[7]->SetCurrentPosition(Position(6 * cellSize + topMargin, 7 * cellSize + leftMargin)); // pion right
+		vectOfPieces[0]->SetPosition(Position(6 * cellSize + topMargin, 0 * cellSize + leftMargin)); //pion left
+		vectOfPieces[1]->SetPosition(Position(6 * cellSize + topMargin, 1 * cellSize + leftMargin));
+		vectOfPieces[2]->SetPosition(Position(6 * cellSize + topMargin, 2 * cellSize + leftMargin));
+		vectOfPieces[3]->SetPosition(Position(6 * cellSize + topMargin, 3 * cellSize + leftMargin));
+		vectOfPieces[4]->SetPosition(Position(6 * cellSize + topMargin, 4 * cellSize + leftMargin));
+		vectOfPieces[5]->SetPosition(Position(6 * cellSize + topMargin, 5 * cellSize + leftMargin));
+		vectOfPieces[6]->SetPosition(Position(6 * cellSize + topMargin, 6 * cellSize + leftMargin));
+		vectOfPieces[7]->SetPosition(Position(6 * cellSize + topMargin, 7 * cellSize + leftMargin)); // pion right
 
-		vectOfPieces[8]->SetCurrentPosition(Position(7 * cellSize + topMargin, 2 * cellSize + leftMargin)); // left fou
-		vectOfPieces[9]->SetCurrentPosition(Position(7 * cellSize + topMargin, 5 * cellSize + leftMargin)); // right fou
-		vectOfPieces[10]->SetCurrentPosition(Position(7 * cellSize + topMargin, 1 * cellSize + leftMargin)); // left cavalier
-		vectOfPieces[11]->SetCurrentPosition(Position(7 * cellSize + topMargin, 6 * cellSize + leftMargin)); // right cavalier
-		vectOfPieces[12]->SetCurrentPosition(Position(7 * cellSize + topMargin, 0 * cellSize + leftMargin)); // left tour
-		vectOfPieces[13]->SetCurrentPosition(Position(7 * cellSize + topMargin, 7 * cellSize + leftMargin)); // right tour
-		vectOfPieces[14]->SetCurrentPosition(Position(7 * cellSize + topMargin, 4 * cellSize + leftMargin)); // roi
-		vectOfPieces[15]->SetCurrentPosition(Position(7 * cellSize + topMargin, 3 * cellSize + leftMargin)); // dame
+		vectOfPieces[8]->SetPosition(Position(7 * cellSize + topMargin, 2 * cellSize + leftMargin)); // left fou
+		vectOfPieces[9]->SetPosition(Position(7 * cellSize + topMargin, 5 * cellSize + leftMargin)); // right fou
+		vectOfPieces[10]->SetPosition(Position(7 * cellSize + topMargin, 1 * cellSize + leftMargin)); // left cavalier
+		vectOfPieces[11]->SetPosition(Position(7 * cellSize + topMargin, 6 * cellSize + leftMargin)); // right cavalier
+		vectOfPieces[12]->SetPosition(Position(7 * cellSize + topMargin, 0 * cellSize + leftMargin)); // left tour
+		vectOfPieces[13]->SetPosition(Position(7 * cellSize + topMargin, 7 * cellSize + leftMargin)); // right tour
+		vectOfPieces[14]->SetPosition(Position(7 * cellSize + topMargin, 4 * cellSize + leftMargin)); // roi
+		vectOfPieces[15]->SetPosition(Position(7 * cellSize + topMargin, 3 * cellSize + leftMargin)); // dame
 	}
 	else
 	{
-		vectOfPieces[0]->SetCurrentPosition(Position(1 * cellSize + topMargin, 0 * cellSize + leftMargin)); //pion left
-		vectOfPieces[1]->SetCurrentPosition(Position(1 * cellSize + topMargin, 1 * cellSize + leftMargin));
-		vectOfPieces[2]->SetCurrentPosition(Position(1 * cellSize + topMargin, 2 * cellSize + leftMargin));
-		vectOfPieces[3]->SetCurrentPosition(Position(1 * cellSize + topMargin, 3 * cellSize + leftMargin));
-		vectOfPieces[4]->SetCurrentPosition(Position(1 * cellSize + topMargin, 4 * cellSize + leftMargin));
-		vectOfPieces[5]->SetCurrentPosition(Position(1 * cellSize + topMargin, 5 * cellSize + leftMargin));
-		vectOfPieces[6]->SetCurrentPosition(Position(1 * cellSize + topMargin, 6 * cellSize + leftMargin));
-		vectOfPieces[7]->SetCurrentPosition(Position(1 * cellSize + topMargin, 7 * cellSize + leftMargin)); // pion right
+		vectOfPieces[0]->SetPosition(Position(1 * cellSize + topMargin, 0 * cellSize + leftMargin)); //pion left
+		vectOfPieces[1]->SetPosition(Position(1 * cellSize + topMargin, 1 * cellSize + leftMargin));
+		vectOfPieces[2]->SetPosition(Position(1 * cellSize + topMargin, 2 * cellSize + leftMargin));
+		vectOfPieces[3]->SetPosition(Position(1 * cellSize + topMargin, 3 * cellSize + leftMargin));
+		vectOfPieces[4]->SetPosition(Position(1 * cellSize + topMargin, 4 * cellSize + leftMargin));
+		vectOfPieces[5]->SetPosition(Position(1 * cellSize + topMargin, 5 * cellSize + leftMargin));
+		vectOfPieces[6]->SetPosition(Position(1 * cellSize + topMargin, 6 * cellSize + leftMargin));
+		vectOfPieces[7]->SetPosition(Position(1 * cellSize + topMargin, 7 * cellSize + leftMargin)); // pion right
 
-		vectOfPieces[8]->SetCurrentPosition(Position(0 * cellSize + topMargin, 2 * cellSize + leftMargin)); // left fou
-		vectOfPieces[9]->SetCurrentPosition(Position(0 * cellSize + topMargin, 5 * cellSize + leftMargin)); // right fou
-		vectOfPieces[10]->SetCurrentPosition(Position(0 * cellSize + topMargin, 1 * cellSize + leftMargin)); // left cavalier
-		vectOfPieces[11]->SetCurrentPosition(Position(0 * cellSize + topMargin, 6 * cellSize + leftMargin)); // right cavalier
-		vectOfPieces[12]->SetCurrentPosition(Position(0 * cellSize + topMargin, 0 * cellSize + leftMargin)); // left tour
-		vectOfPieces[13]->SetCurrentPosition(Position(0 * cellSize + topMargin, 7 * cellSize + leftMargin)); // right tour
-		vectOfPieces[14]->SetCurrentPosition(Position(0 * cellSize + topMargin, 4 * cellSize + leftMargin)); // roi
-		vectOfPieces[15]->SetCurrentPosition(Position(0 * cellSize + topMargin, 3 * cellSize + leftMargin)); // dame
+		vectOfPieces[8]->SetPosition(Position(0 * cellSize + topMargin, 2 * cellSize + leftMargin)); // left fou
+		vectOfPieces[9]->SetPosition(Position(0 * cellSize + topMargin, 5 * cellSize + leftMargin)); // right fou
+		vectOfPieces[10]->SetPosition(Position(0 * cellSize + topMargin, 1 * cellSize + leftMargin)); // left cavalier
+		vectOfPieces[11]->SetPosition(Position(0 * cellSize + topMargin, 6 * cellSize + leftMargin)); // right cavalier
+		vectOfPieces[12]->SetPosition(Position(0 * cellSize + topMargin, 0 * cellSize + leftMargin)); // left tour
+		vectOfPieces[13]->SetPosition(Position(0 * cellSize + topMargin, 7 * cellSize + leftMargin)); // right tour
+		vectOfPieces[14]->SetPosition(Position(0 * cellSize + topMargin, 4 * cellSize + leftMargin)); // roi
+		vectOfPieces[15]->SetPosition(Position(0 * cellSize + topMargin, 3 * cellSize + leftMargin)); // dame
 	
 	}
 	
@@ -238,7 +254,7 @@ std::vector<std::unique_ptr<Piece>>  Chess::InitPlayersPieces(bool player1Side)
 void Chess::MovePiece(Piece & piece, Position step)
 {
 	//current position
-	Position currentPos = piece.GetCurrentPosition();
+	Position currentPos = piece.GetPosition();
 
 	// next position = current + step
 	Position nextPos(0, 0);
@@ -246,13 +262,13 @@ void Chess::MovePiece(Piece & piece, Position step)
 	nextPos.col = currentPos.col + step.col;
 
 	// move piece to the next position
-	piece.SetCurrentPosition(nextPos);
+	piece.SetPosition(nextPos);
 }
 
 void Chess::DragPiece()
 {
 	//----------------------
-	// get mouse position
+	// get mouse delta position
 	//----------------------
 	Vector2 mouseStep = GetMouseDelta();
 	Position step(0, 0);
@@ -260,23 +276,62 @@ void Chess::DragPiece()
 	step.col = mouseStep.x;
 
 	//----------------------
+	// get cursor position
+	//----------------------
+	Vector2 cursor = GetMousePosition();
+	Position cursorPos(0, 0);
+	cursorPos.row = cursor.y;
+	cursorPos.col = cursor.x;
+	
+	
+	//----------------------
 	//get selected piece
 	//----------------------
-	int index = -1;
 	if (flag_isPlayer1Turn)
 	{
-		index = GetSelectedPiece(player1);
-		if (index != -1)
-			MovePiece(*player1[index], step);
+		if (!flag_isAnyPieceSelected )
+		{
+			selectdPieceID = GetSelectedPiece(player1);
+		}
+			
+
+		if (selectdPieceID != -1)
+		{
+			flag_isAnyPieceSelected = true;
+
+			// set centerPiece = mousePos
+			SetCenterPieceToCursorPosition(*player1[selectdPieceID], cursorPos);
+
+			// drag piece to cursor position
+			MovePiece(*player1[selectdPieceID], step);
+		}
 	}
 	else
 	{
-		index = GetSelectedPiece(player2);
-		if (index != -1)
-			MovePiece(*player2[index], step);
+		if (!flag_isAnyPieceSelected )
+		{
+			selectdPieceID = GetSelectedPiece(player2);
+		}
+
+		if (selectdPieceID != -1)
+		{
+			flag_isAnyPieceSelected = true;
+
+			// set centerPiece = mousePos
+			SetCenterPieceToCursorPosition(*player2[selectdPieceID], cursorPos);
+
+			// drag piece to cursor position
+			MovePiece(*player2[selectdPieceID], step);
+		}
 	}
 }
 
+/*******************************************
+* @brief This function gets the selected piece to drag using the cursor.
+* @param piece : a vector of pieces.
+* @return : The index of the selected piece from the correspondig vector of pieces, 
+* returns -1 if no piece is selected.
+*/
 int Chess::GetSelectedPiece(std::vector<std::unique_ptr<Piece>> const &player)
 {
 	for (int idx = 0 ; idx < player.size(); idx++)
@@ -286,5 +341,26 @@ int Chess::GetSelectedPiece(std::vector<std::unique_ptr<Piece>> const &player)
 			return idx;
 	}
 	return -1; // no piece is selected
+}
+
+/*******************************************
+* @brief This function sets the center of the piece on the same positon as the cursor.
+* @param piece : the selected piece to drag
+* @param cursoPos : the current position of the cursor.
+*/
+void Chess::SetCenterPieceToCursorPosition(Piece& piece, Position const &cursorPos)
+{
+	
+	Position delta_center_cursor(0, 0),
+		centerPiece(0, 0);
+
+	// get center of piece position
+	centerPiece = piece.GetCenterOfPiecePosition();
+
+	//calculate delta_center_cursor
+	delta_center_cursor.row = cursorPos.row - centerPiece.row;
+	delta_center_cursor.col = cursorPos.col - centerPiece.col;
+
+	MovePiece(piece, delta_center_cursor);
 }
 

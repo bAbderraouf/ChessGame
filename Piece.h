@@ -22,25 +22,30 @@ public :
 	virtual void InitPiece();
 
 	virtual Position GetInitialPosition();
-	virtual Position GetCurrentPosition();
+	virtual Position GetPosition();
 	virtual Position GetCenterOfPiecePosition();
 	virtual void SetInitialPosition(Position pos);
-	virtual void SetCurrentPosition(Position pos);
+	virtual void SetPosition(Position pos);
+	virtual void SetCenterOfPiecePosition(Position pos);
 	virtual bool IsPlayer1Side();
 	virtual void Draw();
 	virtual Rectangle GetImageBounds();
 	virtual void SetImageSize(int size);
 	virtual void LoadPieceImage();
+	virtual void SetSlected(bool selected);
+	virtual bool IsSelected();
 
 
 protected:
-	Position currentPos , initialPos;  // pos on the grid
+	Position pos , centerPos, initialPos;  // pos on the grid
 	Image pieceImage;
 	Texture pieceTexture;
 	int imageSize;
-	bool player1;
 	std::string pieceName;
 
+	// flags
+	bool player1;
+	bool flag_isSelected;
 	
 };
 
