@@ -51,6 +51,19 @@ private:
 	//pieces
 	std::vector<std::unique_ptr<Piece>> player1, player2;
 
+	//Board case
+	struct infoCase 
+	{
+		bool empty;
+		int idPiece;
+		std::string pieceName;
+		std::string caseName;
+		bool caseHovered;
+		bool playerSide;
+	};
+	infoCase strCaseInfo;
+	infoCase board[8][8];
+
 	//flags
 	bool    flag_isPlayer1Turn,
 		    flag_leftMouseButtonPressed, 

@@ -41,6 +41,19 @@ void Chess::Init()
 	player1 = InitPlayersPieces(true); // player 1
 	player2 = InitPlayersPieces(false); // player 2
 
+
+	//case info
+	/*
+	strCaseInfo.empty = false;
+	strCaseInfo.caseHovered = false;
+	strCaseInfo.caseName =
+	strCaseInfo.
+	strCaseInfo.
+	strCaseInfo.
+	*/
+
+
+	
 	//falgs
 	flag_isPlayer1Turn = true;
 	flag_leftMouseButtonPressed = false;
@@ -168,7 +181,11 @@ std::vector<std::unique_ptr<Piece>>  Chess::InitPlayersPieces(bool player1Side)
 		vectOfPieces.push_back(std::make_unique<Roi>(player1Side));
 		vectOfPieces.push_back(std::make_unique<Dame>(player1Side));
 		
+	// set pieceImage size to cellSize
+	for (auto& p : vectOfPieces)
+		p->SetImageSize(cellSize);
 
+	// set Pieces positions according to player side
 	if (player1Side)
 	{
 		// position(row,col) where :

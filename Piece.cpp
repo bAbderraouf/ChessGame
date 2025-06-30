@@ -9,10 +9,13 @@ Piece::Piece(bool player1Side)
 {
 	id = 0;
 	player1 = player1Side;
-
-	pieceTexture = LoadTexture("assets/images/black_queen.png");
+	pieceName = "";
+	imageSize = 75; // real image size
 
 	//InitPiece
+	LoadPieceImage();
+
+
 }
 
 
@@ -24,6 +27,8 @@ Piece::Piece(Piece const& p) :
 	currentPos(p.currentPos.col, p.currentPos.row)
 {
 	id = p.id;
+	pieceName = p.pieceName;
+
 
 	//InitPiece
 	pieceTexture = p.pieceTexture;
@@ -38,6 +43,11 @@ Piece::Piece(Piece const& p) :
 int Piece::getId()
 {
 	return this->id;
+}
+
+std::string Piece::GetName()
+{
+	return this->pieceName;
 }
 
 //-------------------------------------------------------------
@@ -113,6 +123,36 @@ Rectangle Piece::GetImageBounds()
 	return Rectangle{ (float)currentPos.col, (float)currentPos.row, (float)pieceTexture.width, (float)pieceTexture.height};
 }
 
+void Piece::SetImageSize(int size)
+{
+	imageSize = size;
+	// reste image and texture sizes
+	LoadPieceImage(); 
+}
+
+void Piece::LoadPieceImage()
+{
+	//set path
+	std::string side = player1 ? "B" : "N";
+	std::string fullPath = "assets/images/" + pieceName + side + ".png";
+
+	//convert to char*
+	const char* c_fullPath = fullPath.c_str();
+
+	//set ratio
+	const int realImageSize = 75; //75x75px
+	float ratio = (float)imageSize / (float)realImageSize;
+
+	// load image
+	pieceImage = LoadImage(c_fullPath);
+
+	//resize image
+	ImageResize(&pieceImage, pieceImage.width * ratio, pieceImage.height * ratio);
+
+	//set texture
+	pieceTexture = LoadTextureFromImage(pieceImage);
+}
+
 //-------------------------------------------------------------
 //			Pion
 //-------------------------------------------------------------
@@ -120,12 +160,10 @@ Rectangle Piece::GetImageBounds()
 Pion::Pion(bool player1Side) : Piece(player1Side)
 {
 	id = 1;
+	pieceName = "Pion";
 
 	//InitPiece
-	if (player1Side)
-		pieceTexture = LoadTexture("assets/images/pionb.png");
-	else
-		pieceTexture = LoadTexture("assets/images/pionN.png");
+	LoadPieceImage();
 }
 
 // copy constructor
@@ -145,11 +183,10 @@ Pion* Pion::Clone() const
 Fou::Fou(bool player1Side) : Piece(player1Side)
 {
 	id = 2;
+	pieceName = "Fou";
+
 	//InitPiece
-	if (player1Side)
-		pieceTexture = LoadTexture("assets/images/foub.png");
-	else
-		pieceTexture = LoadTexture("assets/images/fouN.png");
+	LoadPieceImage();
 }
 
 // copy constructor
@@ -169,11 +206,10 @@ Fou* Fou::Clone() const
 Cavalier::Cavalier(bool player1Side):Piece( player1Side)
 {
 	id = 3;
+	pieceName = "Cavalier";
+
 	//InitPiece
-	if (player1Side)
-		pieceTexture = LoadTexture("assets/images/cavalierb.png");
-	else
-		pieceTexture = LoadTexture("assets/images/cavalierN.png");
+	LoadPieceImage();
 }
 
 // copy constructor
@@ -192,11 +228,10 @@ Cavalier* Cavalier::Clone() const
 Tour::Tour(bool player1Side) :Piece( player1Side)
 {
 	id = 4;
+	pieceName = "Tour";
+
 	//InitPiece
-	if (player1Side)
-		pieceTexture = LoadTexture("assets/images/tourb.png");
-	else
-		pieceTexture = LoadTexture("assets/images/tourN.png");
+	LoadPieceImage();
 }
 
 // copy constructor
@@ -216,11 +251,10 @@ Tour* Tour::Clone() const
 Dame::Dame(bool player1Side) :Piece( player1Side)
 {
 	id = 5;
+	pieceName = "Dame";
+
 	//InitPiece
-	if (player1Side)
-		pieceTexture = LoadTexture("assets/images/dameb.png");
-	else
-		pieceTexture = LoadTexture("assets/images/dameN.png");
+	LoadPieceImage();
 }
 
 // copy constructor
@@ -240,11 +274,10 @@ Dame* Dame::Clone() const
 Roi::Roi(bool player1Side) : Piece( player1Side)
 {
 	id = 6;
+	pieceName = "Roi";
+
 	//InitPiece
-	if (player1Side)
-		pieceTexture = LoadTexture("assets/images/roib.png");
-	else
-		pieceTexture = LoadTexture("assets/images/roiN.png");
+	LoadPieceImage();
 }
 // copy constructor
 Roi::Roi(Roi const& p) : Piece(p)

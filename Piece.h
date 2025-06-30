@@ -9,7 +9,7 @@
 class Piece 
 {
 public :
-	Piece(bool player1Side);
+	Piece(bool player1Side );
 	virtual ~Piece() = default;
 
 	Piece(Piece const& p); // copy constructor
@@ -29,13 +29,17 @@ public :
 	virtual bool IsPlayer1Side();
 	virtual void Draw();
 	virtual Rectangle GetImageBounds();
+	virtual void SetImageSize(int size);
+	virtual void LoadPieceImage();
 
 
 protected:
 	Position currentPos , initialPos;  // pos on the grid
+	Image pieceImage;
 	Texture pieceTexture;
+	int imageSize;
 	bool player1;
-	std::string name;
+	std::string pieceName;
 
 	
 };

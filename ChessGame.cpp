@@ -23,7 +23,7 @@ int main()
 			color1 = ligthBlue,
 			color2 = BLUE,
 			background = vdarkBlue;
-	int w = 800, h = 620, nRows = 8, nCols = 8, cSize = 75, fps = 60 , leftMargin = 10, topMargin = 10;
+	int w = 800, h = 620, nRows = 8, nCols = 8, cSize =90, fps = 60 , leftMargin = 10, topMargin = 10;
 
 	//--------------------
 	// window : w, h, fps  
