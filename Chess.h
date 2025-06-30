@@ -31,8 +31,10 @@ public :
 	std::vector<std::unique_ptr<Piece>> InitPlayersPieces(bool player1Side);
 	void MovePiece(Piece& piece, Position step);
 	void DragPiece();
+	void ReleasePiece();
 	int GetSelectedPiece(std::vector<std::unique_ptr<Piece>> const &player);
 	void SetCenterPieceToCursorPosition(Piece& piece , Position const &cursorPos);
+	Position GetCorrespondingBoardCase(Position centerPos);
 
 private:
 	Grid* grid;

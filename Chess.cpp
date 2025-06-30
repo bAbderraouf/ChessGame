@@ -12,7 +12,7 @@ Chess::Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin
 	numCols = nCols;
 	cellSize = cSize;
 	leftMargin = lMargin;
-	topMargin = topMargin;
+	topMargin = tMargin;
 	color1 = c1;
 	color2 = c2;
 
@@ -53,8 +53,6 @@ void Chess::Init()
 	strCaseInfo.
 	*/
 
-
-	
 	//falgs
 	flag_isPlayer1Turn = true;
 	flag_leftMouseButtonPressed = false;
@@ -67,19 +65,25 @@ void Chess::Init()
 
 void Chess::Input()
 {
+	// LEFT mouse mouse PRESSED
 	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
 	{
 		flag_leftMouseButtonPressed = true;
 	}
 
+	// RIGHT mouse mouse PRESSED
 	if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON))
 	{
 		flag_rightMouseButtonPressed = true;
 	}
+
+	// LEFT mouse mouse is DOWN
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
 	{
 		flag_leftMouseButtonDown = true;
 	}
+
+	// LEFT mouse mouse is RELEASED
 	if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
 	{
 		flag_leftMouseButtonReleased = true;
@@ -120,9 +124,11 @@ void Chess::Update()
 	{
 		flag_leftMouseButtonReleased = false;
 
-		flag_isAnyPieceSelected = false;
+		ReleasePiece();
 
 		selectdPieceID = -1; // no selected piece
+
+		flag_isAnyPieceSelected = false;
 
 	}
 
@@ -326,6 +332,52 @@ void Chess::DragPiece()
 	}
 }
 
+void Chess::ReleasePiece()
+{
+	if(selectdPieceID != -1  && flag_isAnyPieceSelected)
+	{
+		if (flag_isPlayer1Turn)
+		{
+			// get center pos
+			Position centerPos = player1[selectdPieceID]->GetCenterOfPiecePosition();
+
+			// get current pos
+			Position currentPos = player1[selectdPieceID]->GetPosition();
+
+			// get corresponding board case position
+			Position correspondingCase = GetCorrespondingBoardCase(centerPos);
+				
+			// calculate step
+			Position step(0, 0);
+			step.row = correspondingCase.row - currentPos.row;
+			step.col = correspondingCase.col - currentPos.col;
+			
+			// move piece to the corresponding case
+			MovePiece(*player1[selectdPieceID], step);
+		}
+		else
+		{
+			// get center pos
+			Position centerPos = player2[selectdPieceID]->GetCenterOfPiecePosition();
+
+			// get current pos
+			Position currentPos = player2[selectdPieceID]->GetPosition();
+
+			// get corresponding board case position
+			Position correspondingCase = GetCorrespondingBoardCase(centerPos);
+
+			// calculate step
+			Position step(0, 0);
+			step.row = correspondingCase.row - currentPos.row;
+			step.col = correspondingCase.col - currentPos.col;
+
+			// move piece to the corresponding case
+			MovePiece(*player2[selectdPieceID], step);
+		}
+	}
+	
+}
+
 /*******************************************
 * @brief This function gets the selected piece to drag using the cursor.
 * @param piece : a vector of pieces.
@@ -362,5 +414,38 @@ void Chess::SetCenterPieceToCursorPosition(Piece& piece, Position const &cursorP
 	delta_center_cursor.col = cursorPos.col - centerPiece.col;
 
 	MovePiece(piece, delta_center_cursor);
+}
+
+Position Chess::GetCorrespondingBoardCase(Position centerPos)
+{
+	Position result(0,0);
+	int x = 0, y = 0;
+
+	for (int row = 0; row < numRows; row++)
+	{
+		for (int col = 0; col < numCols; col++)
+		{
+			// position of each cell
+			x = col * cellSize;
+			y = row *  cellSize;
+
+			// add margins
+			x = x + leftMargin;
+			y = y + topMargin;
+
+			// position of the center of the piece (vector2)
+			Vector2 centerCordinantes;
+			centerCordinantes.x = centerPos.col;
+			centerCordinantes.y = centerPos.row;
+
+			if (CheckCollisionPointRec(centerCordinantes, Rectangle{ (float)(x), (float)(y), (float)cellSize, (float)cellSize }))
+			{
+				result.row = y ;
+				result.col = x ;
+			}
+		}
+	}
+
+	return result;
 }
 
