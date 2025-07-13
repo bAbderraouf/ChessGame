@@ -13,16 +13,17 @@ int main()
 	double	lastTime = 0, currentTime = 0, 	timeInterval = 0.25; 
 
 	// list of colors to change theme
-	Color	brown = { 128, 43, 0 ,255},
-			brown2 = { 225, 135, 64, 255 },
+	Color	darkBrown = { 128, 43, 0 ,255 },
+			lightBrown = { 225, 135, 64, 255 },
 			beige = { 255, 204, 156,255 },
 			/// theme 2
 			ligthBlue = { 204, 204, 255, 255 }, // with blue
-			vdarkBlue = { 0, 0, 102 , 255},
+			vdarkBlue = { 0, 0, 102 , 255 },
 
-			color1 = ligthBlue,
-			color2 = BLUE,
-			background = vdarkBlue;
+			color1 = lightBrown, //ligthBlue,
+			color2 = beige,// = BLUE,
+			background = darkBrown; //vdarkBlue;
+
 	int w = 800, h = 620, nRows = 8, nCols = 8, cSize =75, fps = 60 , leftMargin = 10, topMargin = 10;
 
 	//--------------------

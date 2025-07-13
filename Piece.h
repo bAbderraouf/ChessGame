@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Position.h"
 #include <raylib.h>
+#include <vector>
 
 //-------------------------------------------------------------
 //				Base Class
@@ -16,28 +17,34 @@ public :
 	int id;
 
 	virtual Piece* Clone() const = 0;
-	virtual int getId();
-	virtual std::string GetName();
+	virtual int getId() const;
+	virtual std::string GetName() const;
+	virtual bool GetPlayerSide() const;
 
 	virtual void InitPiece();
 
-	virtual Position GetInitialPosition();
-	virtual Position GetPosition();
-	virtual Position GetCenterOfPiecePosition();
+	virtual Position GetInitialPosition() const;
+	virtual Position GetPosition() const;
+	virtual Position GetCenterOfPiecePosition() const;
+	virtual Position GetLastPosition() const;
 	virtual void SetInitialPosition(Position pos);
 	virtual void SetPosition(Position pos);
 	virtual void SetCenterOfPiecePosition(Position pos);
+	virtual void SetLastPosition(Position pos);
 	virtual bool IsPlayer1Side();
 	virtual void Draw();
 	virtual Rectangle GetImageBounds();
 	virtual void SetImageSize(int size);
 	virtual void LoadPieceImage();
 	virtual void SetSlected(bool selected);
-	virtual bool IsSelected();
+	virtual bool IsSelected() const;
+	virtual void SetNeverMoved(bool neverMoved);
+	virtual bool IsNeverMoved() const;
+	virtual std::vector<Position> GetPosiblePositionsOnBoard(int cellSize) const;
 
 
 protected:
-	Position pos , centerPos, initialPos;  // pos on the grid
+	Position pos , centerPos, initialPos , lastPos;  // pos on the grid
 	Image pieceImage;
 	Texture pieceTexture;
 	int imageSize;
@@ -46,6 +53,7 @@ protected:
 	// flags
 	bool player1;
 	bool flag_isSelected;
+	bool flag_neverMoved;
 	
 };
 

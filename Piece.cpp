@@ -11,6 +11,7 @@ Piece::Piece(bool player1Side)
 	id = 0;
 	player1 = player1Side;
 	flag_isSelected = false;
+	flag_neverMoved = true;
 	pieceName = "";
 	imageSize = 75; // real image size
 	centerPos = GetCenterOfPiecePosition();
@@ -44,14 +45,19 @@ Piece::Piece(Piece const& p) :
 //				Adiitional functions
 //-------------------------------------------------------------
 
-int Piece::getId()
+int Piece::getId() const
 {
 	return this->id;
 }
 
-std::string Piece::GetName()
+std::string Piece::GetName() const
 {
 	return this->pieceName;
+}
+
+bool Piece::GetPlayerSide() const
+{
+	return this->player1;
 }
 
 //-------------------------------------------------------------
@@ -61,18 +67,18 @@ void Piece::InitPiece()
 }
 
 //-------------------------------------------------------------
-Position Piece::GetInitialPosition()
+Position Piece::GetInitialPosition() const
 {
 	return initialPos;
 }
 
 //-------------------------------------------------------------
-Position Piece::GetPosition()
+Position Piece::GetPosition() const
 {
 	return pos;
 }
 
-Position Piece::GetCenterOfPiecePosition()
+Position Piece::GetCenterOfPiecePosition() const
 {
 	Position centerOfPiece(0, 0);
 
@@ -81,6 +87,11 @@ Position Piece::GetCenterOfPiecePosition()
 	centerOfPiece.col = pos.col + pieceTexture.width / 2;
 
 	return centerOfPiece;
+}
+
+Position Piece::GetLastPosition() const
+{
+	return this->lastPos;
 }
 
 //-------------------------------------------------------------
@@ -106,6 +117,11 @@ void Piece::SetCenterOfPiecePosition(Position pos)
 
 	//set corresponding normal pos
 	SetPosition(normalPos);
+}
+
+void Piece::SetLastPosition(Position pos)
+{
+	this->lastPos = pos;
 }
 
 //-------------------------------------------------------------
@@ -175,9 +191,96 @@ void Piece::SetSlected(bool selected)
 	flag_isSelected = selected;
 }
 
-bool Piece::IsSelected()
+bool Piece::IsSelected() const
 {
 	return flag_isSelected;
+}
+
+void Piece::SetNeverMoved(bool neverMoved)
+{
+	this->flag_neverMoved = neverMoved;
+}
+
+bool Piece::IsNeverMoved() const
+{
+	return this->flag_neverMoved;
+}
+
+std::vector<Position> Piece::GetPosiblePositionsOnBoard(int cellSize) const
+{
+	// without margings (only board positions)
+
+	std::vector<Position> positions;
+	int step = player1 ? -cellSize : cellSize;
+	Position p(0, 0);
+	int r = 0, c = 0;
+	
+	switch (id)
+	{
+	case 1:  // piion
+		positions.push_back(Position(pos.row + step, pos.col));
+		positions.push_back(Position(pos.row + step, pos.col +step));
+		positions.push_back(Position(pos.row + step, pos.col -step));
+		break;
+	case 2: // fou
+		for(int n = -7 ; n <=7 ; n++)
+		{
+			
+			r= pos.row + n* step;
+			c = pos.col + n* step;
+
+			if (r <= 7 * cellSize && r >= 0 && c <= 7 * cellSize && c >= 0)
+			{
+				positions.push_back(Position(r, c));
+			}
+			
+			c = pos.col - n* step;
+
+			if (r <= 7 * cellSize && r >= 0 && c <= 7 * cellSize && c >= 0)
+			{
+				positions.push_back(Position(pos.row + step, pos.col - step));
+			}
+
+		}
+		break;
+	case 3: // cavalier
+		positions.push_back(Position(pos.row + step, pos.col + 2*step));
+		positions.push_back(Position(pos.row + step, pos.col - 2*step));
+		positions.push_back(Position(pos.row + 2 * step, pos.col + step));
+		positions.push_back(Position(pos.row + 2 * step, pos.col - step));
+		positions.push_back(Position(pos.row - step, pos.col + 2 * step));
+		positions.push_back(Position(pos.row - step, pos.col - 2 * step));
+		positions.push_back(Position(pos.row - 2 * step, pos.col + step));
+		positions.push_back(Position(pos.row - 2 * step, pos.col - step));
+		break;
+	case 4: //tour
+		for (int n = -7; n <= 7; n++)
+		{
+
+			r = pos.row + n * step;
+			c = pos.col ;
+
+			if (r <= 7 * cellSize && r >= 0 && c <= 7 * cellSize && c >= 0)
+			{
+				positions.push_back(Position(r, c));
+			}
+
+			r = pos.row ;
+			c = pos.col + n * step;
+
+			if (r <= 7 * cellSize && r >= 0 && c <= 7 * cellSize && c >= 0)
+			{
+				positions.push_back(Position(pos.row + step, pos.col - step));
+			}
+
+		}
+		break;
+
+	//case 5:
+	//case 6:
+	}
+
+	return positions;
 }
 
 //-------------------------------------------------------------
@@ -233,7 +336,7 @@ Fou* Fou::Clone() const
 Cavalier::Cavalier(bool player1Side):Piece( player1Side)
 {
 	id = 3;
-	pieceName = "Cavalier";
+	pieceName = "Cava";//lier";
 
 	//InitPiece
 	LoadPieceImage();
