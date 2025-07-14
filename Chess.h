@@ -52,8 +52,8 @@ public :
 	void GetBoardRowColFromCaseName(std::string caseName , int& row, int& col);
 	void GetBoardRowColFromPiecePosition(Position const & pos, int& row, int& col) const;
 	void PrintBoardQuickInfo(std::string infoType) const;
-	bool AddPossiblePossition(std::vector<Position>& positions, int const &row, int const &col) const;
-
+	int AddPossiblePossition(std::vector<Position>& positions, Piece const& piece, int const &row, int const &col ) const;
+	bool IsCapturableObstacle(int const &row, int const &col) const;
 
 private:
 	Grid* grid;

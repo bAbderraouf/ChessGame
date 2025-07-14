@@ -323,103 +323,174 @@ std::vector<Position> Chess::GetPossiblePositionsOnBoard(Piece const & piece) co
 	int rowCell =0, colCell = 0;
 	int step = flag_isPlayer1Turn ? -1 : 1;
 
+	int caseInfo = 0;
+	int idPiece = piece.getId();
+
 	//get corresponding row and col on the board
 	GetBoardRowColFromPiecePosition(pos, rowCell, colCell);
 
-	switch (piece.getId())
+	switch (idPiece)
 	{
-	case 1:  // piion
+	case 1:  //pion
 
-		AddPossiblePossition(possiblePos, rowCell + step , colCell );
-		if( piece.IsNeverMoved())
-			AddPossiblePossition(possiblePos, rowCell + 2*step, colCell);
+		//one case forward
+		if(m_Board[rowCell + step][colCell].empty)
+			AddPossiblePossition(possiblePos, piece,  rowCell + step , colCell );
 
-		//AddPossiblePossition(possiblePos, rowCell + step , colCell + step);
-		//AddPossiblePossition(possiblePos, rowCell + step , colCell - step);
+		// two cases (only initial pos)
+		if (m_Board[rowCell + 2 * step][colCell].empty)
+			if( piece.IsNeverMoved())
+				AddPossiblePossition(possiblePos, piece, rowCell + 2*step, colCell);
+
+		// capturable movements
+		if(IsCapturableObstacle(rowCell + step, colCell + step))
+			AddPossiblePossition(possiblePos, piece, rowCell + step , colCell + step);
+		if (IsCapturableObstacle(rowCell + step, colCell - step))
+			AddPossiblePossition(possiblePos, piece, rowCell + step , colCell - step);
+
 		break;
 	case 2: // fou
 		for (int i = 1; i < 8; i++)
-			if(AddPossiblePossition(possiblePos, rowCell + i * step, colCell + i * step))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell + i * step, colCell + i * step);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
+			
 		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell + i * step, colCell - i * step))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell + i * step, colCell - i * step);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
+			
 		for (int i = 1; i < 8; i++)
-			if(AddPossiblePossition(possiblePos, rowCell - i * step, colCell + i * step))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell - i * step, colCell + i * step);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
+			
 		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell - i * step, colCell - i * step))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell - i * step, colCell - i * step);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
 		break;
 	case 3 : // cava
 
-		AddPossiblePossition(possiblePos, rowCell +  step, colCell + 2 * step);
-		AddPossiblePossition(possiblePos, rowCell +  step, colCell - 2 * step);
-		AddPossiblePossition(possiblePos, rowCell + 2 * step, colCell + step);
-		AddPossiblePossition(possiblePos, rowCell + 2 * step, colCell - step);
+		AddPossiblePossition(possiblePos, piece, rowCell +  step, colCell + 2 * step);
+		AddPossiblePossition(possiblePos, piece, rowCell +  step, colCell - 2 * step);
+		AddPossiblePossition(possiblePos, piece, rowCell + 2 * step, colCell + step);
+		AddPossiblePossition(possiblePos, piece, rowCell + 2 * step, colCell - step);
 
-		AddPossiblePossition(possiblePos, rowCell -  step, colCell - 2 * step);
-		AddPossiblePossition(possiblePos, rowCell -  step, colCell + 2 * step);
-		AddPossiblePossition(possiblePos, rowCell - 2 * step, colCell -  step);
-		AddPossiblePossition(possiblePos, rowCell - 2 * step, colCell +  step);
+		AddPossiblePossition(possiblePos, piece, rowCell -  step, colCell - 2 * step);
+		AddPossiblePossition(possiblePos, piece, rowCell -  step, colCell + 2 * step);
+		AddPossiblePossition(possiblePos, piece, rowCell - 2 * step, colCell -  step);
+		AddPossiblePossition(possiblePos, piece, rowCell - 2 * step, colCell +  step);
 
 		break;
 	case 4: // tour
 		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell + i * step, colCell))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell + i * step, colCell);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
+			
 		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell - i * step, colCell))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell - i * step, colCell);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
+			
 		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell, colCell + i * step))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell, colCell + i * step);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
+			
 		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell, colCell - i * step))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell, colCell - i * step);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
 
 		break;
 	case 5: // dame
 			
 		//fou type
 		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell + i * step, colCell + i * step))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell + i * step, colCell + i * step);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
-		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell + i * step, colCell - i * step))
-				break;
-		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell - i * step, colCell + i * step))
-				break;
-		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell - i * step, colCell - i * step))
-				break;
+		}
 
+		for (int i = 1; i < 8; i++)
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell + i * step, colCell - i * step);
+			if (caseInfo == 0 || caseInfo == 2)
+				break;
+		}
+
+		for (int i = 1; i < 8; i++)
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell - i * step, colCell + i * step);
+			if (caseInfo == 0 || caseInfo == 2)
+				break;
+		}
+
+		for (int i = 1; i < 8; i++)
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell - i * step, colCell - i * step);
+			if (caseInfo == 0 || caseInfo == 2)
+				break;
+		}
 		//tour type
 		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell + i * step, colCell))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell + i * step, colCell);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
+
 		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell - i * step, colCell))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell - i * step, colCell);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
+
 		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell, colCell + i * step))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell, colCell + i * step);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
+
 		for (int i = 1; i < 8; i++)
-			if (AddPossiblePossition(possiblePos, rowCell, colCell - i * step))
+		{
+			caseInfo = AddPossiblePossition(possiblePos, piece, rowCell, colCell - i * step);
+			if (caseInfo == 0 || caseInfo == 2)
 				break;
+		}
 		break;
 	case 6: // roi
 		//+ type
-		AddPossiblePossition(possiblePos, rowCell +  step, colCell +  step);
-		AddPossiblePossition(possiblePos, rowCell +  step, colCell -  step);
-		AddPossiblePossition(possiblePos, rowCell -  step, colCell +  step);
-		AddPossiblePossition(possiblePos, rowCell -  step, colCell -  step);
+		AddPossiblePossition(possiblePos, piece, rowCell +  step, colCell +  step);
+		AddPossiblePossition(possiblePos, piece, rowCell +  step, colCell -  step);
+		AddPossiblePossition(possiblePos, piece, rowCell -  step, colCell +  step);
+		AddPossiblePossition(possiblePos, piece, rowCell -  step, colCell -  step);
 		//x type
-		AddPossiblePossition(possiblePos, rowCell + step, colCell);
-		AddPossiblePossition(possiblePos, rowCell - step, colCell);
-		AddPossiblePossition(possiblePos, rowCell, colCell + step);
-		AddPossiblePossition(possiblePos, rowCell, colCell - step);
+		AddPossiblePossition(possiblePos, piece, rowCell + step, colCell);
+		AddPossiblePossition(possiblePos, piece, rowCell - step, colCell);
+		AddPossiblePossition(possiblePos, piece, rowCell, colCell + step);
+		AddPossiblePossition(possiblePos, piece, rowCell, colCell - step);
 		break;
 
 	}
@@ -427,6 +498,50 @@ std::vector<Position> Chess::GetPossiblePositionsOnBoard(Piece const & piece) co
 
 	return possiblePos;
 }
+
+
+int Chess::AddPossiblePossition(std::vector<Position>& positions, Piece const& piece, const int& row, int const& col) const
+{
+	int caseInfo = 0;
+	// 0 : obstacle present (team side) : cant move to this case
+	// 1 : no obstacle : a possible empty position can move to it
+	// 2 : obstacle present (enemy side) : can capture this piece and move to its case (the piece is not Roi).
+
+	// not out of board
+	// if not check or check mat
+	if (row >= 0 && row < 8 && col >= 0 && col < 8)
+	{
+		// case is empty
+		if (m_Board[row][col].empty)
+		{
+			positions.push_back(m_Board[row][col].cellPosition);
+			caseInfo = 1;
+		}
+		// enemy side & not king & not pion (pion capture otherwise)
+		else if (IsCapturableObstacle(row, col) )
+		{
+			positions.push_back(m_Board[row][col].cellPosition);
+			caseInfo = 2;
+		}
+		// obstacle present (cant move)
+		else
+			caseInfo = 0;
+	}
+
+	return caseInfo;
+
+}
+
+
+bool Chess::IsCapturableObstacle(int const& row, int const& col) const
+{
+	if(! m_Board[row][col].empty)
+		if (m_Board[row][col].playerSide != flag_isPlayer1Turn)
+			if (m_Board[row][col].idPiece != 6) // not king (pas le roi) 
+				return true;
+	return false;
+}
+
 
 
 void Chess::MovePiece(Piece & piece, Position step)
@@ -878,18 +993,4 @@ void Chess::PrintBoardQuickInfo(std::string infoType) const
 	}
 
 	std::cout << std::endl;
-}
-
-bool Chess::AddPossiblePossition(std::vector<Position>& positions, int const &row, int const &col) const
-{
-	bool obstacle = false;
-
-	if (row >= 0 && row < 8 && col >= 0 && col < 8)
-		if (m_Board[row][col].empty)
-			positions.push_back(m_Board[row][col].cellPosition);
-		else
-			obstacle = true;
-
-	return obstacle;
-
 }
