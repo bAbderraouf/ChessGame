@@ -87,14 +87,12 @@ void Chess::Init()
 
 	selectdPieceID = -1; // no piece is selected
 	m_selectedPieceMovementType = -1;
-	m_selectedPiecePossiblePositions = {}; // empty vector
-	m_selectedPieceMovementTypes = {}; // empty 
+	m_possibleMouvement = {}; //empty
 	m_player1InCheckCases = {};
 	m_player2InCheckCases = {};
 	// erase vectors
-	std::vector<Position>().swap(m_selectedPiecePossiblePositions);
-	std::vector<int>().swap(m_selectedPieceMovementTypes);
-	std::vector<int>().swap(m_player1InCheckCases);
+	std::vector<PossibleMouvement>().swap(m_possibleMouvement);
+ 	std::vector<int>().swap(m_player1InCheckCases);
 	std::vector<int>().swap(m_player2InCheckCases);
 
 	//falgs
@@ -106,7 +104,7 @@ void Chess::Init()
 	flag_isAnyPieceSelected = false;
 	flag_player1InCheck = false;
 	flag_player2InCheck = false;
-
+	flag_possibleMouvemntsAreCalculated = false;
 	
 }
 
@@ -180,10 +178,12 @@ void Chess::Update()
 
 			// chek movement type (if captured)
 
+			
 			if (flag_isPlayer1Turn)
 				m_selectedPieceMovementType = CheckIfAnyPossiblePosIsSelected(*player1[selectdPieceID]);
 			else
 				m_selectedPieceMovementType = CheckIfAnyPossiblePosIsSelected(*player2[selectdPieceID]);
+
 
 		}
 		
@@ -202,21 +202,13 @@ void Chess::Update()
 
 		flag_isAnyPieceSelected = false;
 
-		std::cout << "before {} : --------------------------" << std::endl;
-			std::cout << " m_selectedPieceMovementTypes.size() : " <<  m_selectedPieceMovementTypes.size() << std::endl;
-		std::cout << " m_selectedPieceMovementTypes.capacity() : " <<  m_selectedPieceMovementTypes.capacity() << std::endl;
 
 
-		m_selectedPiecePossiblePositions = {}; // reset to empty vector
-		m_selectedPieceMovementTypes = {};
+		m_possibleMouvement = {}; // reset to empty vector
+
 
 		// erase vectors
-		std::vector<Position>().swap(m_selectedPiecePossiblePositions);
-		std::vector<int>().swap(m_selectedPieceMovementTypes);
-
-		std::cout << "after {} : --------------------------" << std::endl;
-		std::cout << " m_selectedPieceMovementTypes.size() : " << m_selectedPieceMovementTypes.size() << std::endl;
-		std::cout << " m_selectedPieceMovementTypes.capacity() : " <<  m_selectedPieceMovementTypes.capacity() << std::endl;
+		std::vector<PossibleMouvement>().swap(m_possibleMouvement);
 
 	}
 
@@ -364,25 +356,27 @@ void Chess::SetPlayerInitialPositions(std::vector<std::unique_ptr<Piece>>& vectO
 
 void Chess::DrawPossiblePositions(Color color)
 {
-	int i = 0;
 
 	// draw it once (when we click to select the piece)
 		// draw rectangle on existing possilbe positions
-	if ( !m_selectedPiecePossiblePositions.empty())
+	if ( !m_possibleMouvement.empty())
 	{
-		for (auto p : m_selectedPiecePossiblePositions)
+		for (auto p : m_possibleMouvement)
 		{
-			if (m_selectedPieceMovementTypes[i] == 2)
+			if (p.movementType == 2)
 			{
-	
-				DrawRectangle(p.col, p.row, cellSize, cellSize, color);
-				
+				DrawRectangle(p.possiblePosition.col, p.possiblePosition.row, cellSize, cellSize, color);
+			}
+			if (p.movementType == -1) // check posi
+			{
+				Color lightRed = { 205, 0 , 0, 150 };
+				DrawRectangle(p.possiblePosition.col, p.possiblePosition.row, cellSize, cellSize, lightRed);
 			}
 			else
 			{
 				// draw corresponding circles coordinates
-				int xCircle = (int)(p.col + ((float)(cellSize / 2)));
-				int yCircle = (int)(p.row + ((float)(cellSize / 2)));
+				int xCircle = (int)(p.possiblePosition.col + ((float)(cellSize / 2)));
+				int yCircle = (int)(p.possiblePosition.row + ((float)(cellSize / 2)));
 
 				int thickness = 25;
 				for (int i = 0; i < thickness; i += 2)
@@ -391,17 +385,14 @@ void Chess::DrawPossiblePositions(Color color)
 				}
 			}
 
-			i++;
 		}
 
 	}
 
 }
 
-bool Chess::GetPossiblePositionsOnBoard(Piece const& piece, 
-										std::vector<Position> & possiblePos, 
-										std::vector<int> &movementTypes, 
-										std::vector<int>& inCheckVect)
+												
+bool Chess::GetPossiblePositionsOnBoard(Piece const& piece, std::vector<PossibleMouvement> & PossibleMvt)
 {
 
 	Position pos = piece.GetPosition();
@@ -422,87 +413,87 @@ bool Chess::GetPossiblePositionsOnBoard(Piece const& piece,
 
 		//one case forward
 		if(m_Board[rowCell + step][colCell].empty)
-			AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect, rowCell + step , colCell );
+			AddPossiblePossition(piece, PossibleMvt, rowCell + step , colCell );
 
 		// two cases (only initial pos)
 		if (m_Board[rowCell + 2 * step][colCell].empty)
 			if( piece.IsNeverMoved())
-				AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + 2*step, colCell);
+				AddPossiblePossition(piece, PossibleMvt,rowCell + 2*step, colCell);
 
 		// capturable movements
-		if(IsCapturableObstacle(rowCell + step, colCell + step))
-			AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + step , colCell + step);
-		if (IsCapturableObstacle(rowCell + step, colCell - step))
-			AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + step , colCell - step);
+		if(IsEnemyObstacle(rowCell + step, colCell + step))
+			AddPossiblePossition(piece, PossibleMvt, rowCell + step , colCell + step);
+		if (IsEnemyObstacle(rowCell + step, colCell - step))
+			AddPossiblePossition(piece, PossibleMvt, rowCell + step , colCell - step);
 
 		break;
 	case 2: // fou
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + i * step, colCell + i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt, rowCell + i * step, colCell + i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 			
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + i * step, colCell - i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt, rowCell + i * step, colCell - i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 			
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell - i * step, colCell + i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt, rowCell - i * step, colCell + i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 			
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell - i * step, colCell - i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt, rowCell - i * step, colCell - i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 		break;
 	case 3 : // cava
 
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell +  step, colCell + 2 * step);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell +  step, colCell - 2 * step);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + 2 * step, colCell + step);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + 2 * step, colCell - step);
+		AddPossiblePossition(piece, PossibleMvt, rowCell +  step, colCell + 2 * step);
+		AddPossiblePossition(piece, PossibleMvt, rowCell +  step, colCell - 2 * step);
+		AddPossiblePossition(piece, PossibleMvt, rowCell + 2 * step, colCell + step);
+		AddPossiblePossition(piece, PossibleMvt, rowCell + 2 * step, colCell - step);
 
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell -  step, colCell - 2 * step);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell -  step, colCell + 2 * step);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell - 2 * step, colCell -  step);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell - 2 * step, colCell +  step);
+		AddPossiblePossition(piece, PossibleMvt, rowCell -  step, colCell - 2 * step);
+		AddPossiblePossition(piece, PossibleMvt, rowCell -  step, colCell + 2 * step);
+		AddPossiblePossition(piece, PossibleMvt, rowCell - 2 * step, colCell -  step);
+		AddPossiblePossition(piece, PossibleMvt, rowCell - 2 * step, colCell +  step);
 
 		break;
 	case 4: // tour
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + i * step, colCell);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell + i * step, colCell);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 			
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell - i * step, colCell);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell - i * step, colCell);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 			
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell, colCell + i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell, colCell + i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 			
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell, colCell - i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell, colCell - i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
@@ -513,71 +504,71 @@ bool Chess::GetPossiblePositionsOnBoard(Piece const& piece,
 		//fou type
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + i * step, colCell + i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell + i * step, colCell + i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + i * step, colCell - i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell + i * step, colCell - i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell - i * step, colCell + i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell - i * step, colCell + i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell - i * step, colCell - i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell - i * step, colCell - i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 		//tour type
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + i * step, colCell);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell + i * step, colCell);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell - i * step, colCell);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell - i * step, colCell);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell, colCell + i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell, colCell + i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 
 		for (int i = 1; i < 8; i++)
 		{
-			caseInfo = AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell, colCell - i * step);
+			caseInfo = AddPossiblePossition(piece, PossibleMvt,rowCell, colCell - i * step);
 			if (caseInfo == 0 || caseInfo == 2 || caseInfo == -1)
 				break;
 		}
 		break;
 	case 6: // roi
 		//+ type
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell +  step, colCell +  step);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell +  step, colCell -  step);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell -  step, colCell +  step);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell -  step, colCell -  step);
+		AddPossiblePossition(piece, PossibleMvt,rowCell +  step, colCell +  step);
+		AddPossiblePossition(piece, PossibleMvt,rowCell +  step, colCell -  step);
+		AddPossiblePossition(piece, PossibleMvt,rowCell -  step, colCell +  step);
+		AddPossiblePossition(piece, PossibleMvt,rowCell -  step, colCell -  step);
 		//x type
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell + step, colCell);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell - step, colCell);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell, colCell + step);
-		AddPossiblePossition(piece, possiblePos, movementTypes, inCheckVect,rowCell, colCell - step);
+		AddPossiblePossition(piece, PossibleMvt,rowCell + step, colCell);
+		AddPossiblePossition(piece, PossibleMvt,rowCell - step, colCell);
+		AddPossiblePossition(piece, PossibleMvt,rowCell, colCell + step);
+		AddPossiblePossition(piece, PossibleMvt,rowCell, colCell - step);
 
 	
 		break;
@@ -585,73 +576,78 @@ bool Chess::GetPossiblePositionsOnBoard(Piece const& piece,
 	}
 
 	// check valid condition
-	return (possiblePos.size() == movementTypes.size());
+	return true; //(possiblePos.size() == movementTypes.size());  //<<**********toDo
 }
 
-int Chess::CheckIfAnyPossiblePosIsSelected(Piece const& piece)
+int Chess::CheckIfAnyPossiblePosIsSelected(Piece const& piece) //<<**********toDo to review the algo (after changing to struct)
 {
 	// compare piece position (after release) with possible position
 	// and get index of that possible pos => then get movement type
 	// if mvt type is captured move the captured piece outside of bord
 	// return -1 : no possible pos is selected
 	int result = -1;
-	int index = 0;
-	int static capturedPColForPlayer1 = 630, capturedPColForPlayer2 = 630,
-		capturedPRowForPlayer1 = 520, capturedPRowForPlayer2 = 10, cpt = 0;
 
-	for (auto const& p : m_selectedPiecePossiblePositions)
+	int static	capturedPColForPlayer1 = leftMargin + 8 * cellSize + cellSize / 3,//+ cellSize/3, 
+				capturedPColForPlayer2 = leftMargin + 8 * cellSize + cellSize / 3,//+ cellSize/3,
+				capturedPRowForPlayer1 = 0.6*windowHeigh,
+				capturedPRowForPlayer2 = 0.2* windowWidth, cpt1 = 0, cpt2 = 0;
+
+	for (auto const& p : m_possibleMouvement)
 	{
-		if (piece.GetPosition().col == p.col)
-			if (piece.GetPosition().row == p.row)
-			{
-				result  = m_selectedPieceMovementTypes[index];
+		if ((piece.GetPosition().col == p.possiblePosition.col)  && (piece.GetPosition().row == p.possiblePosition.row))
+		{
+			// move captured piece if any
 
-				// move captured piece if any
+			int row = 0, col = 0;
 
-				int row = 0, col = 0;
+			GetBoardRowColFromPiecePosition(piece.GetPosition(), row, col, false);
 
-				GetBoardRowColFromPiecePosition(piece.GetPosition(), row, col, false);
+			if (p.movementType == 2) // captured mvt
+				// get corresponding piece info form cell case
 
-				if (result == 2)
-					// get corresponding piece info form cell case
-					if (flag_isPlayer1Turn)
+				if (flag_isPlayer1Turn)
+				{
+
+					if (m_Board[row][col].playerSide == !flag_isPlayer1Turn)
 					{
-						if (m_Board[row][col].playerSide == !flag_isPlayer1Turn)
-						{
-							player2[m_Board[row][col].pieceTeamIndex]->SetImageSize(35);
-							player2[m_Board[row][col].pieceTeamIndex]->SetPosition(Position(capturedPRowForPlayer1, capturedPColForPlayer1));
+						
+						player2[m_Board[row][col].pieceTeamIndex]->SetImageSize(35);
+						player2[m_Board[row][col].pieceTeamIndex]->SetPosition(Position(capturedPRowForPlayer1, capturedPColForPlayer1));
 
-							capturedPColForPlayer1 += 20;
-							if (cpt == 6)
-							{
-								cpt = 0;
-								capturedPColForPlayer1 = 630;
-								capturedPRowForPlayer1 += 30;
-							}
+						capturedPColForPlayer1 += 20;
+						cpt1++;
+
+						if (cpt1 == 6)
+						{
+							cpt1 = 0;
+							capturedPColForPlayer1 = leftMargin + 8 * cellSize + cellSize / 3;
+							capturedPRowForPlayer1 += 30;
+						}
 								
-							cpt++;
-						}
+						
 					}
-					else
+				}
+				else
+				{
+					if (m_Board[row][col].playerSide == !flag_isPlayer1Turn)
 					{
-						if (m_Board[row][col].playerSide == !flag_isPlayer1Turn)
-						{
-							player1[m_Board[row][col].pieceTeamIndex]->SetImageSize(35);
-							player1[m_Board[row][col].pieceTeamIndex]->SetPosition(Position(capturedPRowForPlayer2, capturedPColForPlayer2));
+						player1[m_Board[row][col].pieceTeamIndex]->SetImageSize(35);
+						player1[m_Board[row][col].pieceTeamIndex]->SetPosition(Position(capturedPRowForPlayer2, capturedPColForPlayer2));
 							
-							capturedPColForPlayer2 += 20;
-							if (cpt == 6)
-							{
-								cpt = 0;
-								capturedPRowForPlayer2 += 30;
-								capturedPColForPlayer2 = 630;
-							}
-							cpt++;
+						capturedPColForPlayer2 += 20;
+						cpt2++;
+
+						if (cpt2 == 6)
+						{
+							cpt2 = 0;
+							capturedPRowForPlayer2 += 30;
+							capturedPColForPlayer2 = leftMargin + 8 * cellSize + cellSize / 3;
 						}
+						
 					}
-			}
-					
-		index++;
+				}
+		}
+
 	}
 	
 	return result;
@@ -692,9 +688,9 @@ void Chess::FillCheckPositions()
 
 			std::cout << "current piece : " << piece->GetName() << " id: " << piece->getId() << std::endl;
 
-			posiblePos = {};
-			mvtType = {};
-			GetPossiblePositionsOnBoard(*piece, posiblePos, mvtType, m_player2InCheckCases);
+			m_possibleMouvement = {};
+
+			//GetPossiblePositionsOnBoard(*piece, m_possibleMouvement);  //<<**********toDo  not working anymore (we have to create a new fonction)
 
 			if (m_player2InCheckCases.size() != 0)
 			{
@@ -714,9 +710,11 @@ void Chess::FillCheckPositions()
 		// fill vector
 		for (auto const& piece : player1)
 		{
-			posiblePos = {};
-			mvtType = {};
-			GetPossiblePositionsOnBoard(*piece, posiblePos, mvtType, m_player1InCheckCases);
+			m_possibleMouvement = {};
+
+			//GetPossiblePositionsOnBoard(*piece, m_possibleMouvement);  //<<**********toDo  not working anymore (we have to create a new fonction)
+
+
 		}
 	}
 
@@ -726,13 +724,44 @@ void Chess::FillCheckPositions()
 		std::cout << "check case presnet player 2" << std::endl;
 }
 
+/*
+	convert a Position type to a ChessCase type
+	position : is the coordinates of that point on the window
+	chessCase : is the coordinates of that case on the board (0 to 7)
+*/
+ChessCase Chess::PosToCase(Position pos)
+{
+	// row = i * cellSize + topMargin
+	// col = j * cellSize + leftMargin
+
+	int i, j;
+	i = int((pos.row - topMargin)/ cellSize);
+	j = int((pos.col - leftMargin)/ cellSize);
+	ChessCase CCase(i, j);
+	return CCase;
+}
+
+/* 
+	convert a ChessCase type to Position type
+	position : is the coordinates of that point on the window
+	chessCase : is the coordinates of that case on the board (0 to 7)
+*/
+Position Chess::CaseToPos(ChessCase CCase)
+{
+	// row = i * cellSize + topMargin
+	// col = j * cellSize + leftMargin
+
+	int row, col;
+	row = CCase.row * cellSize + topMargin;
+	col = CCase.col * cellSize + leftMargin;
+	Position pos(row, col);
+	return pos;
+}
 
 
 
 int Chess::AddPossiblePossition(Piece const& piece, 
-								std::vector<Position>& positions, 
-								std::vector<int>& movementTypes, 
-								std::vector<int> &inCheckVect, 
+								std::vector<PossibleMouvement> & PossibleMvt,
 								int const& row, 
 								int const& col)
 {
@@ -750,24 +779,25 @@ int Chess::AddPossiblePossition(Piece const& piece,
 		// case is empty
 		if (m_Board[row][col].empty)
 		{
-			positions.push_back(m_Board[row][col].cellPosition);
+			
 			movementType = 1;
-			movementTypes.push_back(movementType);
+			PossibleMvt.push_back({ m_Board[row][col].cellPosition , movementType });
 
 		}
 		// enemy side & not king & not pion (pion capture otherwise)
 		else if (IsCapturableObstacle(row, col) )
 		{
-			positions.push_back(m_Board[row][col].cellPosition);
+			
 			movementType = 2;
-			movementTypes.push_back(movementType);
+			PossibleMvt.push_back({ m_Board[row][col].cellPosition , movementType });
 		}
 		// enemy side ( king ) check position : cant move
 		else if (IsCheckPosition(row, col))
 		{
+			
 			movementType = -1; // check  position
-			inCheckVect.push_back(movementType);
-			// dont push_back mouvementType vector because its not a possible move
+			PossibleMvt.push_back({ m_Board[row][col].cellPosition , movementType });
+			
 		}
 		// obstacle present (cant move)
 		else
@@ -798,7 +828,13 @@ bool Chess::IsCapturableObstacle(int const& row, int const& col) const
 	return false;
 }
 
-
+bool Chess::IsEnemyObstacle(int const& row, int const& col) const
+{
+	if (!m_Board[row][col].empty)
+		if (m_Board[row][col].playerSide != flag_isPlayer1Turn)
+			return true;
+	return false;
+}
 
 void Chess::MovePieceByStep(Piece & piece, Position step)
 {
@@ -818,6 +854,15 @@ void Chess::MovePieceToNewPos(Piece& piece, Position newPos)
 {
 	// move piece to the next position
 	piece.SetPosition(newPos);
+}
+
+void Chess::MovePieceToNewCase(Piece& piece, ChessCase CCase)
+{
+	// get the corresponding position on the window
+	Position newPos = CaseToPos(CCase);
+
+	// move it to the new pos
+	MovePieceToNewPos(piece, newPos);
 }
 
 void Chess::DragPiece()
@@ -863,21 +908,21 @@ void Chess::DragPiece()
 			// get possible postions
 			// m_selectedPieceMovementType : is updated
 			
-			std::vector<int> inCheckVect = {};
+			if (!flag_possibleMouvemntsAreCalculated)
+			{
+				bool valid = GetPossiblePositionsOnBoard(*player1[selectdPieceID], m_possibleMouvement);
 
-			bool valid = GetPossiblePositionsOnBoard(*player1[selectdPieceID], 
-										m_selectedPiecePossiblePositions,
-										m_selectedPieceMovementTypes,
-										inCheckVect);
-
-			if (!valid)
-				return;
+				flag_possibleMouvemntsAreCalculated = true;
+				
+				if (!valid)
+					return;
+			}
 
 			
 			// is player in check position ?
 			//player 1 turn => 
-			if (!inCheckVect.empty())
-				flag_player2InCheck = true;
+			//if (!inCheckVect.empty()) //<<**********toDo we removed incheckVect
+				//flag_player2InCheck = true;
 			//----------------------------------------------------------------
 
 			// set centerPiece = mousePos
@@ -909,22 +954,22 @@ void Chess::DragPiece()
 			// get possible postions
 			// m_selectedPieceMovementType : is updated
 
-			std::vector<int> inCheckVect = {};
 
-			bool valid = GetPossiblePositionsOnBoard(*player1[selectdPieceID],
-													m_selectedPiecePossiblePositions,
-													m_selectedPieceMovementTypes,
-													inCheckVect);
-
-			if (!valid)
-				return;
+			if (!flag_possibleMouvemntsAreCalculated)
+			{
+				bool valid = GetPossiblePositionsOnBoard(*player1[selectdPieceID], m_possibleMouvement);
+				flag_possibleMouvemntsAreCalculated = true;
+				if (!valid)
+					return;
+			}
+			
 
 
 
 			// is player in check position ?
 			//player 2 turn => 
-			if (!inCheckVect.empty())
-				flag_player1InCheck = true;
+			//if (!inCheckVect.empty())			//<<**********toDo not existing anymore
+				//flag_player1InCheck = true;
 			//----------------------------------------------------------------
 
 			// set centerPiece = mousePos
@@ -941,6 +986,9 @@ void Chess::ReleasePiece()
 
 	if(selectdPieceID != -1  && flag_isAnyPieceSelected) // security check
 	{
+		//restart the flag after realease
+		flag_possibleMouvemntsAreCalculated = false;
+
 		// correct draged Piece Position
 
 		if (flag_isPlayer1Turn)
@@ -1068,8 +1116,8 @@ Position Chess::GetCorrespondingBoardCase(Position centerPos)
 			{
 				// ceck if this new position is from Possible possitions 
 
-				for(auto const &p : m_selectedPiecePossiblePositions)
-					if (p.col == x && p.row == y)
+				for(auto const &p : m_possibleMouvement)
+					if (p.possiblePosition.col == x && p.possiblePosition.row == y)
 					{
 						result.row = y;
 						result.col = x;

@@ -19,6 +19,7 @@ int main()
 		/// theme 2
 		ligthBlue = { 204, 204, 255, 255 }, // with blue
 		vdarkBlue = { 0, 0, 102 , 255 },
+		
 
 		color1 = ligthBlue,// lightBrown, //ligthBlue,
 		color2 = BLUE, //beige,// = BLUE,

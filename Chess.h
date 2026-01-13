@@ -5,11 +5,18 @@
 #include "Piece.h"
 #include "raylib.h"
 #include "Position.h"
+#include "ChessCase.h"
 #include <string>
 #include <iomanip> // for setw() : cout
 
 class Chess : public Game
 {
+private:
+	struct PossibleMouvement {
+		Position possiblePosition;
+		int movementType;
+	};
+
 public :
 	Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin, int tMargin, Color c1, Color c2);
 	~Chess();
@@ -29,6 +36,8 @@ public :
 	void DrawPlayerPieces(std::vector<std::unique_ptr<Piece>> const &player);
 	void MovePieceByStep(Piece& piece, Position step);
 	void MovePieceToNewPos(Piece& piece, Position newPos);
+	void MovePieceToNewCase(Piece& piece, ChessCase CCase);
+
 	void DragPiece();
 	void ReleasePiece();
 	void CorrectPiecePosition(std::vector<std::unique_ptr<Piece>> & player);
@@ -38,10 +47,15 @@ public :
 	std::vector<std::unique_ptr<Piece>> InitPlayersPieces(bool player1Side);
 	void SetPlayerInitialPositions(std::vector<std::unique_ptr<Piece>>& vectOfPieces, std::string caseNames[]);
 	void DrawPossiblePositions(Color color);
-	bool GetPossiblePositionsOnBoard(Piece const& piece, std::vector<Position>& possiblePos, std::vector<int>& movementTypes, std::vector<int>& inCheckVect);
-	int CheckIfAnyPossiblePosIsSelected(Piece const& piece);
+	bool GetPossiblePositionsOnBoard(Piece const& piece, std::vector<PossibleMouvement> & PossibleMvt);
+	int  CheckIfAnyPossiblePosIsSelected(Piece const& piece);
 	bool isCheckPosition();
 	void FillCheckPositions( );
+
+	//conversion cell to pos
+	ChessCase PosToCase(Position pos);
+	Position CaseToPos(ChessCase CCase);
+
 
 	// m_borad fonctions
 	Position GetCellPosition(int i, int j);
@@ -56,8 +70,9 @@ public :
 	void GetBoardRowColFromCaseName(std::string caseName , int& row, int& col);
 	void GetBoardRowColFromPiecePosition(Position const & pos, int& row, int& col , bool beforePieceReleased) const;
 	void PrintBoardQuickInfo(std::string infoType) const;
-	int AddPossiblePossition(Piece const& piece , std::vector<Position>& positions, std::vector<int>& movementTypes, std::vector<int> &inCheckVect, int const &row, int const &col ) ;
+	int  AddPossiblePossition(Piece const& piece , std::vector<PossibleMouvement> &PossibleMvt, int const &row, int const &col ) ;
 	bool IsCapturableObstacle(int const &row, int const &col) const;
+	bool IsEnemyObstacle(int const& row, int const& col) const;
 	bool IsCheckPosition(int const&row , int const &col) const;
 
 private:
@@ -80,8 +95,11 @@ private:
 	std::vector<std::unique_ptr<Piece>> player1, player2;
 	int selectdPieceID;
 	Position selectedPieceOriginalPos;
-	std::vector<Position> m_selectedPiecePossiblePositions;
-	std::vector<int> m_selectedPieceMovementTypes;
+
+	std::vector<PossibleMouvement> m_possibleMouvement;
+	//std::vector<Position> m_selectedPiecePossiblePositions;
+	//std::vector<int> m_selectedPieceMovementTypes;
+
 	std::vector<int> m_player1InCheckCases;
 	std::vector<int> m_player2InCheckCases;
 	int m_selectedPieceMovementType;
@@ -114,7 +132,8 @@ private:
 		flag_isAnyPieceSelected,
 		flag_drawPosiblePositions,
 		flag_player1InCheck,
-		flag_player2InCheck;
+		flag_player2InCheck,
+		flag_possibleMouvemntsAreCalculated;
 	
 };
 
