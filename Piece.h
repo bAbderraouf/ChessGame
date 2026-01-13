@@ -27,6 +27,8 @@ public :
 	virtual Position GetPosition() const;
 	virtual Position GetCenterOfPiecePosition() const;
 	virtual Position GetLastPosition() const;
+	virtual int GetTeamIndex() const;
+	virtual void SetTeamIndex(int idx);
 	virtual void SetInitialPosition(Position pos);
 	virtual void SetPosition(Position pos);
 	virtual void SetCenterOfPiecePosition(Position pos);
@@ -49,6 +51,7 @@ protected:
 	Texture pieceTexture;
 	int imageSize;
 	std::string pieceName;
+	int m_teamIndex;
 
 	// flags
 	bool player1;

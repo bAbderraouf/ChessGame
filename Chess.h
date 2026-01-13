@@ -27,7 +27,8 @@ public :
 	//----------------------
 	void setGameFPS(int fps);
 	void DrawPlayerPieces(std::vector<std::unique_ptr<Piece>> const &player);
-	void MovePiece(Piece& piece, Position step);
+	void MovePieceByStep(Piece& piece, Position step);
+	void MovePieceToNewPos(Piece& piece, Position newPos);
 	void DragPiece();
 	void ReleasePiece();
 	void CorrectPiecePosition(std::vector<std::unique_ptr<Piece>> & player);
@@ -37,7 +38,10 @@ public :
 	std::vector<std::unique_ptr<Piece>> InitPlayersPieces(bool player1Side);
 	void SetPlayerInitialPositions(std::vector<std::unique_ptr<Piece>>& vectOfPieces, std::string caseNames[]);
 	void DrawPossiblePositions(Color color);
-	std::vector<Position> GetPossiblePositionsOnBoard(Piece const & piece) const;
+	bool GetPossiblePositionsOnBoard(Piece const& piece, std::vector<Position>& possiblePos, std::vector<int>& movementTypes, std::vector<int>& inCheckVect);
+	int CheckIfAnyPossiblePosIsSelected(Piece const& piece);
+	bool isCheckPosition();
+	void FillCheckPositions( );
 
 	// m_borad fonctions
 	Position GetCellPosition(int i, int j);
@@ -50,10 +54,11 @@ public :
 	void SetEmptyBoardInfo(bool player1Turn);
 	void SetNewValuesToBoardInfo(bool player1Turn);
 	void GetBoardRowColFromCaseName(std::string caseName , int& row, int& col);
-	void GetBoardRowColFromPiecePosition(Position const & pos, int& row, int& col) const;
+	void GetBoardRowColFromPiecePosition(Position const & pos, int& row, int& col , bool beforePieceReleased) const;
 	void PrintBoardQuickInfo(std::string infoType) const;
-	int AddPossiblePossition(std::vector<Position>& positions, Piece const& piece, int const &row, int const &col ) const;
+	int AddPossiblePossition(Piece const& piece , std::vector<Position>& positions, std::vector<int>& movementTypes, std::vector<int> &inCheckVect, int const &row, int const &col ) ;
 	bool IsCapturableObstacle(int const &row, int const &col) const;
+	bool IsCheckPosition(int const&row , int const &col) const;
 
 private:
 	Grid* grid;
@@ -62,6 +67,7 @@ private:
 	//window
 	int windowWidth, windowHeigh;
 	int gameFps;
+	Image m_screenshot;
 
 	//grid
 	int numRows;
@@ -75,6 +81,11 @@ private:
 	int selectdPieceID;
 	Position selectedPieceOriginalPos;
 	std::vector<Position> m_selectedPiecePossiblePositions;
+	std::vector<int> m_selectedPieceMovementTypes;
+	std::vector<int> m_player1InCheckCases;
+	std::vector<int> m_player2InCheckCases;
+	int m_selectedPieceMovementType;
+	
 
 	//Board case
 	struct infoCase 
@@ -82,6 +93,7 @@ private:
 		bool empty;
 		int idCell;
 		int idPiece;
+		int pieceTeamIndex;
 		Position cellPosition;
 		Position cellCentralPosition;
 		std::string pieceName;
@@ -95,13 +107,14 @@ private:
 
 	//flags
 	bool    flag_isPlayer1Turn,
-			flag_leftMouseButtonPressed,
-			flag_rightMouseButtonPressed,
-			flag_leftMouseButtonDown,
-			flag_leftMouseButtonReleased,
-			flag_isAnyPieceSelected,
-		flag_drawPosiblePositions;
-
+		flag_leftMouseButtonPressed,
+		flag_rightMouseButtonPressed,
+		flag_leftMouseButtonDown,
+		flag_leftMouseButtonReleased,
+		flag_isAnyPieceSelected,
+		flag_drawPosiblePositions,
+		flag_player1InCheck,
+		flag_player2InCheck;
 	
 };
 

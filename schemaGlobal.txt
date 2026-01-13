@@ -1,0 +1,62 @@
+---------------------------------------------------------------------------------------------
+Init()
+---------------------------------------------------------------------------------------------
+	InitWindow
+	InitGrid
+	InitBoardInfo()
+	InitPlayersPieces
+	InitVectors()
+	InitFlags()
+---------------------------------------------------------------------------------------------
+Input()
+---------------------------------------------------------------------------------------------
+	LeftPressed
+	RightPressed
+	LeftDown  => drag()
+	LeftReleased => release()
+--------------------------------------------------------------------------------------------
+Update()
+--------------------------------------------------------------------------------------------
+        if => LeftDown
+	------------
+	| DragPiece()
+	------------
+		-GetMousePos
+		-GetSelectedPiece()
+		-GetPiecePosition
+		-GetPossiblePositionsOnBoard(piece , possiblePos , mvtType , inCheck)  <<***********
+			-GetBoardRowColFromPiecePosition(pos, row, col, true)
+			-AddPossiblePossition(piece, posiblePos, mvtType, incheck)  <<***********
+				-IsCapturableObstacle()
+				-IsCheckPosition()
+		-SetCenterPieceToCursorPosition()
+		-MovePiece()
+       if => LeftReleased 
+	---------------
+	ReleasePiece()  
+	---------------
+		-CorrectPiecePosition(player)
+			-GetCorrespondingBoardCase(centerPos)
+			-MovePiece()
+	------------
+	CheckIfAnyPossiblePosIsSelected(player)
+	------------
+		-CapturePiece()
+	------------
+	UpdateBoardInfo(playerTurn)
+	------------
+	InitVectors(m_selectedPiecePossiblePositions)
+	InitFlags()
+---------------------------------------------------------------------------------------------
+Draw()
+---------------------------------------------------------------------------------------------
+	DrawGrid()
+	DrawPossbilePositions(color)
+	DrawPlayerPieces()
+---------------------------------------------------------------------------------------------
+
+
+problesm:
+fillcheckpositions fiha pb
+m_selectedPiecePossiblePositions (while capturing is too much long)
+capture pieces (has a problem) both sides (capture is done but piece is not drawn at right side)

@@ -9,6 +9,7 @@ Piece::Piece(bool player1Side)
 	centerPos(0, 0)
 {
 	id = 0;
+	m_teamIndex = -1; 
 	player1 = player1Side;
 	flag_isSelected = false;
 	flag_neverMoved = true;
@@ -92,6 +93,16 @@ Position Piece::GetCenterOfPiecePosition() const
 Position Piece::GetLastPosition() const
 {
 	return this->lastPos;
+}
+
+int Piece::GetTeamIndex() const
+{
+	return this->m_teamIndex;
+}
+
+void Piece::SetTeamIndex(int idx)
+{
+	this->m_teamIndex = idx;
 }
 
 //-------------------------------------------------------------
