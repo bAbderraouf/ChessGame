@@ -11,6 +11,7 @@ Piece::Piece(bool player1Side)
 	id = 0;
 	m_teamIndex = -1; 
 	player1 = player1Side;
+	m_isCaptured = false;
 	flag_isSelected = false;
 	flag_neverMoved = true;
 	pieceName = "";
@@ -215,6 +216,16 @@ void Piece::SetNeverMoved(bool neverMoved)
 bool Piece::IsNeverMoved() const
 {
 	return this->flag_neverMoved;
+}
+
+bool Piece::IsCaptured() const
+{
+	return m_isCaptured;
+}
+
+void Piece::SetCaptured(bool isCaptured)
+{
+	m_isCaptured = isCaptured;
 }
 
 std::vector<Position> Piece::GetPosiblePositionsOnBoard(int cellSize) const

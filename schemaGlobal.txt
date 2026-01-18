@@ -26,7 +26,7 @@ Update()
 		-GetPiecePosition
 		-GetPossiblePositionsOnBoard(piece , possiblePos , mvtType , inCheck)  <<***********
 			-GetBoardRowColFromPiecePosition(pos, row, col, true)
-			-AddPossiblePossition(piece, posiblePos, mvtType, incheck)  <<***********
+			-AddPossiblePossition(piece, posiblePos, mvtType, incheck)  <<***********		
 				-IsCapturableObstacle()
 				-IsCheckPosition()
 		-SetCenterPieceToCursorPosition()
@@ -39,7 +39,7 @@ Update()
 			-GetCorrespondingBoardCase(centerPos)
 			-MovePiece()
 	------------
-	CheckIfAnyPossiblePosIsSelected(player)
+	CheckIfAnyPossiblePosIsSelected(player)  // check if selected pos == capture mouvement
 	------------
 		-CapturePiece()
 	------------

@@ -42,6 +42,8 @@ public :
 	virtual bool IsSelected() const;
 	virtual void SetNeverMoved(bool neverMoved);
 	virtual bool IsNeverMoved() const;
+	virtual bool IsCaptured() const;
+	virtual void SetCaptured(bool isCaptured);
 	virtual std::vector<Position> GetPosiblePositionsOnBoard(int cellSize) const;
 
 
@@ -52,6 +54,7 @@ protected:
 	int imageSize;
 	std::string pieceName;
 	int m_teamIndex;
+	bool m_isCaptured;
 
 	// flags
 	bool player1;
