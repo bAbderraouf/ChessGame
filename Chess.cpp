@@ -106,7 +106,10 @@ void Chess::Init()
 	flag_isAnyPieceSelected = false;
 	flag_player1InCheck = false;
 	flag_player2InCheck = false;
+	flag_isMovementAllowed = false;
+	flag_isAnyPieceCaptured = false;
 	flag_possibleMouvemntsAreCalculated = false;
+
 	
 }
 
@@ -179,35 +182,44 @@ void Chess::Update()
 			// chek movement type (if captured)
 
 			if (flag_isPlayer1Turn)
-				CheckIfAnyPossiblePosIsSelected(*player1[selectdPieceID]);
+				flag_isAnyPieceCaptured = IsAnyPieceCaptured(*player1[selectdPieceID]);  //<<*******ToDo better without paramaetre (check player side inside the fct)
 			else
-				CheckIfAnyPossiblePosIsSelected(*player2[selectdPieceID]);
+				flag_isAnyPieceCaptured = IsAnyPieceCaptured(*player2[selectdPieceID]);
 
 
 		}
 		
-		
+		//----------------------------------
 		// update m_board for each piece released
-
+		//----------------------------------
 		UpdateBoardInfo(flag_isPlayer1Turn);
 
+
+
+		//----------------------------------
+		// Change player side if turn is finished
+		//----------------------------------
+		if (IsTurnFinished())
+			ChangeTurn();
+
+		
+		// print infos
+		//----------------------------------
 		PrintBoardQuickInfo("indexes", m_board);
 
 		PrintBoardQuickInfo("Names", m_board);
 
-		selectdPieceID = -1; // no selected piece
 
-		//m_selectedPieceMovementType = -1; //movement finished   //<<**********toDo is it necesaary after modifs?
+		// reset values
+		//----------------------------------
+		selectdPieceID = -1; // no selected piece
 
 		flag_isAnyPieceSelected = false;
 
-
-
-		m_possibleMouvement = {}; // reset to empty vector
-
-
 		// erase vectors
+		m_possibleMouvement = {}; // reset to empty vector	
 		std::vector<PossibleMouvement>().swap(m_possibleMouvement);
+
 
 	}
 
@@ -220,7 +232,7 @@ void Chess::Update()
 
 		// change player side
 
-			ChangeTurn();
+		ChangeTurn();  //<<****ToDo to be remove at the end (only for tests)
 		
 	}
 }
@@ -912,13 +924,13 @@ bool Chess::GetPossiblePositionsOnBoardFromBoard(	ChessCase const& cellCoords,
 	return true; //(possiblePos.size() == movementTypes.size());  //<<**********toDo
 }
 
-int Chess::CheckIfAnyPossiblePosIsSelected(Piece const& piece) //<<**********toDo to review the algo (after changing to struct)
+bool Chess::IsAnyPieceCaptured(Piece const& piece) //<<**********toDo to review the algo (after changing to struct)
 {
 	// compare piece position (after release) with possible position
 	// and get index of that possible pos => then get movement type
 	// if mvt type is captured move the captured piece outside of bord
-	// return -1 : no possible pos is selected
-	int result = -1;
+	// return false : if no possible pos is selected or no piece is captured
+	bool captured = false;
 
 	float static	capturedPColForPlayer1 = leftMargin + 8 * cellSize + cellSize / 3,//+ cellSize/3, 
 					capturedPColForPlayer2 = leftMargin + 8 * cellSize + cellSize / 3,//+ cellSize/3,
@@ -944,7 +956,7 @@ int Chess::CheckIfAnyPossiblePosIsSelected(Piece const& piece) //<<**********toD
 
 					if (m_board.at(row).at(col).playerSide == !flag_isPlayer1Turn)
 					{
-						
+						// capturePiece <<********ToDo  : creat a sepearte function for cpature
 						player2[m_board.at(row).at(col).pieceTeamIndex]->SetImageSize(35);
 						player2[m_board.at(row).at(col).pieceTeamIndex]->SetPosition(Position(capturedPRowForPlayer1, capturedPColForPlayer1));
 
@@ -962,13 +974,16 @@ int Chess::CheckIfAnyPossiblePosIsSelected(Piece const& piece) //<<**********toD
 							capturedPRowForPlayer1 += 30;
 						}
 								
-						
+						//<<******To Do : add a break after captured movement (or just return true)
+						captured = true;
+						break;
 					}
 				}
 				else
 				{
 					if (m_board.at(row).at(col).playerSide == !flag_isPlayer1Turn)
 					{
+						// capturePiece <<********ToDo  : creat a sepearte function for cpature
 						player1[m_board.at(row).at(col).pieceTeamIndex]->SetImageSize(35);
 						player1[m_board.at(row).at(col).pieceTeamIndex]->SetPosition(Position(capturedPRowForPlayer2, capturedPColForPlayer2));
 
@@ -987,13 +1002,16 @@ int Chess::CheckIfAnyPossiblePosIsSelected(Piece const& piece) //<<**********toD
 							capturedPColForPlayer2 = leftMargin + 8 * cellSize + cellSize / 3;
 						}
 						
+						//<<******To Do : add a break after captured movement (or just return true)
+						captured = true;
+						break;
 					}
 				}
 		}
 
 	}
 	
-	return result;
+	return captured;
 }
 
 
@@ -1113,6 +1131,20 @@ bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& playe
 
 	}
 
+}
+
+/*
+* the turn will be finished if movement is allowed in release function
+* or if piece is captured 
+* otherwise the player side should be kept as is
+* @return true if movement is finished then side should be changed
+* maybe only the drag action is finished maybe the turn still present.
+*/
+bool Chess::IsTurnFinished()
+{
+	if (flag_isMovementAllowed || flag_isAnyPieceCaptured)
+		return true;
+	return false;
 }
 
 /*
@@ -1349,27 +1381,77 @@ ChessCase Chess::GetAttackedKingCoordsOnTheBoard(bool const& attackedSide , Boar
 */
 bool Chess::IsNextMoveValid(Piece const& piece, ChessCase const& nextPosition, Board const &board, enPlayerNum const& playerNum)
 {
-	// make a copy from board
-	Board temp_board = board; 
-
-	// get coordinates of last position
-	ChessCase lastPosition = PosToCase(selectedPieceOriginalPos);
-
-	//set starting cell to empty
-	temp_board.at(lastPosition.row).at(lastPosition.col).setToEmpty();
-
-	//set next cell info
-	SetCellInfo(piece, nextPosition.row, nextPosition.col, temp_board);
-	std::cout << BLUEE << "=====temp_board====" << std::endl;
-	PrintBoardQuickInfo("Names", temp_board);
-	PrintBoardQuickInfo("indexes", temp_board);
-	std::cout << "=====temp_board====" << RESET <<std::endl;
-	//board is updated with next move info 
-	// now we should check if check possitions exists
-
-	bool stillInCheck = IsPlayerInCheckPosition(temp_board, playerNum);
 	
-	return stillInCheck? false : true;
+	ChessCase currentPosition = PosToCase(selectedPieceOriginalPos);
+
+	if (IsSameCoordinates(currentPosition, nextPosition)) // should move to a new postion to finish the turn
+		return false;
+	else 
+	{
+		// make a copy from board
+		Board temp_board = board;
+
+		// get coordinates of last position
+		ChessCase lastPosition = PosToCase(selectedPieceOriginalPos);
+
+		//set starting cell to empty
+		temp_board.at(lastPosition.row).at(lastPosition.col).setToEmpty();
+
+		//set next cell info
+		SetCellInfo(piece, nextPosition.row, nextPosition.col, temp_board);
+		std::cout << BLUEE << "=====temp_board====" << std::endl;
+		PrintBoardQuickInfo("Names", temp_board);
+		PrintBoardQuickInfo("indexes", temp_board);
+		std::cout << "=====temp_board====" << RESET << std::endl;
+		//board is updated with next move info 
+		// now we should check if check possitions exists
+
+		bool isAnyCheckPosition = IsPlayerInCheckPosition(temp_board, playerNum); // still in check or not
+
+		return (isAnyCheckPosition ? false : true);
+	}
+	
+	
+}
+
+void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
+{
+	if (flag_isPlayer1Turn)
+	{	// case player 1
+
+		if (IsNextMoveValid(*player1[selectdPieceID], selectedMoveCell, m_board, enPlayerNum::PLAYER1))
+		{
+			// allow the move
+			flag_player1InCheck = false;
+			flag_isMovementAllowed = true;
+		}
+
+		else
+		{
+			// back to orignal position
+			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
+			flag_player1InCheck = true;
+			flag_isMovementAllowed = false;
+		}
+	}
+
+	else // case player 2
+	{
+		if (IsNextMoveValid(*player2[selectdPieceID], selectedMoveCell , m_board, enPlayerNum::PLAYER2))
+		{
+			// allow the move
+			flag_player2InCheck = false;
+			flag_isMovementAllowed = true;
+		}
+
+		else
+		{
+			// back to orignal position
+			selectedMoveCell = PosToCase(selectedPieceOriginalPos);  // return the original position (before the drag)
+			flag_player2InCheck = true;
+			flag_isMovementAllowed = false;
+		}
+	}
 }
 
 Chess::stPiece Chess::GetPieceFromBoardCell(infoCase const& cell )
@@ -1473,9 +1555,11 @@ void Chess::ChangeTurn()
 
 	flag_isPlayer1Turn = !flag_isPlayer1Turn;
 
-	// init flags
+	// reset movement flags
 	flag_player1InCheck = false;
 	flag_player2InCheck = false;
+	flag_isMovementAllowed = false;
+	flag_isAnyPieceCaptured = false;
 
 	// check if current player is in check position
 	if(flag_isPlayer1Turn)
@@ -1532,7 +1616,7 @@ void Chess::DragPiece()
 			// get possible postions
 			// m_selectedPieceMovementType : is updated
 			
-			if (!flag_possibleMouvemntsAreCalculated)
+			if (!flag_possibleMouvemntsAreCalculated) //<<*******ToDo no need to that
 			{
 				UpdateBoardInfo(flag_isPlayer1Turn);
 				Position pos = player1[selectdPieceID]->GetPosition();
@@ -1624,17 +1708,11 @@ void Chess::ReleasePiece()
 
 	if(selectdPieceID != -1  && flag_isAnyPieceSelected) // security check
 	{
-		// correct draged Piece Position
+		// correct draged Piece Position (allow or not the movement )
 		if (flag_isPlayer1Turn)
-			//if (flag_MovesAreNotAlowed)  // player1 turn => we should check player2
-				CorrectPiecePosition(player1);		// no check position => alow player1 to move
-			//else
-				//player1[selectdPieceID]->SetPosition(selectedPieceOriginalPos);
+				CorrectPiecePosition(player1);		
 		else
-			//if (flag_MovesAreNotAlowed)  // player2 turn => we should check player1
-				CorrectPiecePosition(player2);		// no check position => alow player2 to move
-			//else
-				//player2[selectdPieceID]->SetPosition(selectedPieceOriginalPos);
+				CorrectPiecePosition(player2);		
 		
 	}	
 }
@@ -1660,57 +1738,30 @@ void Chess::CorrectPiecePosition(std::vector<std::unique_ptr<Piece>>& player)
 	// in case the piece shouldnt move => we should back to its orignal position (before the drag)
 
 	Position correspondingCase = GetCorrespondingBoardCase(centerPos);
+	ChessCase correspondingCell = PosToCase(correspondingCase);
 
-	//
-	// check if check case is present
-						// case player 1
-	
-	
-	
-	if ( flag_isPlayer1Turn)
-	{
-		
-		if(IsNextMoveValid(*player1[selectdPieceID] , PosToCase(correspondingCase), m_board , enPlayerNum::PLAYER1))
-		{
-			// allow the move
-			flag_player1InCheck = false;
-		}
+	//----------------------------------
+	// check if check position is present				
+	//----------------------------------
+	ValidateCurrentMove(correspondingCell);
 
-		else
-		{
-			flag_player1InCheck = true;
-			correspondingCase = selectedPieceOriginalPos; // return the original position (before the drag)
-		}
-	}
-		 
-	else 
-	{
-		if (IsNextMoveValid(*player2[selectdPieceID], PosToCase(correspondingCase), m_board, enPlayerNum::PLAYER2))
-		{
-			// allow the move
-			flag_player2InCheck = false;
-		}
 
-		else
-		{
-			flag_player2InCheck = true;
-			correspondingCase = selectedPieceOriginalPos; // return the original position (before the drag)
-		}
-	}
+	flag_possibleMouvemntsAreCalculated = false;  //<<******ToDo no need
+	MovePieceToNewCase(*player[selectdPieceID], correspondingCell);
 	
-	
-
+	/*
 	// calculate step    <<******To do : no need to callculate step since we have a new function
 	Position step(0, 0);
 	step.row = correspondingCase.row - currentPos.row;
 	step.col = correspondingCase.col - currentPos.col;
 
 	//restart the flag after realease
-	flag_possibleMouvemntsAreCalculated = false;
+	flag_possibleMouvemntsAreCalculated = false;  //<<******ToDo no need
 
 	// move piece to the corresponding case
 	MovePieceByStep(*player[selectdPieceID], step);  //<<*******To do : use the ne function movetopos or move to case
 	//MovePieceToNewPos(*player[selectdPieceID], correspondingCase);
+	*/
 
 	// check if piece is moved 
 	bool colCondition = selectedPieceOriginalPos.col != player[selectdPieceID]->GetPosition().col;
@@ -1981,6 +2032,11 @@ bool Chess::Compare2Cells(infoCase const& cell1, infoCase const& cell2)
 	
 
 	return condition;
+}
+
+bool Chess::IsSameCoordinates(ChessCase const& cell1, ChessCase const& cell2)
+{
+	return (cell1.row == cell2.row && cell1.col == cell2.col);
 }
 
 void Chess::GetBoardRowColFromCaseName(std::string caseName , int& row, int& col)

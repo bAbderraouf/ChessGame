@@ -11,7 +11,7 @@ Init()
 Input()
 ---------------------------------------------------------------------------------------------
 	LeftPressed
-	RightPressed
+	RightPressed => ChangeTurn();
 	LeftDown  => drag()
 	LeftReleased => release()
 --------------------------------------------------------------------------------------------
@@ -37,15 +37,16 @@ Update()
 	---------------
 		-CorrectPiecePosition(player)
 			-GetCorrespondingBoardCase(centerPos)
+			-ValidateCurrentMove(correspondingCell)
 			-MovePiece()
 	------------
-	CheckIfAnyPossiblePosIsSelected(player)  // check if selected pos == capture mouvement
+	IsAnyPieceCaptured(player)  // check if selected pos == capture mouvement
 	------------
 		-CapturePiece()
 	------------
 	UpdateBoardInfo(playerTurn)
 	------------
-	InitVectors(m_selectedPiecePossiblePositions)
+	InitVectors(m_possibleMouvement)
 	InitFlags()
 ---------------------------------------------------------------------------------------------
 Draw()
@@ -60,3 +61,8 @@ problesm:
 fillcheckpositions fiha pb
 m_selectedPiecePossiblePositions (while capturing is too much long)
 capture pieces (has a problem) both sides (capture is done but piece is not drawn at right side)
+
+
+
+		if (IsNextMoveValid(*player1[selectdPieceID], PosToCase(correspondingCase), m_board, enPlayerNum::PLAYER1))
+// case player 1

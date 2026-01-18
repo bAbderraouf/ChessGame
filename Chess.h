@@ -64,12 +64,6 @@ private:
 	Position selectedPieceOriginalPos;
 
 	std::vector<PossibleMouvement> m_possibleMouvement;
-	//std::vector<Position> m_selectedPiecePossiblePositions;
-	//std::vector<int> m_selectedPieceMovementTypes;
-
-	//std::vector<int> m_player1InCheckCases;
-	//std::vector<int> m_player2InCheckCases;
-	//int m_selectedPieceMovementType;
 
 
 	//Board case
@@ -100,9 +94,10 @@ private:
 			flag_leftMouseButtonDown,
 			flag_leftMouseButtonReleased,
 			flag_isAnyPieceSelected,
-			flag_drawPosiblePositions,
 			flag_player1InCheck,
 			flag_player2InCheck,
+			flag_isMovementAllowed,
+			flag_isAnyPieceCaptured,
 			flag_possibleMouvemntsAreCalculated;
 
 
@@ -144,8 +139,9 @@ public :
 												Board const & board, 
 												std::vector<PossibleMouvement>& PossibleMvt, 
 												enActionType const& ActionType);
-	int  CheckIfAnyPossiblePosIsSelected(Piece const& piece);
+	bool  IsAnyPieceCaptured(Piece const& piece);
 	bool IsPlayerInCheckPosition(Board const& board , enPlayerNum const & playerNum);
+	bool IsTurnFinished();
 
 	//conversion cell to pos
 	ChessCase PosToCase(Position pos);
@@ -164,6 +160,7 @@ public :
 	void SetEmptyBoardInfo(bool player1Turn);
 	void SetNewValuesToBoardInfo(bool player1Turn);
 	bool Compare2Cells(infoCase const& cell1, infoCase const& cell2);
+	bool IsSameCoordinates(ChessCase const& cell1, ChessCase const& cell2);
 	void GetBoardRowColFromCaseName(std::string caseName , int& row, int& col);
 	void GetBoardRowColFromPiecePosition(Position const & pos, int& row, int& col , bool beforePieceReleased) const;
 	void PrintBoardQuickInfo(std::string infoType , Board const & board) const;
@@ -187,6 +184,8 @@ public :
 	bool IsAnyCheckPossitionExists(std::vector<PossibleMouvement> const & PossibleMvt);  // for each piece
 	ChessCase GetAttackedKingCoordsOnTheBoard(bool const & attackedSide, Board const& board) const;
 	bool IsNextMoveValid(Piece const &piece, ChessCase const & nextPosition , Board const & board , enPlayerNum const& playerNum);
+
+	void ValidateCurrentMove( ChessCase & selectedMoveCell );
 	stPiece GetPieceFromBoardCell(infoCase const& cell);
 
 	bool IsValidIdx(int const &row, int const &col) const;
