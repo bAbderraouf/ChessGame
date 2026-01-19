@@ -40,7 +40,7 @@ It features a custom chess engine with full rule validation, turn and state mana
 - Better animations / effects
 
 # Setup
-## Prérequis
+## Prerequisites
 - C++17 compatible compiler (g++, MSVC, etc.)
 - [Raylib](https://www.raylib.com/) library installed.
 - Git to clone the project.
@@ -49,4 +49,4 @@ It features a custom chess engine with full rule validation, turn and state mana
 ```bash
 git clone https://github.com/bAbderraouf/ChessGame.git
 
-<!-- TODO: Installation Guide , Exemple d’utilisation , Licence (MIT, Apache, etc.)-->
+<!-- TODO: Installation Guide , Exemple d’utilisation , Licence (MIT, Apache, etc.) -->
