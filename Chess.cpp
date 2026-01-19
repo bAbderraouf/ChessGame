@@ -1,7 +1,7 @@
 #include "Chess.h"
 
 Chess::Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin, int tMargin, Color c1, Color c2)
-: selectedPieceOriginalPos(0, 0)
+	: selectedPieceOriginalPos(0, 0), selectedPieceCurrentPos(0, 0)
 {
 	// game window
 	windowWidth = w;
@@ -186,15 +186,17 @@ void Chess::Update()
 			else
 				flag_isAnyPieceCaptured = IsAnyPieceCaptured(*player2[selectdPieceID]);
 
-
 		}
 		
 		//----------------------------------
 		// update m_board for each piece released
 		//----------------------------------
 		UpdateBoardInfo(flag_isPlayer1Turn);
-
-
+		
+		//----------------------------------
+		// update PionPromotion
+		//----------------------------------
+		PionPromotion();
 
 		//----------------------------------
 		// Change player side if turn is finished
@@ -1414,6 +1416,15 @@ bool Chess::IsNextMoveValid(Piece const& piece, ChessCase const& nextPosition, B
 	
 }
 
+/*
+* @brief validate the current move selected:
+* 1 - in case no check position =>  the move is valid 
+* 2 - otherwise we should back to the original position of the piece (before the drag)
+* @param selectedMoveCell : the corresponding case to the draged piece (current move selected by the player), 
+* this variable is modified and retrned
+* @return validated piece position
+* 
+*/
 void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 {
 	if (flag_isPlayer1Turn)
@@ -1424,6 +1435,7 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 			// allow the move
 			flag_player1InCheck = false;
 			flag_isMovementAllowed = true;
+			selectedPieceCurrentPos = CaseToPos(selectedMoveCell);
 		}
 
 		else
@@ -1442,6 +1454,7 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 			// allow the move
 			flag_player2InCheck = false;
 			flag_isMovementAllowed = true;
+			selectedPieceCurrentPos = CaseToPos(selectedMoveCell);
 		}
 
 		else
@@ -1466,6 +1479,63 @@ Chess::stPiece Chess::GetPieceFromBoardCell(infoCase const& cell )
 			return { side , pieceTeamIndex };
 	}
 	return { 0,-1 };
+}
+
+void Chess::PionPromotion()
+{
+	if (selectdPieceID != -1)
+	{
+		if (flag_isPlayer1Turn)
+		{
+			if (player1[selectdPieceID]->getId() == 1 && PosToCase(player1[selectdPieceID]->GetPosition()).row == 0)
+			{
+				
+				
+				// remplacer le pion par une damme
+				auto p = std::make_unique<Dame>(flag_isPlayer1Turn);
+				player1[selectdPieceID] = std::move(p); 
+				
+				player1[selectdPieceID]->SetPosition(selectedPieceCurrentPos);
+				player1[selectdPieceID]->SetImageSize(cellSize);
+				player1[selectdPieceID]->SetTeamIndex(selectdPieceID);
+
+				ChessCase cellPos = PosToCase(selectedPieceCurrentPos);
+				UpdateCellInfo(*player1[selectdPieceID], cellPos.row , cellPos.col , m_board);
+			}
+		}
+		else
+		{
+			if (player2[selectdPieceID]->getId() == 1 && PosToCase(player2[selectdPieceID]->GetPosition()).row == 7)
+			{
+
+				// remplacer le pion par une damme
+				auto p = std::make_unique<Dame>(flag_isPlayer1Turn);
+				player2[selectdPieceID] = std::move(p);
+
+				player2[selectdPieceID]->SetPosition(selectedPieceCurrentPos);
+				player2[selectdPieceID]->SetImageSize(cellSize);
+				player2[selectdPieceID]->SetTeamIndex(selectdPieceID);
+
+				ChessCase cellPos = PosToCase(selectedPieceCurrentPos);
+				UpdateCellInfo(*player2[selectdPieceID], cellPos.row, cellPos.col, m_board);
+			}
+		}
+	}
+
+	/*
+	//set piece to corresponding position
+		vectOfPieces[i]->SetPosition(GetPostionFromBoardCaseName(caseNames[i]));
+
+		//set initial position for current piece
+		vectOfPieces[i]->SetInitialPosition(vectOfPieces[i]->GetPosition());
+
+		// get corresponndging board row & col
+		int row, col;
+		GetBoardRowColFromCaseName(caseNames[i], row, col);
+
+		// update m_board corresponding case
+		UpdateCellInfo(*vectOfPieces[i], row, col, m_board);
+	*/
 }
 
 bool Chess::IsValidIdx(int const &row, int const &col) const
@@ -1641,7 +1711,7 @@ void Chess::DragPiece()
 			// set centerPiece = mousePos
 			SetCenterPieceToCursorPosition(*player1[selectdPieceID], cursorPos);
 
-			// drag piece to cursor position
+			// drag piece to cursor position (center of piece folows cursor)
 			MovePieceByStep(*player1[selectdPieceID], step);
 
 
@@ -1694,7 +1764,7 @@ void Chess::DragPiece()
 			// set centerPiece = mousePos
 			SetCenterPieceToCursorPosition(*player2[selectdPieceID], cursorPos);
 
-			// drag piece to cursor position
+			// drag piece to cursor position (center of piece folows cursor)
 			MovePieceByStep(*player2[selectdPieceID], step);
 		}
 	}
@@ -1702,21 +1772,13 @@ void Chess::DragPiece()
 
 void Chess::ReleasePiece()
 {
-	// check pos
-	if (flag_player1InCheck || flag_player2InCheck)
-		std::cout << RED << "MovesAreNotAlowed" << WHITE << std::endl;
-
 	if(selectdPieceID != -1  && flag_isAnyPieceSelected) // security check
 	{
 		// correct draged Piece Position (allow or not the movement )
-		if (flag_isPlayer1Turn)
-				CorrectPiecePosition(player1);		
-		else
-				CorrectPiecePosition(player2);		
-		
+		CorrectDragedPiecePosition();
+
 	}	
 }
-
 
 
 /*
@@ -1725,54 +1787,84 @@ void Chess::ReleasePiece()
 * otherwise the piece should comme back to its last position before the drag
 * note : executing this function means there is no check possition
 */
-void Chess::CorrectPiecePosition(std::vector<std::unique_ptr<Piece>>& player)
+void Chess::CorrectDragedPiecePosition()
 {
-	// get center pos
-	Position centerPos = player[selectdPieceID]->GetCenterOfPiecePosition();
-
-	// get current pos
-	Position currentPos = player[selectdPieceID]->GetPosition();
-
-	// get corresponding board case position 
-	// here we should decide if the piece should move or not
-	// in case the piece shouldnt move => we should back to its orignal position (before the drag)
-
-	Position correspondingCase = GetCorrespondingBoardCase(centerPos);
-	ChessCase correspondingCell = PosToCase(correspondingCase);
-
-	//----------------------------------
-	// check if check position is present				
-	//----------------------------------
-	ValidateCurrentMove(correspondingCell);
-
-
-	flag_possibleMouvemntsAreCalculated = false;  //<<******ToDo no need
-	MovePieceToNewCase(*player[selectdPieceID], correspondingCell);
-	
-	/*
-	// calculate step    <<******To do : no need to callculate step since we have a new function
-	Position step(0, 0);
-	step.row = correspondingCase.row - currentPos.row;
-	step.col = correspondingCase.col - currentPos.col;
-
-	//restart the flag after realease
-	flag_possibleMouvemntsAreCalculated = false;  //<<******ToDo no need
-
-	// move piece to the corresponding case
-	MovePieceByStep(*player[selectdPieceID], step);  //<<*******To do : use the ne function movetopos or move to case
-	//MovePieceToNewPos(*player[selectdPieceID], correspondingCase);
-	*/
-
-	// check if piece is moved 
-	bool colCondition = selectedPieceOriginalPos.col != player[selectdPieceID]->GetPosition().col;
-	bool rowCondition = selectedPieceOriginalPos.row != player[selectdPieceID]->GetPosition().row;
-
-	if (colCondition || rowCondition)
+	if (flag_isPlayer1Turn) // player1 turn
 	{
-		player[selectdPieceID]->SetNeverMoved(false);
-		player[selectdPieceID]->SetLastPosition(selectedPieceOriginalPos);
-	}
+		// get center pos
+		Position centerPos = player1[selectdPieceID]->GetCenterOfPiecePosition();
 
+		// get current pos
+		Position currentPos = player1[selectdPieceID]->GetPosition();
+
+		
+		// here we should decide if the piece should move or not
+		// in case the piece shouldnt move => we should back to its orignal position (before the drag)
+
+		// get corresponding board case position 
+		Position correspondingCase = GetCorrespondingBoardCase(centerPos);
+		ChessCase correspondingCell = PosToCase(correspondingCase);
+
+		//----------------------------------
+		// check if check position is present				
+		//----------------------------------
+		ValidateCurrentMove(correspondingCell);
+
+
+		flag_possibleMouvemntsAreCalculated = false;  //<<******ToDo no need
+
+		// move piece to the corresponding case
+		MovePieceToNewCase(*player1[selectdPieceID], correspondingCell);
+
+		// check if piece is moved 
+		bool colCondition = selectedPieceOriginalPos.col != player1[selectdPieceID]->GetPosition().col;
+		bool rowCondition = selectedPieceOriginalPos.row != player1[selectdPieceID]->GetPosition().row;
+
+		if (colCondition || rowCondition)
+		{
+			player1[selectdPieceID]->SetNeverMoved(false);
+			player1[selectdPieceID]->SetLastPosition(selectedPieceOriginalPos);
+		}
+
+	}
+	else
+	{
+		// get center pos
+		Position centerPos = player2[selectdPieceID]->GetCenterOfPiecePosition();
+
+		// get current pos
+		Position currentPos = player2[selectdPieceID]->GetPosition();
+
+		
+		// here we should decide if the piece should move or not
+		// in case the piece shouldnt move => we should back to its orignal position (before the drag)
+
+		// get corresponding board case position 
+		Position correspondingCase = GetCorrespondingBoardCase(centerPos);
+		ChessCase correspondingCell = PosToCase(correspondingCase);
+
+		//----------------------------------
+		// check if check position is present				
+		//----------------------------------
+		ValidateCurrentMove(correspondingCell);
+
+
+		flag_possibleMouvemntsAreCalculated = false;  //<<******ToDo no need
+
+		// move piece to the corresponding case
+		MovePieceToNewCase(*player2[selectdPieceID], correspondingCell);
+
+		// check if piece is moved 
+		bool colCondition = selectedPieceOriginalPos.col != player2[selectdPieceID]->GetPosition().col;
+		bool rowCondition = selectedPieceOriginalPos.row != player2[selectdPieceID]->GetPosition().row;
+
+		if (colCondition || rowCondition)
+		{
+			player2[selectdPieceID]->SetNeverMoved(false);
+			player2[selectdPieceID]->SetLastPosition(selectedPieceOriginalPos);
+		}
+
+	}
 }
 
 /*******************************************************************************

@@ -35,16 +35,29 @@ Update()
 	---------------
 	ReleasePiece()  
 	---------------
-		-CorrectPiecePosition(player)
+		-CorrectDragedPiecePosition(player)
 			-GetCorrespondingBoardCase(centerPos)
 			-ValidateCurrentMove(correspondingCell)
-			-MovePiece()
+			-MovePieceToNewCase()
 	------------
 	IsAnyPieceCaptured(player)  // check if selected pos == capture mouvement
 	------------
 		-CapturePiece()
+	
 	------------
-	UpdateBoardInfo(playerTurn)
+	UpdateBoardInfo for each piece released
+	------------
+		-UpdateBoardInfo(playerTurn)
+	------------
+	update PionPromotion
+	------------
+		-PionPromotion()
+	
+	------------
+	 Change player side
+	------------
+		-IsTurnFinished()
+			-ChangeTurn();
 	------------
 	InitVectors(m_possibleMouvement)
 	InitFlags()
@@ -55,14 +68,3 @@ Draw()
 	DrawPossbilePositions(color)
 	DrawPlayerPieces()
 ---------------------------------------------------------------------------------------------
-
-
-problesm:
-fillcheckpositions fiha pb
-m_selectedPiecePossiblePositions (while capturing is too much long)
-capture pieces (has a problem) both sides (capture is done but piece is not drawn at right side)
-
-
-
-		if (IsNextMoveValid(*player1[selectdPieceID], PosToCase(correspondingCase), m_board, enPlayerNum::PLAYER1))
-// case player 1

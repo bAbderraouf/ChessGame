@@ -61,7 +61,7 @@ private:
 	//pieces
 	std::vector<std::unique_ptr<Piece>> player1, player2;
 	int selectdPieceID;;
-	Position selectedPieceOriginalPos;
+	Position selectedPieceOriginalPos , selectedPieceCurrentPos;
 
 	std::vector<PossibleMouvement> m_possibleMouvement;
 
@@ -125,7 +125,7 @@ public :
 
 	void DragPiece();
 	void ReleasePiece();
-	void CorrectPiecePosition(std::vector<std::unique_ptr<Piece>> & player);
+	void CorrectDragedPiecePosition();
 	int GetSelectedPiece(std::vector<std::unique_ptr<Piece>> const &player);
 	void SetCenterPieceToCursorPosition(Piece& piece , Position const &cursorPos);
 	Position GetCorrespondingBoardCase(Position centerPos);
@@ -187,9 +187,15 @@ public :
 
 	void ValidateCurrentMove( ChessCase & selectedMoveCell );
 	stPiece GetPieceFromBoardCell(infoCase const& cell);
+	void PionPromotion();
 
 	bool IsValidIdx(int const &row, int const &col) const;
 	void ErrorIndex(int row, int col);
 };
 
 
+/*check mat
+* 1 player1 turn + player1 in check // should be the first iff
+* 2 all roi positions are invalide
+* 3 all player2 pieces possible positions are invalid
+*/
