@@ -1,10 +1,10 @@
-# Project name:  ChessGame 2D (C++)
+# ChessGame 2D (C++)
 
 # ChessGame 2D (C++)
 ChessGame 2D is a personal C++ project built from scratch to explore game architecture and modern C++ practices.  
 It features a custom chess engine with full rule validation, turn and state management, and a clean object-oriented design.
 
-## Features
+# Features
 - Full chess rules (legal moves, captures, turns)
 - Drag and drop of 2D pieces.
 - Capture pieces
@@ -17,21 +17,36 @@ It features a custom chess engine with full rule validation, turn and state mana
 - 2D rendering (Raylib)
 - Board representation (grid-based)
 
-## Project Goals
+# Project Goals
 - Problem solving, (project built from scratch).
-- Practice modern C++ (OOP, polymorphism, smart pointers, inhiritance, interfaces, STL containers)
+- Practice modern C++ (OOP, polymorphism, smart pointers, inheritance, interfaces, STL containers)
 - Clean architecture & separation of concerns
 - Build a clean and extensible chess engine
 - Separate game logic from rendering and input handling
 - Memory management
 
-## Technologies
+# Technologies
 - C++ 17
 - Raylib (2D rendering & input)
 - STL (`std::vector`, `std::unique_ptr`, etc.)
 
 
-## Screenshot
+# Screenshot
 ![ChessGame Screenshot](assets/screenshots/chessScreen.gif)
+
+# Future Work
+- AI opponent
+- Networked multiplayer
+- Better animations / effects
+
+# Setup
+## Prérequis
+- C++17 compatible compiler (g++, MSVC, etc.)
+- [Raylib](https://www.raylib.com/) library installed.
+- Git to clone the project.
+
+## Clone the projet
+```bash
+git clone https://github.com/bAbderraouf/ChessGame.git
 
 <!-- TODO: Installation Guide , Exemple d’utilisation , Licence (MIT, Apache, etc.)-->
