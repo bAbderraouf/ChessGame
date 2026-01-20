@@ -11,12 +11,12 @@
 #include <array>
 
 
-#define RED   "\033[31m"
-#define BLUEE  "\033[34m"
-#define RESET "\033[0m"
-#define GREEN "\033[32m"
-#define YELLOW "\033[33m"
-#define WHITE "\033[37m"
+#define RED_COUT   "\033[31m"
+#define BLUE_COUT  "\033[34m"
+#define RESET_COUT "\033[0m"
+#define GREEN_COUT "\033[32m"
+#define YELLOW_COUT "\033[33m"
+#define WHITE_COUT "\033[37m"
 
 class Chess : public Game
 {
@@ -75,6 +75,11 @@ private:
 
 	std::vector<PossibleMouvement> m_possibleMouvement;
 
+	//text 
+	float m_xText;
+	int m_sizeText, m_spacingText;
+	Font m_fontText;
+
 
 	//Board case
 	struct infoCase
@@ -106,6 +111,7 @@ private:
 			flag_isAnyPieceSelected,
 			flag_player1InCheck,
 			flag_player2InCheck,
+			flag_checkMate,
 			flag_isMovementAllowed,
 			flag_isAnyPieceCaptured,
 			flag_possibleMouvemntsAreCalculated;
@@ -145,10 +151,10 @@ public :
 	bool GetPossiblePositionsOnBoard(	Piece const& piece, 
 										std::vector<PossibleMouvement> & PossibleMvt , 
 										enActionType const & ActionType);
-	bool GetPossiblePositionsOnBoardFromBoard(	ChessCase const & cellCoords, 
-												Board const & board, 
-												std::vector<PossibleMouvement>& PossibleMvt, 
-												enActionType const& ActionType);
+	bool GenerateLegalMoves(	ChessCase const & cellCoords, 
+								Board const & board, 
+								std::vector<PossibleMouvement>& PossibleMvt, 
+								enActionType const& ActionType);
 	bool  IsAnyPieceCaptured(Piece const& piece);
 	bool IsPlayerInCheckPosition(Board const& board , enPlayerNum const & playerNum);
 	bool IsTurnFinished();
@@ -205,6 +211,15 @@ public :
 
 	bool IsValidIdx(int const &row, int const &col) const;
 	void ErrorIndex(int row, int col);
+
+	// text
+	void DrawPlayerTurn();
+	void DrawPlayerInCheck();
+	void DrawCheckMate();
+	void DrawTime();
+	void DrawLastMoves();
+	void DrawLetters();
+	void DrawLateralTexts();
 };
 
 
@@ -213,3 +228,25 @@ public :
 * 2 all roi positions are invalide + ( its own position // no need)
 * 3 all player1 pieces possible positions are invalid
 */
+
+/* rock roi side : to be added to roi possible positions
+* 1 selectedPiece = king // no need
+* 2 king never moved && tour 13 never moved
+* 3 empty cells between king & tour && no check on this cases
+* 4 king moves to cavalier 11 case
+* 5 tour moves to fou 9 case
+*/
+
+
+// isPat
+// priseEnPassant
+// 3 times same position
+// materiel insufisant roi vs roi
+
+// temp, fin de partie en temps,
+// son, mvt, echec, mat
+// orientation du plateaux
+
+// historique des coups,
+// annuler / refaire un coups / redemarrer la partie / abondon
+// sauvegarde / chargement de partie

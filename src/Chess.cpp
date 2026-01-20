@@ -71,8 +71,6 @@ void Chess::Init()
 	InitBoardInfo();
 
 	
-
-
 	//pirngt m_bord positions
 
 
@@ -93,6 +91,12 @@ void Chess::Init()
 
 	m_possibleMouvement = {}; //empty
 
+	// text
+	m_xText = leftMargin + 8 * cellSize + cellSize / 3;
+	m_sizeText = 15;
+	m_fontText = LoadFont("assets/fonts/DejaVuSansMono.ttf");
+	m_spacingText = 5;
+
 
 	// erase vectors
 	std::vector<PossibleMouvement>().swap(m_possibleMouvement);
@@ -106,6 +110,7 @@ void Chess::Init()
 	flag_isAnyPieceSelected = false;
 	flag_player1InCheck = false;
 	flag_player2InCheck = false;
+	flag_checkMate = false;
 	flag_isMovementAllowed = false;
 	flag_isAnyPieceCaptured = false;
 	flag_possibleMouvemntsAreCalculated = false;
@@ -208,7 +213,11 @@ void Chess::Update()
 		// is checkMate state ?
 		//----------------------------------
 		if (IsCheckmat())
-			std::cout << RED << "CHECKMATE" << RESET << std::endl;
+		{
+			flag_checkMate = true;
+			std::cout << RED_COUT << "CHECKMATE" << RESET_COUT << std::endl;
+		}
+			
 		
 		// print infos
 		//----------------------------------
@@ -260,6 +269,8 @@ void Chess::Draw()
 	DrawPlayerPieces(player1);
 	DrawPlayerPieces(player2);
 
+	//draw text
+	DrawLateralTexts();
 
 	
 }
@@ -611,7 +622,7 @@ bool Chess::GetPossiblePositionsOnBoard(Piece const& piece, std::vector<Possible
 	return true; //(possiblePos.size() == movementTypes.size());  //<<**********toDo
 }
 
-bool Chess::GetPossiblePositionsOnBoardFromBoard(	ChessCase const& cellCoords, 
+bool Chess::GenerateLegalMoves(	ChessCase const& cellCoords, 
 													Board const& board, 
 													std::vector<PossibleMouvement>& PossibleMvt, 
 													enActionType const& ActionType					)
@@ -922,6 +933,13 @@ bool Chess::GetPossiblePositionsOnBoardFromBoard(	ChessCase const& cellCoords,
 			if (IsValidIdx(r, c))
 				AddPossiblePossitionFromBoard(ActionType, board, PossibleMvt, r, c , attacker);
 
+			// small rock
+			/*
+			* 2 king never moved && tour 13 never moved
+			* 3 empty cells between king & tour && no check on this cases
+			* 4 king moves to cavalier 11 case 
+			* 5 tour moves to fou 9 case
+			*/
 
 			break;
 
@@ -942,7 +960,7 @@ bool Chess::IsAnyPieceCaptured(Piece const& piece) //<<**********toDo to review 
 	float static	capturedPColForPlayer1 = leftMargin + 8 * cellSize + cellSize / 3,//+ cellSize/3, 
 					capturedPColForPlayer2 = leftMargin + 8 * cellSize + cellSize / 3,//+ cellSize/3,
 					capturedPRowForPlayer1 = windowHeigh - (1.5 * cellSize),
-					capturedPRowForPlayer2 = cellSize / 3;
+					capturedPRowForPlayer2 = windowHeigh - (3 * cellSize) ;
 	int static cpt1 = 0, cpt2 = 0;
 
 	for (auto const& p : m_possibleMouvement)
@@ -1057,7 +1075,7 @@ bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& playe
 					//GetPossiblePositionsOnBoard(*piece, possMvt, enActionType::CHECK_CASES);
 					if (IsValidIdx(coords.row, coords.col))
 					{
-						GetPossiblePositionsOnBoardFromBoard(coords, board, possMvt, enActionType::CHECK_CASES);
+						GenerateLegalMoves(coords, board, possMvt, enActionType::CHECK_CASES);
 
 						if (IsAnyCheckPossitionExists(possMvt))
 						{
@@ -1066,13 +1084,13 @@ bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& playe
 							stPiece infoPiece = GetPieceFromBoardCell(cell);
 
 							//print info
-							/*
+							
 							std::cout << "(==========================)" << std::endl;
-							std::cout << BLUEE << "	==> check : " << RESET << player2[infoPiece.pieceTeamIdx]->GetName() << " id: " << player2[infoPiece.pieceTeamIdx]->GetTeamIndex() << "  pos: " << coords.col << "," << coords.row << std::endl;
+							std::cout << BLUE_COUT << "	==> check : " << RESET_COUT << player2[infoPiece.pieceTeamIdx]->GetName() << " id: " << player2[infoPiece.pieceTeamIdx]->GetTeamIndex() << "  pos: " << coords.col << "," << coords.row << std::endl;
 							//print
 							std::cout << "	CHECK CASE : present for player 1 " << std::endl;
-							std::cout << "(==========================)" << std::endl;
-							*/
+							std::cout << "(==========================)" << RESET_COUT<<std::endl;
+							
 
 							flag_player1InCheck = true;
 							return true;
@@ -1110,7 +1128,7 @@ bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& playe
 					//GetPossiblePositionsOnBoard(*piece, possMvt, enActionType::CHECK_CASES);
 					if (IsValidIdx(coords.row, coords.col))
 					{
-						GetPossiblePositionsOnBoardFromBoard(coords, board, possMvt, enActionType::CHECK_CASES);
+						GenerateLegalMoves(coords, board, possMvt, enActionType::CHECK_CASES);
 
 						if (IsAnyCheckPossitionExists(possMvt))
 						{
@@ -1123,7 +1141,7 @@ bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& playe
 							//print infos
 							/*
 							std::cout << "(==========================)" << std::endl;
-							std::cout << BLUEE << "	==> check : " << RESET << player1[infoPiece.pieceTeamIdx]->GetName() << " id: " << player1[infoPiece.pieceTeamIdx]->GetTeamIndex() << "  pos: " << coords.col << "," << coords.row << std::endl;
+							std::cout << BLUE_COUT << "	==> check : " << RESET << player1[infoPiece.pieceTeamIdx]->GetName() << " id: " << player1[infoPiece.pieceTeamIdx]->GetTeamIndex() << "  pos: " << coords.col << "," << coords.row << std::endl;
 							//print
 							std::cout << "	CHECK CASE : present for player 2 " << std::endl;
 							std::cout << "(==========================)" << std::endl;
@@ -1308,13 +1326,13 @@ int Chess::AddPossiblePossitionFromBoard(	enActionType const& ActionType,
 			movementType = -1; // check  position shouldnt move
 			PossibleMvt.push_back({ pos , cell, movementType , false });  // cant move to it
 
-			/*
+			//system("cls");
 			//print info
-			std::cout << "==> check case from add pos => \n\tattacked piece name :" << board.at(row).at(col).pieceName << " ,\n\tid : " << board.at(row).at(col).pieceTeamIndex
+			std::cout << RED_COUT <<"==> check case from add pos => \n\tattacked piece name :" << board.at(row).at(col).pieceName << " ,\n\tid : " << board.at(row).at(col).pieceTeamIndex
 				<< "\n\tattacker cell pos : " << attackerCoords.col << ", " << attackerCoords.row
 				<< "\n\tattacker teamId : " << board.at(attackerCoords.row).at(attackerCoords.col).pieceTeamIndex
-				<< "\n\tattacker name : " << board.at(attackerCoords.row).at(attackerCoords.col).pieceName << std::endl;
-			*/
+				<< "\n\tattacker name : " << board.at(attackerCoords.row).at(attackerCoords.col).pieceName << RESET_COUT << std::endl;
+			
 		}
 		// obstacle present (cant move)
 		else
@@ -1420,10 +1438,10 @@ bool Chess::IsSelectedMoveLegal(Piece const& piece, ChessCase const& nextPositio
 
 		//print
 		/*
-		std::cout << BLUEE << "=====temp_board====" << std::endl;
+		std::cout << BLUE_COUT << "=====temp_board====" << std::endl;
 		PrintBoardQuickInfo("Names", temp_board);
 		PrintBoardQuickInfo("indexes", temp_board);
-		std::cout << "=====temp_board====" << RESET << std::endl;
+		std::cout << "=====temp_board====" << RESET_COUT << std::endl;
 		*/
 
 		//board is updated with next move info 
@@ -1439,11 +1457,10 @@ bool Chess::IsSelectedMoveLegal(Piece const& piece, ChessCase const& nextPositio
 
 bool Chess::IsLegalMove(stMove const& move, Board const& board)
 {
-
-	if (IsSameCoordinates(move.fromCell, move.toCell)) // should move to a new postion to finish the turn
-		return false;
-	else
-	{
+	//if (IsSameCoordinates(move.fromCell, move.toCell)) // should move to a new postion to finish the turn
+	//	return false;
+	//else
+	//{
 		// make a copy from board
 		//-------------------------
 		Board temp_board = board;
@@ -1462,10 +1479,10 @@ bool Chess::IsLegalMove(stMove const& move, Board const& board)
 		//print infos
 		//------------------
 		/*
-		std::cout << BLUEE << "=====temp_board====" << std::endl;
+		std::cout << BLUE_COUT << "=====temp_board====" << std::endl;
 		PrintBoardQuickInfo("Names", temp_board);
 		PrintBoardQuickInfo("indexes", temp_board);
-		std::cout << "=====temp_board====" << RESET << std::endl;
+		std::cout << "=====temp_board====" << RESET_COUT << std::endl;
 		*/
 
 
@@ -1475,10 +1492,7 @@ bool Chess::IsLegalMove(stMove const& move, Board const& board)
 		bool isAnyCheckPosition = IsPlayerInCheckPosition(temp_board, move.pieceTeamSide); // still in check or not
 
 		return (isAnyCheckPosition ? false : true);
-	}
-
-
-	
+	//}
 
 }
 
@@ -1506,16 +1520,19 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 	{	
 		// set move info
 		stMove move{ PosToCase(selectedPieceOriginalPos), selectedMoveCell, player1[selectdPieceID]->GetTeamIndex(), enPlayerNum::PLAYER1 };
-
-		//if (IsSelectedMoveLegal(*player1[selectdPieceID], selectedMoveCell, m_board, enPlayerNum::PLAYER1))
-		if (IsLegalMove(move, m_board))
+		
+		if (IsSameCoordinates(move.fromCell, move.toCell))
+		{
+			// back to orignal position
+			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
+		}
+		else if (IsLegalMove(move, m_board))
 		{
 			// allow the move
 			flag_player1InCheck = false;
 			flag_isMovementAllowed = true;
 			selectedPieceCurrentPos = CaseToPos(selectedMoveCell);
 		}
-
 		else
 		{
 			// back to orignal position
@@ -1530,7 +1547,11 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 		// set move info
 		stMove move{ PosToCase(selectedPieceOriginalPos), selectedMoveCell, player2[selectdPieceID]->GetTeamIndex(), enPlayerNum::PLAYER2 };
 
-		//if (IsSelectedMoveLegal(*player2[selectdPieceID], selectedMoveCell , m_board, enPlayerNum::PLAYER2))
+		if (IsSameCoordinates(move.fromCell, move.toCell))
+		{
+			// back to orignal position
+			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
+		}
 		if (IsLegalMove(move, m_board))
 		{
 			// allow the move
@@ -1632,7 +1653,7 @@ bool Chess::IsCheckmat()
 		//------------------------------------------------------
 		ChessCase kingCellPos = PosToCase(player1[14]->GetPosition());
 
-		GetPossiblePositionsOnBoardFromBoard(kingCellPos, m_board, possMvt, enActionType::MOUVEMENT);
+		GenerateLegalMoves(kingCellPos, m_board, possMvt, enActionType::MOUVEMENT);
 
 		for (auto const& mvt : possMvt)
 		{
@@ -1656,7 +1677,7 @@ bool Chess::IsCheckmat()
 			if (piece->GetTeamIndex() != 14 && !piece->IsCaptured())
 			{
 				ChessCase currentPieceCell = PosToCase(piece->GetPosition());
-				GetPossiblePositionsOnBoardFromBoard(currentPieceCell, m_board, possMvt, enActionType::MOUVEMENT);
+				GenerateLegalMoves(currentPieceCell, m_board, possMvt, enActionType::MOUVEMENT);
 
 				for (auto const& mvt : possMvt)
 				{
@@ -1679,7 +1700,7 @@ bool Chess::IsCheckmat()
 		//------------------------------------------------------
 		ChessCase kingCellPos = PosToCase(player2[14]->GetPosition());
 
-		GetPossiblePositionsOnBoardFromBoard(kingCellPos, m_board, possMvt, enActionType::MOUVEMENT);
+		GenerateLegalMoves(kingCellPos, m_board, possMvt, enActionType::MOUVEMENT);
 
 		for (auto const& mvt : possMvt)
 		{
@@ -1703,7 +1724,7 @@ bool Chess::IsCheckmat()
 			if (piece->GetTeamIndex() != 14 && !piece->IsCaptured())
 			{
 				ChessCase currentPieceCell = PosToCase(piece->GetPosition());
-				GetPossiblePositionsOnBoardFromBoard(currentPieceCell, m_board, possMvt, enActionType::MOUVEMENT);
+				GenerateLegalMoves(currentPieceCell, m_board, possMvt, enActionType::MOUVEMENT);
 
 				for (auto const& mvt : possMvt)
 				{
@@ -1735,6 +1756,117 @@ void Chess::ErrorIndex(int row, int col)
 		std::cerr << "Index invalide : " << row << ", " << col << '\n';
 		std::abort();
 	}
+}
+
+void Chess::DrawPlayerTurn()
+{
+	float xText = m_xText , yText = topMargin;
+	Color lightBlue = { 204, 204, 255, 255 };
+
+	std::string title = "Turn:";
+	std::string strText =  flag_isPlayer1Turn ? "      White" : "      Black";
+
+	DrawTextEx(m_fontText, title.c_str(),  { xText, yText }, m_sizeText, m_spacingText, lightBlue);
+	DrawTextEx(m_fontText, strText.c_str(),{ xText , yText  }, m_sizeText, m_spacingText, YELLOW);
+
+	//DrawTextEx( font, "txt", { x, y }, size, spacing, BLACK );
+}
+
+void Chess::DrawPlayerInCheck()
+{
+	float xText = m_xText + 0.5f * cellSize, yText = cellSize + topMargin;
+
+	std::string strText = "CHECK !";
+
+	DrawTextEx(m_fontText, strText.c_str(), { xText, yText }, m_sizeText, m_spacingText, ORANGE);
+}
+
+void Chess::DrawCheckMate()
+{
+	float xText = m_xText , yText = 0.75*cellSize + topMargin;
+
+	std::string strText = "CHECK MATE";
+
+	DrawTextEx(m_fontText, strText.c_str(), { xText, yText }, m_sizeText, m_spacingText, RED);
+}
+
+void Chess::DrawTime()
+{
+	float xText = m_xText  , yText = 1.75*cellSize + topMargin;
+	Color lightBlue = { 204, 204, 255, 255 };
+
+	std::string title = "Time";
+	std::string player1time = "White: 00:00";
+	std::string player2time = "Black: 00:00";
+	
+	DrawTextEx(m_fontText, title.c_str(),		{ xText, yText }					 , m_sizeText, m_spacingText, lightBlue);
+	DrawTextEx(m_fontText, player1time.c_str(), { xText, (yText + 1.5f *m_sizeText) }, m_sizeText, m_spacingText, flag_isPlayer1Turn ? YELLOW : GRAY);
+	DrawTextEx(m_fontText, player2time.c_str(), { xText, (yText + 3.f * m_sizeText) }, m_sizeText, m_spacingText, flag_isPlayer1Turn ? GRAY : YELLOW);
+}
+
+void Chess::DrawLastMoves()
+{
+	float xText = m_xText, yText = 3*cellSize + topMargin;
+	Color lightBlue = { 204, 204, 255, 255 };
+
+	std::string title = "Move history";
+	std::string move1 = "1. E2 E4";  // <<******ToDo getit from fction
+	std::string move2 = "2. A2 A3";
+	std::string move3 = "2. C2 F4";
+
+
+	DrawTextEx(m_fontText, title.c_str(), { xText, yText }, m_sizeText, m_spacingText, lightBlue);
+	DrawTextEx(m_fontText, move1.c_str(), { xText, (yText + 1.5f * m_sizeText) }, m_sizeText, m_spacingText, YELLOW);
+	DrawTextEx(m_fontText, move2.c_str(), { xText, (yText + 3.f  * m_sizeText) }, m_sizeText, m_spacingText, GRAY);
+	DrawTextEx(m_fontText, move3.c_str(), { xText, (yText + 4.5f * m_sizeText) }, m_sizeText, m_spacingText, GRAY);
+
+}
+
+void Chess::DrawLetters()
+{
+	float xText = 0,
+			yText = 0.5f * cellSize + topMargin;
+	int num = 8;
+
+	std::string strNum = "";
+
+	for (int i = 0; i < 8; i++)
+	{
+		strNum = std::to_string(num);
+		DrawTextEx(m_fontText, strNum.c_str(), { xText, yText + i*cellSize }, m_sizeText, m_spacingText, GRAY);
+		num--;
+	}
+
+	yText =  topMargin + 8*cellSize ;
+	xText = 0.5f * cellSize + leftMargin;
+	char lettre = 'a';
+	
+
+	for (int i = 0; i < 8; i++)
+	{
+		lettre = 'a' + i; // from a to f
+		strNum = lettre;
+		DrawTextEx(m_fontText, strNum.c_str(), { xText + i* cellSize, yText }, m_sizeText , m_spacingText, GRAY);
+		
+	}
+
+}
+
+void Chess::DrawLateralTexts()
+{
+	DrawPlayerTurn();
+	DrawTime();
+	
+
+	if (flag_checkMate)
+		DrawCheckMate();
+	else if ((flag_isPlayer1Turn && flag_player1InCheck) || (!flag_isPlayer1Turn && flag_player2InCheck))
+		DrawPlayerInCheck();
+
+	DrawLastMoves();
+
+	DrawLetters();
+
 }
 
 
@@ -1876,7 +2008,7 @@ void Chess::DragPiece()
 				UpdateBoardInfo(flag_isPlayer1Turn);
 				Position pos = player1[selectdPieceID]->GetPosition();
 				ChessCase coords = PosToCase(pos);
-				bool valid = GetPossiblePositionsOnBoardFromBoard(coords, m_board, m_possibleMouvement, enActionType::MOUVEMENT);
+				bool valid = GenerateLegalMoves(coords, m_board, m_possibleMouvement, enActionType::MOUVEMENT);
 
 				//bool valid = GetPossiblePositionsOnBoard(*player1[selectdPieceID), m_possibleMouvement, enActionType::MOUVEMENT);
 
@@ -1929,7 +2061,7 @@ void Chess::DragPiece()
 				UpdateBoardInfo(flag_isPlayer1Turn);
 				Position pos = player2[selectdPieceID]->GetPosition();
 				ChessCase coords = PosToCase(pos);
-				bool valid = GetPossiblePositionsOnBoardFromBoard(coords, m_board, m_possibleMouvement, enActionType::MOUVEMENT);
+				bool valid = GenerateLegalMoves(coords, m_board, m_possibleMouvement, enActionType::MOUVEMENT);
 
 				//bool valid = GetPossiblePositionsOnBoard(*player2[selectdPieceID], m_possibleMouvement, enActionType::MOUVEMENT);
 				flag_possibleMouvemntsAreCalculated = true;

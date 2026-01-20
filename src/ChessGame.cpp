@@ -25,7 +25,7 @@ int main()
 		color2 = BLUE, //beige,// = BLUE,
 		background = vdarkBlue; // darkBrown; //vdarkBlue;
 
-	int w = 800, h = 620, nRows = 8, nCols = 8, cSize =75, fps = 60 , leftMargin = 10, topMargin = 10;
+	int w = 800, h = 625, nRows = 8, nCols = 8, cSize =75, fps = 60 , leftMargin = 10, topMargin = 10;
 
 	//--------------------
 	// window : w, h, fps  
