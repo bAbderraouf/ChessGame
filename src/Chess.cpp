@@ -1525,6 +1525,7 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 		{
 			// back to orignal position
 			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
+			flag_isMovementAllowed = false;
 		}
 		else if (IsLegalMove(move, m_board))
 		{
@@ -1551,8 +1552,9 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 		{
 			// back to orignal position
 			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
+			flag_isMovementAllowed = false;
 		}
-		if (IsLegalMove(move, m_board))
+		else if (IsLegalMove(move, m_board))
 		{
 			// allow the move
 			flag_player2InCheck = false;
