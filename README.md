@@ -1,6 +1,4 @@
 # ChessGame 2D (C++)
-
-# ChessGame 2D (C++)
 ChessGame 2D is a personal C++ project built from scratch to explore game architecture and modern C++ practices.  
 It features a custom chess engine with full rule validation, turn and state management, and a clean object-oriented design.
 

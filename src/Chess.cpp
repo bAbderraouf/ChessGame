@@ -204,6 +204,11 @@ void Chess::Update()
 		if (IsTurnFinished())
 			ChangeTurn();
 
+		//----------------------------------
+		// is checkMate state ?
+		//----------------------------------
+		if (IsCheckmat())
+			std::cout << RED << "CHECKMATE" << RESET << std::endl;
 		
 		// print infos
 		//----------------------------------
@@ -1060,11 +1065,14 @@ bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& playe
 							//ChessCase cell = PosToCase(piece->GetInitialPosition());
 							stPiece infoPiece = GetPieceFromBoardCell(cell);
 
+							//print info
+							/*
 							std::cout << "(==========================)" << std::endl;
 							std::cout << BLUEE << "	==> check : " << RESET << player2[infoPiece.pieceTeamIdx]->GetName() << " id: " << player2[infoPiece.pieceTeamIdx]->GetTeamIndex() << "  pos: " << coords.col << "," << coords.row << std::endl;
 							//print
 							std::cout << "	CHECK CASE : present for player 1 " << std::endl;
 							std::cout << "(==========================)" << std::endl;
+							*/
 
 							flag_player1InCheck = true;
 							return true;
@@ -1110,11 +1118,16 @@ bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& playe
 							//ChessCase cell = PosToCase(piece->GetInitialPosition());
 
 							stPiece infoPiece = GetPieceFromBoardCell(cell);
+
+
+							//print infos
+							/*
 							std::cout << "(==========================)" << std::endl;
 							std::cout << BLUEE << "	==> check : " << RESET << player1[infoPiece.pieceTeamIdx]->GetName() << " id: " << player1[infoPiece.pieceTeamIdx]->GetTeamIndex() << "  pos: " << coords.col << "," << coords.row << std::endl;
 							//print
 							std::cout << "	CHECK CASE : present for player 2 " << std::endl;
 							std::cout << "(==========================)" << std::endl;
+							*/
 
 							flag_player2InCheck = true;
 							return true;
@@ -1234,7 +1247,7 @@ int Chess::AddPossiblePossition(enActionType const& ActionType,
 			movementType = -1; // check  position shouldnt move
 			PossibleMvt.push_back({ pos , cell, movementType , false });  // cant move to it
 
-			std::cout<< "==> check case from add pos 9dima : " << piece.GetName() << " id : " << piece.GetTeamIndex() << " cell pos : " << cell.col << ", " << cell.row << std::endl;
+			//std::cout<< "==> check case from add pos 9dima : " << piece.GetName() << " id : " << piece.GetTeamIndex() << " cell pos : " << cell.col << ", " << cell.row << std::endl;
 
 		}
 		// obstacle present (cant move)
@@ -1295,10 +1308,13 @@ int Chess::AddPossiblePossitionFromBoard(	enActionType const& ActionType,
 			movementType = -1; // check  position shouldnt move
 			PossibleMvt.push_back({ pos , cell, movementType , false });  // cant move to it
 
+			/*
+			//print info
 			std::cout << "==> check case from add pos => \n\tattacked piece name :" << board.at(row).at(col).pieceName << " ,\n\tid : " << board.at(row).at(col).pieceTeamIndex
 				<< "\n\tattacker cell pos : " << attackerCoords.col << ", " << attackerCoords.row
 				<< "\n\tattacker teamId : " << board.at(attackerCoords.row).at(attackerCoords.col).pieceTeamIndex
 				<< "\n\tattacker name : " << board.at(attackerCoords.row).at(attackerCoords.col).pieceName << std::endl;
+			*/
 		}
 		// obstacle present (cant move)
 		else
@@ -1381,7 +1397,7 @@ ChessCase Chess::GetAttackedKingCoordsOnTheBoard(bool const& attackedSide , Boar
 * nextPosition : the selected move by the player 
 * board is m_bord (containing all positions of pieces)
 */
-bool Chess::IsNextMoveValid(Piece const& piece, ChessCase const& nextPosition, Board const &board, enPlayerNum const& playerNum)
+bool Chess::IsSelectedMoveLegal(Piece const& piece, ChessCase const& nextPosition, Board const &board, enPlayerNum const& playerNum)
 {
 	
 	ChessCase currentPosition = PosToCase(selectedPieceOriginalPos);
@@ -1401,10 +1417,15 @@ bool Chess::IsNextMoveValid(Piece const& piece, ChessCase const& nextPosition, B
 
 		//set next cell info
 		SetCellInfo(piece, nextPosition.row, nextPosition.col, temp_board);
+
+		//print
+		/*
 		std::cout << BLUEE << "=====temp_board====" << std::endl;
 		PrintBoardQuickInfo("Names", temp_board);
 		PrintBoardQuickInfo("indexes", temp_board);
 		std::cout << "=====temp_board====" << RESET << std::endl;
+		*/
+
 		//board is updated with next move info 
 		// now we should check if check possitions exists
 
@@ -1415,6 +1436,59 @@ bool Chess::IsNextMoveValid(Piece const& piece, ChessCase const& nextPosition, B
 	
 	
 }
+
+bool Chess::IsLegalMove(stMove const& move, Board const& board)
+{
+
+	if (IsSameCoordinates(move.fromCell, move.toCell)) // should move to a new postion to finish the turn
+		return false;
+	else
+	{
+		// make a copy from board
+		//-------------------------
+		Board temp_board = board;
+
+		//set starting cell to empty
+		//---------------------------
+		temp_board.at(move.fromCell.row).at(move.fromCell.col).setToEmpty();
+
+		//set next cell info
+		//--------------------
+		if(move.pieceTeamSide == enPlayerNum::PLAYER1) // player 1
+			SetCellInfo(*player1[move.pieceTeamIndex], move.toCell.row, move.toCell.col, temp_board);
+		else				
+			SetCellInfo(*player2[move.pieceTeamIndex], move.toCell.row, move.toCell.col, temp_board);
+
+		//print infos
+		//------------------
+		/*
+		std::cout << BLUEE << "=====temp_board====" << std::endl;
+		PrintBoardQuickInfo("Names", temp_board);
+		PrintBoardQuickInfo("indexes", temp_board);
+		std::cout << "=====temp_board====" << RESET << std::endl;
+		*/
+
+
+		//board is updated with next move info 
+		// now we should check if check possitions exists
+		//------------------------------------------------
+		bool isAnyCheckPosition = IsPlayerInCheckPosition(temp_board, move.pieceTeamSide); // still in check or not
+
+		return (isAnyCheckPosition ? false : true);
+	}
+
+
+	
+
+}
+
+Chess::stMove Chess::SetMoveInfo(ChessCase const& fromCell, ChessCase const& toCell, int pieceTeamIndex, enPlayerNum playerSide)
+{
+	stMove move{ fromCell , toCell , pieceTeamIndex , playerSide };
+	return move;
+}
+
+
 
 /*
 * @brief validate the current move selected:
@@ -1427,10 +1501,14 @@ bool Chess::IsNextMoveValid(Piece const& piece, ChessCase const& nextPosition, B
 */
 void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 {
-	if (flag_isPlayer1Turn)
-	{	// case player 1
 
-		if (IsNextMoveValid(*player1[selectdPieceID], selectedMoveCell, m_board, enPlayerNum::PLAYER1))
+	if (flag_isPlayer1Turn) // case player 1
+	{	
+		// set move info
+		stMove move{ PosToCase(selectedPieceOriginalPos), selectedMoveCell, player1[selectdPieceID]->GetTeamIndex(), enPlayerNum::PLAYER1 };
+
+		//if (IsSelectedMoveLegal(*player1[selectdPieceID], selectedMoveCell, m_board, enPlayerNum::PLAYER1))
+		if (IsLegalMove(move, m_board))
 		{
 			// allow the move
 			flag_player1InCheck = false;
@@ -1449,7 +1527,11 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 
 	else // case player 2
 	{
-		if (IsNextMoveValid(*player2[selectdPieceID], selectedMoveCell , m_board, enPlayerNum::PLAYER2))
+		// set move info
+		stMove move{ PosToCase(selectedPieceOriginalPos), selectedMoveCell, player2[selectdPieceID]->GetTeamIndex(), enPlayerNum::PLAYER2 };
+
+		//if (IsSelectedMoveLegal(*player2[selectdPieceID], selectedMoveCell , m_board, enPlayerNum::PLAYER2))
+		if (IsLegalMove(move, m_board))
 		{
 			// allow the move
 			flag_player2InCheck = false;
@@ -1536,6 +1618,109 @@ void Chess::PionPromotion()
 		// update m_board corresponding case
 		UpdateCellInfo(*vectOfPieces[i], row, col, m_board);
 	*/
+}
+
+bool Chess::IsCheckmat()
+{
+	// local variable to get possible mouvement for each piece.
+	std::vector<PossibleMouvement> possMvt = {};
+
+	if (flag_isPlayer1Turn && flag_player1InCheck) // player1 turn + player1 in check
+	{
+		//------------------------------------------------------
+		// check if all possible positions of king 1 are invalid
+		//------------------------------------------------------
+		ChessCase kingCellPos = PosToCase(player1[14]->GetPosition());
+
+		GetPossiblePositionsOnBoardFromBoard(kingCellPos, m_board, possMvt, enActionType::MOUVEMENT);
+
+		for (auto const& mvt : possMvt)
+		{
+			if (mvt.movementType != 0) // piece from team side is present
+			{
+				stMove move{ kingCellPos , mvt.possibleCase, player1[14]->GetTeamIndex() ,enPlayerNum::PLAYER1 };
+
+				if (IsLegalMove(move, m_board))
+					return false;
+			}
+		}
+
+		//------------------------------------------------------
+		// check if all possiblePositions of player1 team are invalid
+		//------------------------------------------------------
+
+		for (auto const& piece : player1)
+		{
+			possMvt = {}; // reset vector
+
+			if (piece->GetTeamIndex() != 14 && !piece->IsCaptured())
+			{
+				ChessCase currentPieceCell = PosToCase(piece->GetPosition());
+				GetPossiblePositionsOnBoardFromBoard(currentPieceCell, m_board, possMvt, enActionType::MOUVEMENT);
+
+				for (auto const& mvt : possMvt)
+				{
+					if (mvt.movementType != 0) // piece from team side is present
+					{
+						stMove move{ currentPieceCell , mvt.possibleCase, piece->GetTeamIndex() ,enPlayerNum::PLAYER1 };
+
+						if (IsLegalMove(move, m_board))
+							return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	else if (!flag_isPlayer1Turn && flag_player2InCheck) // player2 turn + player2 in check
+	{
+		//------------------------------------------------------
+		// check if all possible positions of king 2 are invalid
+		//------------------------------------------------------
+		ChessCase kingCellPos = PosToCase(player2[14]->GetPosition());
+
+		GetPossiblePositionsOnBoardFromBoard(kingCellPos, m_board, possMvt, enActionType::MOUVEMENT);
+
+		for (auto const& mvt : possMvt)
+		{
+			if (mvt.movementType != 0) // piece from team side is present
+			{
+				stMove move{ kingCellPos , mvt.possibleCase, player2[14]->GetTeamIndex() ,enPlayerNum::PLAYER2 };
+
+				if (IsLegalMove(move, m_board))
+					return false;
+			}
+		}
+
+		//------------------------------------------------------
+		// check if all possiblePositions of player2 team are invalid
+		//------------------------------------------------------
+
+		for (auto const& piece : player2)
+		{
+			possMvt = {}; // reset vector
+
+			if (piece->GetTeamIndex() != 14 && !piece->IsCaptured())
+			{
+				ChessCase currentPieceCell = PosToCase(piece->GetPosition());
+				GetPossiblePositionsOnBoardFromBoard(currentPieceCell, m_board, possMvt, enActionType::MOUVEMENT);
+
+				for (auto const& mvt : possMvt)
+				{
+					if (mvt.movementType != 0) // piece from team side is present
+					{
+						stMove move{ currentPieceCell , mvt.possibleCase, piece->GetTeamIndex() ,enPlayerNum::PLAYER2 };
+
+						if (IsLegalMove(move, m_board))
+							return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	else
+		return false;
 }
 
 bool Chess::IsValidIdx(int const &row, int const &col) const

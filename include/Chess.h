@@ -28,14 +28,24 @@ private:
 		bool canMove;
 	};
 	
+
 	enum enActionType {
 		MOUVEMENT = 0,
 		CHECK_CASES = 1,
+
 	};
 
 	enum enPlayerNum {
 		PLAYER1 = 0,
 		PLAYER2 = 1,
+	};
+
+	struct stMove {
+		ChessCase fromCell;
+		ChessCase toCell;
+		// piece info
+		int pieceTeamIndex;
+		enPlayerNum pieceTeamSide;
 	};
 
 	struct stPiece {
@@ -183,11 +193,15 @@ public :
 	bool IsCheckPosition_2(int const& row, int const& col, ChessCase const& attackerCoords, Board const & board) const;
 	bool IsAnyCheckPossitionExists(std::vector<PossibleMouvement> const & PossibleMvt);  // for each piece
 	ChessCase GetAttackedKingCoordsOnTheBoard(bool const & attackedSide, Board const& board) const;
-	bool IsNextMoveValid(Piece const &piece, ChessCase const & nextPosition , Board const & board , enPlayerNum const& playerNum);
+	bool IsSelectedMoveLegal(Piece const &piece, ChessCase const & nextPosition , Board const & board , enPlayerNum const& playerNum);
+
+	bool IsLegalMove(stMove const & move, Board const& board);
+	stMove SetMoveInfo(ChessCase const& fromCell, ChessCase const& toCell, int pieceTeamIndex ,enPlayerNum playerSide);
 
 	void ValidateCurrentMove( ChessCase & selectedMoveCell );
 	stPiece GetPieceFromBoardCell(infoCase const& cell);
 	void PionPromotion();
+	bool IsCheckmat();
 
 	bool IsValidIdx(int const &row, int const &col) const;
 	void ErrorIndex(int row, int col);
@@ -196,6 +210,6 @@ public :
 
 /*check mat
 * 1 player1 turn + player1 in check // should be the first iff
-* 2 all roi positions are invalide
-* 3 all player2 pieces possible positions are invalid
+* 2 all roi positions are invalide + ( its own position // no need)
+* 3 all player1 pieces possible positions are invalid
 */
