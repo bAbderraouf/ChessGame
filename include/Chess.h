@@ -75,6 +75,11 @@ private:
 
 	std::vector<PossibleMouvement> m_possibleMouvement;
 
+	//moves history 
+	std::string m_WhiteMove, m_BlackMove , m_turnMove;
+	std::vector<std::string> m_allMoves;
+	int m_moveIdx;
+
 	//text 
 	float m_xText;
 	int m_sizeText, m_spacingText;
@@ -98,7 +103,6 @@ private:
 		infoCase(); // construtor
 		void setToEmpty();
 	};
-	//infoCase m_Board[8][8];
 	using Board = std::array <std::array<infoCase, 8>, 8>;  // using = type def (modern) : Boerd is the new type 
 	Board m_board , m_Initial_Board;
 
@@ -203,6 +207,7 @@ public :
 
 	bool IsLegalMove(stMove const & move, Board const& board);
 	stMove SetMoveInfo(ChessCase const& fromCell, ChessCase const& toCell, int pieceTeamIndex ,enPlayerNum playerSide);
+	std::string GetCurrentMoveText(stMove const & move);
 
 	void ValidateCurrentMove( ChessCase & selectedMoveCell );
 	stPiece GetPieceFromBoardCell(infoCase const& cell);

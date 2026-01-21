@@ -1844,9 +1844,9 @@ void Chess::DrawLastMoves()
 			break;
 
 		if(i == len - 1)
-			DrawTextEx(m_fontText, m_allMoves[i].c_str(), { xText, (yText + 1.5f * cpt * m_sizeText) }, 0.9*m_sizeText, 0.9 * m_spacingText, YELLOW);
+			DrawTextEx(m_fontText, m_allMoves[i].c_str(), { xText, (yText + 1.5f * cpt * m_sizeText) }, 0.9*m_sizeText, m_spacingText, YELLOW);
 		else
-			DrawTextEx(m_fontText, m_allMoves[i].c_str(), { xText, (yText + 1.5f * cpt * m_sizeText) }, 0.9*m_sizeText, 0.9 * m_spacingText, GRAY);
+			DrawTextEx(m_fontText, m_allMoves[i].c_str(), { xText, (yText + 1.5f * cpt * m_sizeText) }, 0.9*m_sizeText,  m_spacingText, GRAY);
 
 		cpt++;
 	}
