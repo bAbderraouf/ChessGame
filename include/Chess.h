@@ -9,6 +9,7 @@
 #include <string>
 #include <iomanip> // for setw() : cout
 #include <array>
+#include <ctime>
 
 
 #define RED_COUT   "\033[31m"

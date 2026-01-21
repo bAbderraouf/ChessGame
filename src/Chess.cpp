@@ -1908,6 +1908,38 @@ void Chess::DrawLateralTexts()
 
 }
 
+Chess::stDate Chess::GetSystemDateTime(void)
+{
+	time_t  t_now = time(NULL); // curent time
+
+	// tm* now = localtime(&t); // unsafe (using static memory)
+
+	struct tm now;  // a buffer to store the curent time
+	localtime_s(&now, &t_now);
+
+	stDate date;
+
+	date.day = now.tm_mday;
+	date.month = now.tm_mon + 1;
+	date.year = now.tm_year + 1900;
+	date.hour = now.tm_hour;
+	date.minute = now.tm_min;
+	date.second = now.tm_sec;
+
+	return date;
+}
+
+std::string Chess::GetDateTimeToString(stDate const& date, std::string sep)
+{
+	std::string dateTime = "";
+
+	dateTime = std::string(date.hour < 10 ? "0" : "") + std::to_string(date.hour) + sep +
+		std::string(date.minute < 10 ? "0" : "") + std::to_string(date.minute) + sep +
+		std::string(date.second < 10 ? "0" : "") + std::to_string(date.second);
+
+	return dateTime;
+}
+
 
 bool Chess::IsCapturableObstacle(int const& row, int const& col) const
 {
@@ -2650,3 +2682,4 @@ void Chess::PrintBoardQuickInfo(std::string infoType , Board const& board) const
 
 	std::cout << std::endl;
 }
+
