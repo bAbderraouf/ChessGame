@@ -14,9 +14,10 @@ Chess::Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin
 	cellSize = cSize;
 	leftMargin = lMargin;
 	topMargin = tMargin;
-	color1 = c1;
-	color2 = c2;
-	hoveredColor = Color{ 255, 204, 0,100 };// {0,255, 0,140 };
+	m_color1 = c1;
+	m_color2 = c2;
+	m_hoveredColor = Color{ 255, 204, 0,100 };// {0,255, 0,140 };
+	m_backgroundColor = Color{ 0, 0, 102 , 255 };
 
 
 	// init widow + grid + piece
@@ -62,7 +63,7 @@ void Chess::Init()
 	ExportImage(m_screenshot, "capture.png");
 
 	//grid
-	grid = new Grid(numRows, numCols, cellSize , color1, color2);
+	grid = new Grid(numRows, numCols, cellSize , m_color1, m_color2);
 	grid->SetMargins(leftMargin, topMargin);
 
 
@@ -121,6 +122,7 @@ void Chess::Init()
 	flag_isMovementAllowed = false;
 	flag_isAnyPieceCaptured = false;
 	flag_possibleMouvemntsAreCalculated = false;
+	flag_isTheme1 = true;
 
 	
 }
@@ -268,7 +270,7 @@ void Chess::Draw()
 
 	// draw possible pos for selected piece 
 	// (no need to specify side)
-	DrawPossiblePositions(hoveredColor);
+	DrawPossiblePositions(m_hoveredColor);
 
 
 	
@@ -1187,6 +1189,11 @@ bool Chess::IsTurnFinished()
 	return false;
 }
 
+Color Chess::GetBackgroundColor()
+{
+	return m_backgroundColor;
+}
+
 /*
 	convert a Position type to a ChessCase type
 	position : is the coordinates of that point on the window
@@ -1844,9 +1851,9 @@ void Chess::DrawLastMoves()
 			break;
 
 		if(i == len - 1)
-			DrawTextEx(m_fontText, m_allMoves[i].c_str(), { xText, (yText + 1.5f * cpt * m_sizeText) }, 0.9*m_sizeText, m_spacingText, YELLOW);
+			DrawTextEx(m_fontText, m_allMoves[i].c_str(), { xText, (yText + 1.5f * cpt * m_sizeText) }, 0.9*m_sizeText, 0.5 * m_spacingText, YELLOW);
 		else
-			DrawTextEx(m_fontText, m_allMoves[i].c_str(), { xText, (yText + 1.5f * cpt * m_sizeText) }, 0.9*m_sizeText,  m_spacingText, GRAY);
+			DrawTextEx(m_fontText, m_allMoves[i].c_str(), { xText, (yText + 1.5f * cpt * m_sizeText) }, 0.9*m_sizeText, 0.5 * m_spacingText, GRAY);
 
 		cpt++;
 	}
@@ -1980,11 +1987,55 @@ void Chess::ChangeTurn()
 	flag_isMovementAllowed = false;
 	flag_isAnyPieceCaptured = false;
 
+	ChangeTheme(); // <<*****todo test
+
 	// check if current player is in check position
 	if(flag_isPlayer1Turn)
 		flag_player1InCheck = IsPlayerInCheckPosition(m_board , enPlayerNum::PLAYER1);
 	else
 		flag_player2InCheck = IsPlayerInCheckPosition(m_board, enPlayerNum::PLAYER2);
+
+}
+
+void Chess::ChangeTheme()
+{
+
+			//   theme 2
+	Color	darkBrown = { 128, 43, 0 ,255 },
+			lightBrown = { 225, 135, 64, 255 },
+			beige = { 255, 204, 156,255 },
+			///	 theme 1
+			ligthBlue = { 204, 204, 255, 255 }, // with blue
+			vdarkBlue = { 0, 0, 102 , 255 };
+
+	
+	stTheme theme1 = { ligthBlue , BLUE , m_hoveredColor , vdarkBlue };
+	stTheme theme2 = { lightBrown , beige , m_hoveredColor , darkBrown };
+
+	if (flag_isTheme1)
+	{
+		// set theme 2
+		m_color1 = theme2.color1;
+		m_color2 = theme2.color2;
+		m_hoveredColor = theme2.heveredColor;
+		m_backgroundColor = theme2.backgroundColor;
+		grid->SetColors(m_color1 , m_color2);
+
+		flag_isTheme1 = false;
+	}
+	else
+	{
+		
+		// set theme 1
+		m_color1 = theme1.color1;
+		m_color2 = theme1.color2;
+		m_hoveredColor = theme1.heveredColor;
+		m_backgroundColor = theme1.backgroundColor;
+		grid->SetColors(m_color1, m_color2);
+
+		flag_isTheme1 = true;
+		
+	}
 
 }
 

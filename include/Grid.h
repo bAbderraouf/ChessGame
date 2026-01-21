@@ -23,6 +23,7 @@ public:
 	void SetMargins(int left, int top);
 	Color ApplyCellColors(int row, int col);
 	int grid[8][8]; // 8 rows and 8 collumns
+	void SetColors(Color const& c1, Color const& c2);
 
 private:
 	int numRows;  // columns number

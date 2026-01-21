@@ -98,3 +98,9 @@ Color Grid::ApplyCellColors(int row, int col)
 	return cellColor;
 }
 
+void Grid::SetColors(Color const & c1 , Color const & c2)
+{
+	color1 = c1;
+	color2 = c2;
+}
+

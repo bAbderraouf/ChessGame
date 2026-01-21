@@ -68,7 +68,7 @@ int main()
 		// draw
 		//---------
 		BeginDrawing();
-		ClearBackground(background);
+		ClearBackground(chessGame.GetBackgroundColor());
 		chessGame.Draw();
 		EndDrawing();
 

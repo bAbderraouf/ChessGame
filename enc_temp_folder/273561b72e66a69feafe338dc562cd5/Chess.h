@@ -21,16 +21,6 @@
 class Chess : public Game
 {
 private:
-
-	struct stDate {
-		short year;
-		short month;
-		short day;
-		short hour;
-		short minute;
-		short second;
-	};
-
 	struct PossibleMouvement {
 		Position possiblePosition;
 		ChessCase possibleCase;
@@ -244,10 +234,6 @@ public :
 	void DrawLastMoves();
 	void DrawLetters();
 	void DrawLateralTexts();
-
-	// time
-	stDate GetSystemDateTime(void);
-	std::string GetDateTimeToString(stDate const& date, std::string sep = ":");
 };
 
 
