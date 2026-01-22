@@ -105,6 +105,11 @@ void Chess::Init()
 	m_fontText = LoadFont("assets/fonts/DejaVuSansMono.ttf");
 	m_spacingText = 5;
 
+	//time	
+	m_tMaxPlayer1 = 60;//seconds 
+	m_tMaxPlayer2 = 60;
+
+	m_t1 = time(NULL); // curent time
 
 	// erase vectors
 	std::vector<PossibleMouvement>().swap(m_possibleMouvement);
@@ -119,6 +124,9 @@ void Chess::Init()
 	flag_player1InCheck = false;
 	flag_player2InCheck = false;
 	flag_checkMate = false;
+	flag_timeOverPlayer1 = false;
+	flag_timeOverPlayer2 = false;
+	flag_GameOver = false;
 	flag_isMovementAllowed = false;
 	flag_isAnyPieceCaptured = false;
 	flag_possibleMouvemntsAreCalculated = false;
@@ -129,6 +137,7 @@ void Chess::Init()
 
 void Chess::Input()
 {
+
 	// LEFT mouse mouse PRESSED
 	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
 	{
@@ -156,6 +165,19 @@ void Chess::Input()
 
 void Chess::Update()
 {
+	//----------------------------------
+	// update tempo
+	//----------------------------------
+	UpdateTempo();
+
+
+	//----------------------------------
+	// check if time is over
+	//----------------------------------
+	if (IsTimeOver())
+		flag_GameOver = true;
+
+
 	//----------------------
 	// Piece selected 
 	//----------------------
@@ -202,6 +224,8 @@ void Chess::Update()
 
 		}
 		
+	
+
 		//----------------------------------
 		// update m_board for each piece released
 		//----------------------------------
@@ -224,6 +248,7 @@ void Chess::Update()
 		if (IsCheckmat())
 		{
 			flag_checkMate = true;
+			flag_GameOver = true;
 			std::cout << RED_COUT << "CHECKMATE" << RESET_COUT << std::endl;
 		}
 			
@@ -1787,6 +1812,38 @@ void Chess::ErrorIndex(int row, int col)
 	}
 }
 
+void Chess::InitT1()
+{
+	m_t2 = time(nullptr); //std::chrono::steady_clock::now(); // t1 initialized when turn is started (for each player)
+}
+
+void Chess::UpdateTempo()
+{
+	// init m_t2 
+	//-----------
+
+	m_t2 = time(nullptr);// std::chrono::steady_clock::now();
+
+	auto delta = m_t2 - m_t1;//std::chrono::duration_cast<std::chrono::seconds>(m_t2 - m_t1).count();
+	
+
+	// update m_tMax for each player
+	//-----------------------------
+
+	if (!flag_timeOverPlayer1 && !flag_timeOverPlayer2)
+		if(delta >= 1 )
+			if (flag_isPlayer1Turn)
+			{
+				m_tMaxPlayer1 = m_tMaxPlayer1 - delta;
+				m_t1 = m_t2;
+			}
+			else
+			{
+				m_tMaxPlayer2 = m_tMaxPlayer2 - delta;
+				m_t1 = m_t2;
+			}
+}
+
 void Chess::DrawPlayerTurn()
 {
 	float xText = m_xText , yText = topMargin;
@@ -1801,22 +1858,27 @@ void Chess::DrawPlayerTurn()
 	//DrawTextEx( font, "txt", { x, y }, size, spacing, BLACK );
 }
 
-void Chess::DrawPlayerInCheck()
+
+
+void Chess::DrawState()
 {
-	float xText = m_xText + 0.5f * cellSize, yText = cellSize + topMargin;
+	// init position
+	float xText = m_xText, yText = 0.75 * cellSize + topMargin;
 
-	std::string strText = "CHECK !";
+	std::string StateText = "";
 
-	DrawTextEx(m_fontText, strText.c_str(), { xText, yText }, m_sizeText, m_spacingText, ORANGE);
-}
 
-void Chess::DrawCheckMate()
-{
-	float xText = m_xText , yText = 0.75*cellSize + topMargin;
+	// check state case
+	if (flag_checkMate)
+		StateText = "CHECK MATE";
+	else if ((flag_isPlayer1Turn && flag_player1InCheck) || (!flag_isPlayer1Turn && flag_player2InCheck))
+		StateText = "CHECK !";
+	else if (flag_timeOverPlayer1 || flag_timeOverPlayer2)
+		StateText = "TIME OUT !";
 
-	std::string strText = "CHECK MATE";
+	// draw tesxt
+	DrawTextEx(m_fontText, StateText.c_str(), { xText, yText }, m_sizeText, m_spacingText, RED);
 
-	DrawTextEx(m_fontText, strText.c_str(), { xText, yText }, m_sizeText, m_spacingText, RED);
 }
 
 void Chess::DrawTime()
@@ -1825,12 +1887,20 @@ void Chess::DrawTime()
 	Color lightBlue = { 204, 204, 255, 255 };
 
 	std::string title = "Time";
-	std::string player1time = "White: 00:00";
-	std::string player2time = "Black: 00:00";
+	std::string player1time = "White: " + GetDurationToString(SecondsToDuration(m_tMaxPlayer1));
+	std::string player2time = "Black: " + GetDurationToString(SecondsToDuration(m_tMaxPlayer2));
 	
 	DrawTextEx(m_fontText, title.c_str(),		{ xText, yText }					 , m_sizeText, m_spacingText, lightBlue);
 	DrawTextEx(m_fontText, player1time.c_str(), { xText, (yText + 1.5f *m_sizeText) }, m_sizeText, m_spacingText, flag_isPlayer1Turn ? YELLOW : GRAY);
 	DrawTextEx(m_fontText, player2time.c_str(), { xText, (yText + 3.f * m_sizeText) }, m_sizeText, m_spacingText, flag_isPlayer1Turn ? GRAY : YELLOW);
+
+
+	// current time hh:min:sec
+	//-------------------------
+	std::string currentTime = GetDateTimeToString(GetSystemDateTime(), ":");
+	DrawTextEx(m_fontText, currentTime.c_str(), { 8.7f * cellSize + leftMargin, 8.f * cellSize + topMargin }, m_sizeText, m_spacingText, GRAY);
+
+
 }
 
 void Chess::DrawLastMoves()
@@ -1893,18 +1963,15 @@ void Chess::DrawLetters()
 
 void Chess::DrawLateralTexts()
 {
-	DrawPlayerTurn();
-	DrawTime();
+	DrawPlayerTurn(); // current turn
+
+	DrawTime(); // player clocks + system time
 	
+	DrawState(); // checkmate / check / time over
 
-	if (flag_checkMate)
-		DrawCheckMate();
-	else if ((flag_isPlayer1Turn && flag_player1InCheck) || (!flag_isPlayer1Turn && flag_player2InCheck))
-		DrawPlayerInCheck();
+	DrawLastMoves(); // moves history
 
-	DrawLastMoves();
-
-	DrawLetters();
+	DrawLetters();  // case names
 
 }
 
@@ -1933,11 +2000,55 @@ std::string Chess::GetDateTimeToString(stDate const& date, std::string sep)
 {
 	std::string dateTime = "";
 
-	dateTime = std::string(date.hour < 10 ? "0" : "") + std::to_string(date.hour) + sep +
-		std::string(date.minute < 10 ? "0" : "") + std::to_string(date.minute) + sep +
-		std::string(date.second < 10 ? "0" : "") + std::to_string(date.second);
+	dateTime =  std::string(date.hour < 10 ? "0" : "") + std::to_string(date.hour) + sep +
+				std::string(date.minute < 10 ? "0" : "") + std::to_string(date.minute) + sep +
+				std::string(date.second < 10 ? "0" : "") + std::to_string(date.second);
 
 	return dateTime;
+}
+
+Chess::stDuration Chess::SecondsToDuration(time_t seconds)
+{
+	stDuration diff;
+	int m = 0,  s = 0;
+
+	m = seconds / 60;
+	s = seconds % 60;
+
+	setDuration(diff, m, s);
+		
+	return diff;
+}
+
+std::string Chess::GetDurationToString(stDuration const& duration, std::string sep)
+{
+	std::string time = (duration.minutes < 10 ? "0" : "") + std::to_string(duration.minutes) + sep
+					 + (duration.seconds < 10 ? "0" : "") + std::to_string(duration.seconds);
+
+
+	return time;
+}
+
+void Chess::setDuration(stDuration& duration , int const & min, int const & sec)
+{
+	duration.minutes = min;
+	duration.seconds = sec;
+}
+
+bool Chess::IsTimeOver()
+{
+	if (m_tMaxPlayer1 <= 0)
+	{
+		flag_timeOverPlayer1 = true;
+		return true;
+	}
+	if(m_tMaxPlayer2 <= 0)
+	{
+		flag_timeOverPlayer2 = true;
+		return true;
+	}
+
+	return false;
 }
 
 
@@ -2027,6 +2138,8 @@ void Chess::ChangeTurn()
 	else
 		flag_player2InCheck = IsPlayerInCheckPosition(m_board, enPlayerNum::PLAYER2);
 
+	// init t1 for tempo calculation
+	InitT1();
 }
 
 void Chess::ChangeTheme()
@@ -2146,7 +2259,6 @@ void Chess::DragPiece()
 			// drag piece to cursor position (center of piece folows cursor)
 			MovePieceByStep(*player1[selectdPieceID], step);
 
-
 		}
 	}
 	else
@@ -2198,6 +2310,7 @@ void Chess::DragPiece()
 
 			// drag piece to cursor position (center of piece folows cursor)
 			MovePieceByStep(*player2[selectdPieceID], step);
+
 		}
 	}
 }

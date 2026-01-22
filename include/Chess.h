@@ -10,6 +10,7 @@
 #include <iomanip> // for setw() : cout
 #include <array>
 #include <ctime>
+#include <chrono>
 
 
 #define RED_COUT   "\033[31m"
@@ -30,6 +31,12 @@ private:
 		short hour;
 		short minute;
 		short second;
+	};
+
+	struct stDuration {
+		int seconds;
+		int minutes;
+		int hours;
 	};
 
 	struct PossibleMouvement {
@@ -102,6 +109,10 @@ private:
 	int m_sizeText, m_spacingText;
 	Font m_fontText;
 
+	//time
+	using clock = std::chrono::time_point<std::chrono::steady_clock> ;
+	time_t m_tMaxPlayer1, m_tMaxPlayer2; // seconds
+	time_t m_t1, m_t2;  //to calcul elapsed time for each player
 
 	//Board case
 	struct infoCase
@@ -133,6 +144,9 @@ private:
 			flag_player1InCheck,
 			flag_player2InCheck,
 			flag_checkMate,
+			flag_timeOverPlayer1,
+			flag_timeOverPlayer2,
+			flag_GameOver,
 			flag_isMovementAllowed,
 			flag_isAnyPieceCaptured,
 			flag_possibleMouvemntsAreCalculated,
@@ -237,10 +251,13 @@ public :
 	bool IsValidIdx(int const &row, int const &col) const;
 	void ErrorIndex(int row, int col);
 
+	//time
+	void InitT1();
+	void UpdateTempo();
+
 	// text
 	void DrawPlayerTurn();
-	void DrawPlayerInCheck();
-	void DrawCheckMate();
+	void DrawState();
 	void DrawTime();
 	void DrawLastMoves();
 	void DrawLetters();
@@ -249,6 +266,12 @@ public :
 	// time
 	stDate GetSystemDateTime(void);
 	std::string GetDateTimeToString(stDate const& date, std::string sep = ":");
+	stDuration SecondsToDuration(time_t seconds);
+	std::string GetDurationToString(stDuration const& duration , std::string sep = ":");
+	void setDuration(stDuration& duration, int const& min, int const& sec);
+	bool IsTimeOver();
+
+
 };
 
 
