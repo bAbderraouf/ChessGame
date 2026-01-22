@@ -98,12 +98,13 @@ void Chess::Init()
 	m_turnMove = "";
 	m_allMoves = {};
 	m_moveIdx = 1;
+	m_currentMove = {};
 
 	// text
 	m_xText = leftMargin + 8 * cellSize + cellSize / 3;
-	m_sizeText = 15;
-	m_fontText = LoadFont("assets/fonts/DejaVuSansMono.ttf");
-	m_spacingText = 5;
+	m_sizeText = 20;
+	m_fontText = LoadFontEx("assets/fonts/courrierNew.ttf", m_sizeText, nullptr, 0);
+	m_spacingText = 1;
 
 	//time	
 	m_tMaxPlayer1 = 60;//seconds 
@@ -1543,10 +1544,37 @@ Chess::stMove Chess::SetMoveInfo(ChessCase const& fromCell, ChessCase const& toC
 
 std::string Chess::GetCurrentMoveText(stMove const& move)
 {
-	std::string from = m_board.at(move.fromCell.row).at(move.fromCell.col).caseName;
-	std::string to = m_board.at(move.toCell.row).at(move.toCell.col).caseName;
 
-	return from + "." + to;
+
+	// chess notation : [Piece][File][Rank]x[Destination] [Check/Checkmate]
+	// Piece : nom piece (Roi : K , Dame : Q, tour : R,  Fou : B,  Cavalier : N, pion : "")	
+	// file : row letter,   
+	// rank : col number
+	// destination : to (file + rank )
+	// check : +  checkmate : #
+
+	std::string piece = GetEnglishPieceName(m_board.at(move.fromCell.row).at(move.fromCell.col).pieceName);
+	std::string from = ToLowerCase(m_board.at(move.fromCell.row).at(move.fromCell.col).caseName);
+	std::string mouvementType = m_board.at(move.toCell.row).at(move.toCell.col).empty ? "" : "x"; // if capture => "x" else ""
+	std::string to = ToLowerCase(m_board.at(move.toCell.row).at(move.toCell.col).caseName);
+
+	return piece + from + mouvementType + to;
+}
+
+std::string Chess::GetEnglishPieceName(std::string const& pieceName)
+{
+	if (pieceName == "Pion")
+		return "";
+	if (pieceName == "Tour")
+		return "R";
+	if (pieceName == "Cava")
+		return "N";
+	if (pieceName == "Fou")
+		return "B";
+	if (pieceName == "Dame")
+		return "Q";
+	if (pieceName == "Roi")
+		return "K";
 }
 
 
@@ -1574,13 +1602,16 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
 			flag_isMovementAllowed = false;
 		}
-		else if (IsLegalMove(move, m_board))
+		else if (IsLegalMove(move, m_board)) // no self check position
 		{
 			// allow the move
 			flag_player1InCheck = false;
 			flag_isMovementAllowed = true;
 			selectedPieceCurrentPos = CaseToPos(selectedMoveCell);
-			m_WhiteMove = GetCurrentMoveText(move);
+
+			// move history
+			m_currentMove = move;
+			UpdateMovesHistory();
 		}
 		else
 		{
@@ -1608,10 +1639,11 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 			flag_player2InCheck = false;
 			flag_isMovementAllowed = true;
 			selectedPieceCurrentPos = CaseToPos(selectedMoveCell);
-			m_BlackMove = GetCurrentMoveText(move);
-			m_turnMove = std::to_string(m_moveIdx) + "." + m_WhiteMove + "-" + m_BlackMove;
-			m_allMoves.push_back(m_turnMove);
-			m_moveIdx++;
+
+			// move history
+			m_currentMove = move;
+			UpdateMovesHistory();
+			 // both players played
 		}
 
 		else
@@ -1812,6 +1844,37 @@ void Chess::ErrorIndex(int row, int col)
 	}
 }
 
+void Chess::UpdateMovesHistory()
+{
+	// player 1
+	if(flag_isPlayer1Turn)
+		m_WhiteMove = GetCurrentMoveText(m_currentMove);
+	else	// both players are played
+	{
+		m_BlackMove = GetCurrentMoveText(m_currentMove);
+
+		// update vector
+		m_turnMove = std::to_string(m_moveIdx) + "." + m_WhiteMove + "-" + m_BlackMove;
+		m_allMoves.push_back(m_turnMove);
+
+		// print
+		std::cout << "Movement: " << YELLOW_COUT << m_allMoves[m_moveIdx-1] << RESET_COUT << std::endl;
+
+		m_moveIdx++;
+	}
+}
+
+std::string Chess::ToLowerCase(std::string& const str)
+{
+	std::string result = "";
+
+	for(char const & e : str)
+	{
+		result += tolower(e);
+	}
+	return result;
+}
+
 void Chess::InitT1()
 {
 	m_t2 = time(nullptr); //std::chrono::steady_clock::now(); // t1 initialized when turn is started (for each player)
@@ -1883,7 +1946,7 @@ void Chess::DrawState()
 
 void Chess::DrawTime()
 {
-	float xText = m_xText  , yText = 1.75*cellSize + topMargin;
+	float xText = m_xText  , yText = 1.5*cellSize + topMargin;
 	Color lightBlue = { 204, 204, 255, 255 };
 
 	std::string title = "Time";

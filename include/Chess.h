@@ -11,6 +11,7 @@
 #include <array>
 #include <ctime>
 #include <chrono>
+#include <cctype>
 
 
 #define RED_COUT   "\033[31m"
@@ -102,6 +103,7 @@ private:
 	//moves history 
 	std::string m_WhiteMove, m_BlackMove , m_turnMove;
 	std::vector<std::string> m_allMoves;
+	stMove m_currentMove;
 	int m_moveIdx;
 
 	//text 
@@ -242,6 +244,7 @@ public :
 	bool IsLegalMove(stMove const & move, Board const& board);
 	stMove SetMoveInfo(ChessCase const& fromCell, ChessCase const& toCell, int pieceTeamIndex ,enPlayerNum playerSide);
 	std::string GetCurrentMoveText(stMove const & move);
+	std::string GetEnglishPieceName(std::string const& pieceName);
 
 	void ValidateCurrentMove( ChessCase & selectedMoveCell );
 	stPiece GetPieceFromBoardCell(infoCase const& cell);
@@ -251,6 +254,9 @@ public :
 	bool IsValidIdx(int const &row, int const &col) const;
 	void ErrorIndex(int row, int col);
 
+	// update moves history
+	void UpdateMovesHistory();
+	std::string ToLowerCase(std::string& const str);
 	//time
 	void InitT1();
 	void UpdateTempo();
