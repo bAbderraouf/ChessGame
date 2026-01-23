@@ -107,8 +107,8 @@ void Chess::Init()
 	m_spacingText = 1;
 
 	//time	
-	m_tMaxPlayer1 = 60;//seconds 
-	m_tMaxPlayer2 = 60;
+	m_tMaxPlayer1 = 160;//seconds 
+	m_tMaxPlayer2 = 160;
 
 	m_t1 = time(NULL); // curent time
 
@@ -131,6 +131,8 @@ void Chess::Init()
 	flag_isMovementAllowed = false;
 	flag_isAnyPieceCaptured = false;
 	flag_possibleMouvemntsAreCalculated = false;
+	flag_CPU_Movement_ON = true; // automatic movement CPU
+	flag_isCPU_turn = false;
 	flag_isTheme1 = true;
 
 	
@@ -198,7 +200,7 @@ void Chess::Update()
 	//----------------------
 	// Drag piece
 	//----------------------
-	if (flag_leftMouseButtonDown)
+	if (flag_leftMouseButtonDown || IsCPUTurn())
 	{
 		flag_leftMouseButtonDown = false;
 
@@ -208,7 +210,7 @@ void Chess::Update()
 	//----------------------
 	// piece released
 	//----------------------
-	if (flag_leftMouseButtonReleased)
+	if (flag_leftMouseButtonReleased || IsCPUTurn())
 	{
 		flag_leftMouseButtonReleased = false;
 
@@ -1039,8 +1041,8 @@ bool Chess::IsAnyPieceCaptured(Piece const& piece) //<<**********toDo to review 
 						break;
 					}
 				}
-				else
-				{
+				else  // player2 turn
+				{ 
 					if (m_board.at(row).at(col).playerSide == !flag_isPlayer1Turn)
 					{
 						// capturePiece <<********ToDo  : creat a sepearte function for cpature
@@ -2114,6 +2116,80 @@ bool Chess::IsTimeOver()
 	return false;
 }
 
+bool Chess::GenerateCPUMove()
+{
+	for (;;) //(auto const& piece : player2) // <<*****ToDo change to for random selection
+	{
+		// randmom selection :
+		int randomIdx = std::rand() % 16;  // reminder = 0 to 15
+
+		//random cpu think time
+		time_t time1 = time(NULL);
+		int sleepTime = std::rand() % 2 + 1; // 1 or 2 
+
+		// currentPiece = player2[randomIdx]
+
+		if (player2[randomIdx]->IsCaptured() == false)
+		{
+			// erase vectors
+			std::vector<PossibleMouvement> possMvt = {};
+			std::vector<PossibleMouvement>().swap(possMvt);
+
+
+			// generate possible pos
+			selectdPieceID = randomIdx;
+			selectedPieceOriginalPos = player2[selectdPieceID]->GetPosition();
+			flag_isAnyPieceSelected = true;
+
+			Position fromPos = selectedPieceOriginalPos;
+			ChessCase fromCoords = PosToCase(fromPos);
+
+			GenerateLegalMoves(fromCoords, m_board, possMvt, enActionType::MOUVEMENT);
+
+
+			for (auto const& pos : possMvt)
+			{
+				if (pos.canMove == true)
+				{
+					ChessCase toCoords = pos.possibleCase;
+
+					stMove move{ fromCoords, toCoords, selectdPieceID, enPlayerNum::PLAYER2 };
+
+					if (IsLegalMove(move, m_board))
+					{
+						// set possible movement vector
+						m_possibleMouvement = possMvt; 
+						
+						time_t delta = 0;
+						do {
+							time_t time2 = time(nullptr);
+							delta = time2 - time1;
+						} while (delta < 2 );
+
+
+						MovePieceToNewCase(*player2[selectdPieceID], toCoords);
+						return true;
+					}
+				}
+			}
+		}
+	
+	}
+
+	return false;
+}
+
+bool Chess::IsCPUTurn()
+{
+	if (flag_isPlayer1Turn == false)
+		flag_isCPU_turn = true;
+	else
+		flag_isCPU_turn = false;
+
+	return (flag_isCPU_turn && !flag_isPlayer1Turn);
+}
+
+
 
 bool Chess::IsCapturableObstacle(int const& row, int const& col) const
 {
@@ -2193,7 +2269,7 @@ void Chess::ChangeTurn()
 	flag_isMovementAllowed = false;
 	flag_isAnyPieceCaptured = false;
 
-	ChangeTheme(); // <<*****todo test
+	//ChangeTheme(); // <<*****todo test
 
 	// check if current player is in check position
 	if(flag_isPlayer1Turn)
@@ -2322,58 +2398,83 @@ void Chess::DragPiece()
 			// drag piece to cursor position (center of piece folows cursor)
 			MovePieceByStep(*player1[selectdPieceID], step);
 
-		}
-	}
-	else
-	{
-
-		if (!flag_isAnyPieceSelected )
-		{
-			selectdPieceID = GetSelectedPiece(player2);
-		}
-
-		if (selectdPieceID != -1)
-		{
-			// set selectedPieceOriginalPos
-			if ( !flag_isAnyPieceSelected )
-				selectedPieceOriginalPos = player2[selectdPieceID]->GetPosition();
-
 			//reset flag
 			flag_isAnyPieceSelected = true;
 
-			//----------------------------------------------------------------
-			// get possible postions
-			// m_selectedPieceMovementType : is updated
+		}
+	}
+	else // player 2 turn
+	{
 
-
-			if (!flag_possibleMouvemntsAreCalculated)
-			{
-				UpdateBoardInfo(flag_isPlayer1Turn);
-				Position pos = player2[selectdPieceID]->GetPosition();
-				ChessCase coords = PosToCase(pos);
-				bool valid = GenerateLegalMoves(coords, m_board, m_possibleMouvement, enActionType::MOUVEMENT);
-
-				//bool valid = GetPossiblePositionsOnBoard(*player2[selectdPieceID], m_possibleMouvement, enActionType::MOUVEMENT);
-				flag_possibleMouvemntsAreCalculated = true;
-				if (!valid)
-					return;
-			}
+		if (flag_CPU_Movement_ON) // computer = player 2
+		{
+			/*
+			* selectdPieceID
+			* FromCoords
+			* ToCoords
 			
-
-
-
-			// is player in check position ?
-			//player 2 turn => 
-			//if (!inCheckVect.empty())			//<<**********toDo not existing anymore
-				//flag_player1InCheck = true;
-			//----------------------------------------------------------------
-
-			// set centerPiece = mousePos
-			SetCenterPieceToCursorPosition(*player2[selectdPieceID], cursorPos);
-
-			// drag piece to cursor position (center of piece folows cursor)
+			selectdPieceID = 
+			selectedPieceOriginalPos = player2[selectdPieceID]->GetPosition();
+			UpdateBoardInfo(flag_isPlayer1Turn);
+			Position pos = player2[selectdPieceID]->GetPosition();
+			ChessCase coords = PosToCase(pos);
+			GenerateLegalMoves(coords, m_board, m_possibleMouvement, enActionType::MOUVEMENT);
 			MovePieceByStep(*player2[selectdPieceID], step);
+			*/
 
+
+			GenerateCPUMove();
+			}
+		else 
+		{
+			if (!flag_isAnyPieceSelected)
+			{
+				selectdPieceID = GetSelectedPiece(player2);
+			}
+
+			if (selectdPieceID != -1)
+			{
+				// set selectedPieceOriginalPos
+				if (!flag_isAnyPieceSelected)
+					selectedPieceOriginalPos = player2[selectdPieceID]->GetPosition();
+
+				//reset flag
+				flag_isAnyPieceSelected = true;
+
+				//----------------------------------------------------------------
+				// get possible postions
+				// m_selectedPieceMovementType : is updated
+
+
+				if (!flag_possibleMouvemntsAreCalculated)
+				{
+					UpdateBoardInfo(flag_isPlayer1Turn);
+					Position pos = player2[selectdPieceID]->GetPosition();
+					ChessCase coords = PosToCase(pos);
+					bool valid = GenerateLegalMoves(coords, m_board, m_possibleMouvement, enActionType::MOUVEMENT);
+
+					//bool valid = GetPossiblePositionsOnBoard(*player2[selectdPieceID], m_possibleMouvement, enActionType::MOUVEMENT);
+					flag_possibleMouvemntsAreCalculated = true;
+					if (!valid)
+						return;
+				}
+
+
+
+
+				// is player in check position ?
+				//player 2 turn => 
+				//if (!inCheckVect.empty())			//<<**********toDo not existing anymore
+					//flag_player1InCheck = true;
+				//----------------------------------------------------------------
+
+				// set centerPiece = mousePos
+				SetCenterPieceToCursorPosition(*player2[selectdPieceID], cursorPos);
+
+				// drag piece to cursor position (center of piece folows cursor)
+				MovePieceByStep(*player2[selectdPieceID], step);
+
+			}
 		}
 	}
 }
@@ -2435,7 +2536,7 @@ void Chess::CorrectDragedPiecePosition()
 		}
 
 	}
-	else
+	else // player2 turn
 	{
 		// get center pos
 		Position centerPos = player2[selectdPieceID]->GetCenterOfPiecePosition();
@@ -2448,8 +2549,18 @@ void Chess::CorrectDragedPiecePosition()
 		// in case the piece shouldnt move => we should back to its orignal position (before the drag)
 
 		// get corresponding board case position 
-		Position correspondingCase = GetCorrespondingBoardCase(centerPos);
-		ChessCase correspondingCell = PosToCase(correspondingCase);
+		Position correspondingCase ;
+		ChessCase correspondingCell;
+
+		if (flag_CPU_Movement_ON)
+		{
+			correspondingCell = PosToCase(currentPos);
+		}
+		{
+			Position correspondingCase = GetCorrespondingBoardCase(centerPos);
+			ChessCase correspondingCell = PosToCase(correspondingCase);
+		}
+	
 
 		//----------------------------------
 		// check if check position is present				

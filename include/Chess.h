@@ -12,6 +12,7 @@
 #include <ctime>
 #include <chrono>
 #include <cctype>
+#include <cstdlib> // rand
 
 
 #define RED_COUT   "\033[31m"
@@ -152,6 +153,8 @@ private:
 			flag_isMovementAllowed,
 			flag_isAnyPieceCaptured,
 			flag_possibleMouvemntsAreCalculated,
+			flag_CPU_Movement_ON,
+			flag_isCPU_turn,
 			flag_isTheme1;
 
 
@@ -277,7 +280,9 @@ public :
 	void setDuration(stDuration& duration, int const& min, int const& sec);
 	bool IsTimeOver();
 
-
+	// cpu
+	bool GenerateCPUMove();
+	bool IsCPUTurn();
 };
 
 
