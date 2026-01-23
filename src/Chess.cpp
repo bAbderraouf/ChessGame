@@ -2118,7 +2118,9 @@ bool Chess::IsTimeOver()
 
 bool Chess::GenerateCPUMove()
 {
-	for (;;) //(auto const& piece : player2) // <<*****ToDo change to for random selection
+	bool moveFound = false;
+
+	do //(auto const& piece : player2) // <<*****ToDo change to for random selection
 	{
 		// randmom selection :
 		int randomIdx = std::rand() % 16;  // reminder = 0 to 15
@@ -2157,6 +2159,8 @@ bool Chess::GenerateCPUMove()
 
 					if (IsLegalMove(move, m_board))
 					{
+						moveFound = true;
+
 						// set possible movement vector
 						m_possibleMouvement = possMvt; 
 						
@@ -2168,13 +2172,13 @@ bool Chess::GenerateCPUMove()
 
 
 						MovePieceToNewCase(*player2[selectdPieceID], toCoords);
-						return true;
+						return moveFound;
 					}
 				}
 			}
 		}
 	
-	}
+	} while (moveFound == false && flag_GameOver == false);
 
 	return false;
 }
