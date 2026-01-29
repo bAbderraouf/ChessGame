@@ -28,6 +28,8 @@ Chess::~Chess()
 {
 	delete grid;
 	UnloadImage(m_screenshot);
+	//UnloadSound(); all sounds
+	CloseAudioDevice();
 	// player1,2 are unique_ptr
 }
 
@@ -106,6 +108,13 @@ void Chess::Init()
 	m_fontText = LoadFontEx("assets/fonts/courrierNew.ttf", m_sizeText, nullptr, 0);
 	m_spacingText = 1;
 
+	//sound
+	InitAudioDevice();
+	m_normalMoveSound	= LoadSound("assets/sounds/movePiece2.wav");
+	m_checkSound		= LoadSound("assets/sounds/checkKing.wav");
+	m_checkmateSound	= LoadSound("assets/sounds/shoot.wav");
+	m_capturepieceSound = LoadSound("assets/sounds/shoot.wav");
+
 	//time	
 	m_tMaxPlayer1 = 160;//seconds 
 	m_tMaxPlayer2 = 160;
@@ -125,6 +134,7 @@ void Chess::Init()
 	flag_player1InCheck = false;
 	flag_player2InCheck = false;
 	flag_checkMate = false;
+	flag_isPat = true;
 	flag_timeOverPlayer1 = false;
 	flag_timeOverPlayer2 = false;
 	flag_GameOver = false;
@@ -133,9 +143,6 @@ void Chess::Init()
 	flag_possibleMouvemntsAreCalculated = false;
 	flag_CPU_Movement_ON = true; // automatic movement CPU
 	flag_isCPU_turn = false;
-	flag_isTheme1 = true;
-
-	
 }
 
 void Chess::Input()
@@ -246,6 +253,12 @@ void Chess::Update()
 			ChangeTurn();
 
 		//----------------------------------
+		// is check state ?
+		//----------------------------------
+		if (IsCheck())
+			PlaySound(m_checkSound);
+
+		//----------------------------------
 		// is checkMate state ?
 		//----------------------------------
 		if (IsCheckmat())
@@ -254,6 +267,17 @@ void Chess::Update()
 			flag_GameOver = true;
 			std::cout << RED_COUT << "CHECKMATE" << RESET_COUT << std::endl;
 		}
+
+		//----------------------------------
+		// is pat state ?
+		//----------------------------------
+		if (IsPat())
+		{
+			flag_isPat = true;
+			flag_GameOver = true;
+			std::cout << RED_COUT << "PAT !" << RESET_COUT << std::endl;
+		}
+
 			
 		
 		// print infos
@@ -329,17 +353,6 @@ void Chess::DrawPlayerPieces(std::vector<std::unique_ptr<Piece>> const &player)
 		e->Draw();
 }
 
-
-/* m_board 
-	A8  B8  C8  D8  E8  F8  G8  H8
-	A7  B7  C7  D7  E7  F7  G7  H7
-	A6  B6  C6  D6  E6  F6  G6  H6
-	A5  B5  C5  D5  E5  F5  G5  H5
-	A4  B4  C4  D4  E4  F4  G4  H4
-	A3  B3  C3  D3  E3  F3  G3  H3
-	A2  B2  C2  D2  E2  F2  G2  H2
-	A1  B1  C1  D1  E1  F1  G1  H1
-*/
 std::vector<std::unique_ptr<Piece>>  Chess::InitPlayersPieces(bool player1Side)
 {
 	std::vector<std::unique_ptr<Piece>> vectOfPieces;
@@ -1077,12 +1090,6 @@ bool Chess::IsAnyPieceCaptured(Piece const& piece) //<<**********toDo to review 
 }
 
 
-/*
-*	check if this player is in check possition,
-* 	note : player 1 turn => we should check player2 pieces if they present a check position for player1
-*   input : enemy player elements
-*	output : true : if any check possition exists 
-*/
 bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& playerNum)
 {
 
@@ -1203,13 +1210,7 @@ bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& playe
 
 }
 
-/*
-* the turn will be finished if movement is allowed in release function
-* or if piece is captured 
-* otherwise the player side should be kept as is
-* @return true if movement is finished then side should be changed
-* maybe only the drag action is finished maybe the turn still present.
-*/
+
 bool Chess::IsTurnFinished()
 {
 	if (flag_isMovementAllowed || flag_isAnyPieceCaptured)
@@ -1222,11 +1223,7 @@ Color Chess::GetBackgroundColor()
 	return m_backgroundColor;
 }
 
-/*
-	convert a Position type to a ChessCase type
-	position : is the coordinates of that point on the window
-	chessCase : is the coordinates of that case on the board (0 to 7)
-*/
+
 ChessCase Chess::PosToCase(Position pos)
 {
 	// row = i * cellSize + topMargin
@@ -1239,11 +1236,6 @@ ChessCase Chess::PosToCase(Position pos)
 	return CCase;
 }
 
-/* 
-	convert a ChessCase type to Position type
-	position : is the coordinates of that point on the window
-	chessCase : is the coordinates of that case on the board (0 to 7)
-*/
 Position Chess::CaseToPos(ChessCase CCase)
 {
 	// row = i * cellSize + topMargin
@@ -1420,11 +1412,6 @@ bool Chess::IsCheckPosition_2(int const& row, int const& col, ChessCase const& a
 		return false;
 }
 
-/*
-	check if any possible position exists for this current piece 
-	=> check values of the "PossibleMouvement" vector of this piece
-	   if PossibleMouvement.MouvementType == -1 => check possition exists
-*/
 bool Chess::IsAnyCheckPossitionExists(std::vector<PossibleMouvement>const & PossibleMvt)
 {
 	for (auto const& item : PossibleMvt)
@@ -1449,14 +1436,6 @@ ChessCase Chess::GetAttackedKingCoordsOnTheBoard(bool const& attackedSide , Boar
 	return ChessCase(-1,-1);
 }
 
-/*
-* when having a check position the player cant move until he removes the check position
-* check if the next move is valid (check position is removed)
-* return true to allow the move / false to say that check position is still present
-* piece : current piece selected
-* nextPosition : the selected move by the player 
-* board is m_bord (containing all positions of pieces)
-*/
 bool Chess::IsSelectedMoveLegal(Piece const& piece, ChessCase const& nextPosition, Board const &board, enPlayerNum const& playerNum)
 {
 	
@@ -1546,8 +1525,6 @@ Chess::stMove Chess::SetMoveInfo(ChessCase const& fromCell, ChessCase const& toC
 
 std::string Chess::GetCurrentMoveText(stMove const& move)
 {
-
-
 	// chess notation : [Piece][File][Rank]x[Destination] [Check/Checkmate]
 	// Piece : nom piece (Roi : K , Dame : Q, tour : R,  Fou : B,  Cavalier : N, pion : "")	
 	// file : row letter,   
@@ -1580,16 +1557,6 @@ std::string Chess::GetEnglishPieceName(std::string const& pieceName)
 }
 
 
-
-/*
-* @brief validate the current move selected:
-* 1 - in case no check position =>  the move is valid 
-* 2 - otherwise we should back to the original position of the piece (before the drag)
-* @param selectedMoveCell : the corresponding case to the draged piece (current move selected by the player), 
-* this variable is modified and retrned
-* @return validated piece position
-* 
-*/
 void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 {
 
@@ -1614,6 +1581,9 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 			// move history
 			m_currentMove = move;
 			UpdateMovesHistory();
+
+			//play sound
+			PlaySound(m_normalMoveSound);
 		}
 		else
 		{
@@ -1646,6 +1616,9 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 			m_currentMove = move;
 			UpdateMovesHistory();
 			 // both players played
+
+			//play sound
+			PlaySound(m_normalMoveSound);
 		}
 
 		else
@@ -1727,6 +1700,11 @@ void Chess::PionPromotion()
 		// update m_board corresponding case
 		UpdateCellInfo(*vectOfPieces[i], row, col, m_board);
 	*/
+}
+
+bool Chess::IsCheck()
+{
+	return (flag_isPlayer1Turn && flag_player1InCheck) || (!flag_isPlayer1Turn && flag_player2InCheck);
 }
 
 bool Chess::IsCheckmat()
@@ -1830,6 +1808,60 @@ bool Chess::IsCheckmat()
 	}
 	else
 		return false;
+}
+
+bool Chess::IsPat()   //<<********ToDo to be finished
+{
+	bool threeTimesSamePos = true;
+
+	// 3 times same pos
+	//-------------------
+	int numMvoes = m_allMoves.size();
+
+	if (numMvoes > 3)
+	{
+		auto move = m_allMoves[numMvoes - 1].substr(1); // last game  1. e2e4 - e7e5
+
+		for (int i = numMvoes - 2; i < numMvoes - 1 - 3; i--)
+		{
+			if (move != m_allMoves[i].substr(1))
+			{
+				threeTimesSamePos = false;
+				break;
+			}
+		}
+	}
+
+	// no check but no possible movement
+	// ----------------------------------
+	bool noPossibleMovesForCurrentPlayer = true;
+
+	// insuficient material
+	//----------------------
+	bool insuficientMaterial = true;
+
+	auto materialP1 = GetRemainingPiecesIds(enPlayerNum::PLAYER1);
+	auto materialP2 = GetRemainingPiecesIds(enPlayerNum::PLAYER2);
+
+	if (materialP1.size() > 2 || materialP2.size() > 2)
+		insuficientMaterial = false;
+
+
+	bool isPat = threeTimesSamePos || insuficientMaterial || noPossibleMovesForCurrentPlayer;
+	return false; //isPat;
+}
+
+std::vector<int> Chess::GetRemainingPiecesIds(enPlayerNum const& side)
+{
+	std::vector<int> remainingPieces;
+
+	for (auto const& p : side == enPlayerNum::PLAYER1 ? player1 : player2)
+	{
+		if (p->IsCaptured() != 2)
+			remainingPieces.push_back(p->getId());
+	}
+
+	return remainingPieces;
 }
 
 bool Chess::IsValidIdx(int const &row, int const &col) const
@@ -1936,10 +1968,12 @@ void Chess::DrawState()
 	// check state case
 	if (flag_checkMate)
 		StateText = "CHECK MATE";
-	else if ((flag_isPlayer1Turn && flag_player1InCheck) || (!flag_isPlayer1Turn && flag_player2InCheck))
+	else if (IsCheck())
 		StateText = "CHECK !";
 	else if (flag_timeOverPlayer1 || flag_timeOverPlayer2)
 		StateText = "TIME OUT !";
+	else if (flag_isPat)
+		StateText = "DRAW !";
 
 	// draw tesxt
 	DrawTextEx(m_fontText, StateText.c_str(), { xText, yText }, m_sizeText, m_spacingText, RED);
@@ -2273,7 +2307,7 @@ void Chess::ChangeTurn()
 	flag_isMovementAllowed = false;
 	flag_isAnyPieceCaptured = false;
 
-	//ChangeTheme(); // <<*****todo test
+	//SetTheme("brown"); // <<*****todo test
 
 	// check if current player is in check position
 	if(flag_isPlayer1Turn)
@@ -2285,7 +2319,7 @@ void Chess::ChangeTurn()
 	InitT1();
 }
 
-void Chess::ChangeTheme()
+void Chess::SetTheme(std::string const& generalColor )
 {
 
 			//   theme 2
@@ -2294,13 +2328,18 @@ void Chess::ChangeTheme()
 			beige = { 255, 204, 156,255 },
 			///	 theme 1
 			ligthBlue = { 204, 204, 255, 255 }, // with blue
-			vdarkBlue = { 0, 0, 102 , 255 };
+			vdarkBlue = { 0, 0, 102 , 255 },
+			// theme 3
+			darkMagenta = { 153, 51, 51 , 255 },
+			lightMagenta = { 255, 80, 80 ,255 },
+			magenta = { 255, 204, 204 , 255 };
 
 	
 	stTheme theme1 = { ligthBlue , BLUE , m_hoveredColor , vdarkBlue };
 	stTheme theme2 = { lightBrown , beige , m_hoveredColor , darkBrown };
+	stTheme theme3 = { lightMagenta, magenta, m_hoveredColor, darkMagenta };
 
-	if (flag_isTheme1)
+	if (generalColor == "blue")
 	{
 		// set theme 2
 		m_color1 = theme2.color1;
@@ -2309,9 +2348,8 @@ void Chess::ChangeTheme()
 		m_backgroundColor = theme2.backgroundColor;
 		grid->SetColors(m_color1 , m_color2);
 
-		flag_isTheme1 = false;
 	}
-	else
+	else if (generalColor == "brown")
 	{
 		
 		// set theme 1
@@ -2321,8 +2359,19 @@ void Chess::ChangeTheme()
 		m_backgroundColor = theme1.backgroundColor;
 		grid->SetColors(m_color1, m_color2);
 
-		flag_isTheme1 = true;
 		
+	}
+	else if (generalColor == "magenta")
+	{
+
+		// set theme 1
+		m_color1 = theme3.color1;
+		m_color2 = theme3.color2;
+		m_hoveredColor = theme3.heveredColor;
+		m_backgroundColor = theme3.backgroundColor;
+		grid->SetColors(m_color1, m_color2);
+
+
 	}
 
 }
@@ -2494,12 +2543,7 @@ void Chess::ReleasePiece()
 }
 
 
-/*
-* coorect draged piece possitions
-* put it alligned inside the correct case afted the drag
-* otherwise the piece should comme back to its last position before the drag
-* note : executing this function means there is no check possition
-*/
+
 void Chess::CorrectDragedPiecePosition()
 {
 	if (flag_isPlayer1Turn) // player1 turn
@@ -2590,12 +2634,7 @@ void Chess::CorrectDragedPiecePosition()
 	}
 }
 
-/*******************************************************************************
-* @brief This function gets the selected piece to drag using the cursor.
-* @param piece : a vector of pieces.
-* @return : The index of the selected piece from the correspondig vector of pieces, 
-* returns -1 if no piece is selected.
-**********************************************************************************/
+
 int Chess::GetSelectedPiece(std::vector<std::unique_ptr<Piece>> const &player)
 {
 	for (int idx = 0 ; idx < player.size(); idx++)
@@ -2607,11 +2646,7 @@ int Chess::GetSelectedPiece(std::vector<std::unique_ptr<Piece>> const &player)
 	return -1; // no piece is selected
 }
 
-/*******************************************************************************
-* @brief This function sets the center of the piece on the same positon as the cursor.
-* @param piece : the selected piece to drag
-* @param cursoPos : the current position of the cursor.
-********************************************************************************/
+
 void Chess::SetCenterPieceToCursorPosition(Piece& piece, Position const &cursorPos)
 {
 	
