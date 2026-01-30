@@ -6,6 +6,7 @@
 #include "raylib.h"
 #include "Position.h"
 #include "ChessCase.h"
+#include "Settings.h"
 #include <string>
 #include <iomanip> // for setw() : cout
 #include <array>
@@ -66,10 +67,21 @@ private:
 	};
 	
 
+
+	/**
+	* @brief to select Mode (game or settings)
+	*/
+	enum class enWindow {
+		GAME = 0,
+		SETTINGS = 1,
+	};
+
+
+
 	/**
 	* @brief to know wich type of action we need
 	*/
-	enum enActionType {
+	enum class enActionType {
 		MOUVEMENT = 0,		/// to make normal moves
 		CHECK_CASES = 1,	/// to calculate check cases
 
@@ -79,7 +91,7 @@ private:
 	/**
 	* @brief to know wich player team side we need
 	*/
-	enum enPlayerNum {
+	enum class enPlayerNum {
 		PLAYER1 = 0,
 		PLAYER2 = 1,
 	};
@@ -136,6 +148,19 @@ private:
 		Color heveredColor;
 		Color backgroundColor;
 	};
+
+
+
+	// window type
+	// ------------
+	enWindow m_windowType;
+
+	
+	
+	// settings 
+	//----------
+	Settings m_settings;
+
 
 	//pieces
 	//----------
@@ -214,7 +239,7 @@ private:
 	//--------
 
 	bool	flag_isPlayer1Turn,					/// 1 : white , 0 : black
-			flag_leftMouseButtonPressed,		
+			flag_leftMouseButtonPressed,
 			flag_rightMouseButtonPressed,
 			flag_leftMouseButtonDown,
 			flag_leftMouseButtonReleased,
@@ -230,7 +255,8 @@ private:
 			flag_isAnyPieceCaptured,			/// 1 : if any piece is captured (movement type == 2)
 			flag_possibleMouvemntsAreCalculated,
 			flag_CPU_Movement_ON,				/// 1 : player2 = CPU (computer is playing)
-			flag_isCPU_turn;					/// 1 : player2 (black) turn
+			flag_isCPU_turn,					/// 1 : player2 (black) turn
+			flag_isSoundON;
 
 public :  //<<*******ToDo reset public & private fct
 	
@@ -326,7 +352,7 @@ public :  //<<*******ToDo reset public & private fct
 	* @brief set a new theme fot the game (new set of colors).
 	* @param generalColor : the selected theme
 	*---------------------------------------------------------------------------------*/
-	void SetTheme(std::string const & generalColor = "blue");
+	void SetTheme(Settings::Theme const& theme);
 
 
 	/*--------------------------------------------------------------------------------
@@ -1148,6 +1174,15 @@ public :  //<<*******ToDo reset public & private fct
 
 	*---------------------------------------------------------------------------------*/
 	bool IsCPUTurn();
+
+
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief load settings from the first configuration before the game
+
+	*---------------------------------------------------------------------------------*/
+	void LoadSettings();
 };
 
 
@@ -1179,6 +1214,7 @@ public :  //<<*******ToDo reset public & private fct
 // sauvegarde / chargement de partie
 
 // bug  pion 2 cases + obstacle
+// bug time white while settinngs
 
 /* setings
 * sound on/off
@@ -1199,3 +1235,4 @@ public :  //<<*******ToDo reset public & private fct
 
 @code ... @endcode → Exemple d’utilisation (très apprécié).
 */
+
