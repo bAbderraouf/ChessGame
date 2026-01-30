@@ -1165,7 +1165,6 @@ public :  //<<*******ToDo reset public & private fct
 * 5 tour moves to fou 9 case
 */
 
-
 // isPat
 // priseEnPassant
 // 3 times same position

@@ -712,8 +712,8 @@ bool Chess::GenerateLegalMoves(	ChessCase const& cellCoords,
 			// two cases (only initial pos)
 			r = rowCell + 2 * step; 
 			c = colCell;
-			if (IsValidIdx(r, c))
-				if (board.at(r).at(c).empty)
+			if (IsValidIdx(r, c) && IsValidIdx(r -step, c))
+				if ((board.at(r).at(c).empty) && (board.at(r-step).at(c).empty))
 					if (Compare2Cells(board.at(rowCell).at(colCell), m_Initial_Board.at(rowCell).at(colCell))) // piece NeverMoved : compare current cell with initial one
 						AddPossiblePossitionFromBoard(ActionType, board, PossibleMvt, r, c , attacker);
 
