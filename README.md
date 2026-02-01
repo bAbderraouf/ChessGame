@@ -4,6 +4,7 @@ It features a custom chess engine with full rule validation, turn and state mana
 
 # Features
 - Full chess rules (legal moves, captures, turns)
+- Supported CPU mode (play agains computer).
 - Drag and drop of 2D pieces.
 - Capture pieces
 - Calculate possible position for each piece.
@@ -14,6 +15,9 @@ It features a custom chess engine with full rule validation, turn and state mana
 - Custom game logic and validation
 - 2D rendering (Raylib)
 - Board representation (grid-based)
+- Supported game modes: Bullet, Blitz, and Rapid.
+- Settings can be selected before starting the game.
+
 
 # Project Goals
 - Problem solving, (project built from scratch).

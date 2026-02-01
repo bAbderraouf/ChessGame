@@ -13,8 +13,9 @@
 #include <ctime>
 #include <chrono>
 #include <cctype>
-#include <cstdlib> // rand
-
+#include <cstdlib>	// rand
+#include <fstream>
+#include <sstream>  // std::ostringstream
 
 #define RED_COUT   "\033[31m"
 #define BLUE_COUT  "\033[34m"
@@ -205,6 +206,13 @@ private:
 	time_t	m_t1, /// internal variables to calcul elapsed time for each player
 			m_t2;  
 
+
+	//output files
+	//-------------
+
+	std::string m_gameHistoryFileName;
+
+
 	//Board case
 	//------------
 
@@ -221,6 +229,8 @@ private:
 		Position cellCentralPosition;	/// cell central position in pixels (x,y)
 		ChessCase cellCoordinates;		/// cell coordinates (i,j)
 		std::string pieceName;			/// piece name (Pion, Fou, Tour, ....)
+		std::string pieceEnName;		/// piece english name (Pawn, Bishop, Rook, ....)
+		std::string piecePGNName;		/// piecePGNName : Portable Game Notation K Q R B N P
 		std::string caseName;			/// cell case name exple : A1, E2 , F4 ...
 		int playerSide;					/// piece team side (1 : white , 0 : black)
 
@@ -256,6 +266,8 @@ private:
 			flag_possibleMouvemntsAreCalculated,
 			flag_CPU_Movement_ON,				/// 1 : player2 = CPU (computer is playing)
 			flag_isCPU_turn,					/// 1 : player2 (black) turn
+			flag_isRoundFinished,				/// 1 : if both players are played (white turn + black turn)
+			flag_isNewGame,
 			flag_isSoundON;
 
 public :  //<<*******ToDo reset public & private fct
@@ -343,10 +355,28 @@ public :  //<<*******ToDo reset public & private fct
 	void MovePieceToNewCase(Piece& piece, ChessCase CCase);
 
 
+
+	/*--------------------------------------------------------------------------------
+	* @brief game is starting (no moves yet)
+	* @return true if game is starting without any move
+	*---------------------------------------------------------------------------------*/
+	bool IsNewGame();
+
+
+
 	/*--------------------------------------------------------------------------------
 	* @brief change the player side after each round (init necessary flags)
 	*---------------------------------------------------------------------------------*/
 	void ChangeTurn();
+
+
+	/*--------------------------------------------------------------------------------
+	* @brief check if round is finished (both players played)
+	* @return true if round is finished
+	*---------------------------------------------------------------------------------*/
+	bool IsRoundFinished();
+
+
 
 	/*--------------------------------------------------------------------------------
 	* @brief set a new theme fot the game (new set of colors).
@@ -578,7 +608,7 @@ public :  //<<*******ToDo reset public & private fct
 
 	/*--------------------------------------------------------------------------------
 
-	* @brief initialize the board info internal variable
+	* @brief initialize the board info internal variable with default values
 
 	*---------------------------------------------------------------------------------*/
 	void InitBoardInfo();
@@ -699,9 +729,10 @@ public :  //<<*******ToDo reset public & private fct
 	* @brief print current board info on the terminal
 	* @param infoType : the info name that we need to print (Position, Indexes, ....)
 	* @param caseName : the needed board info variable
+	* @return printed output as a string 
 
 	*---------------------------------------------------------------------------------*/
-	void PrintBoardQuickInfo(std::string infoType , Board const & board) const;
+	std::string PrintBoardQuickInfo(std::string infoType , Board const & board) const;
 
 
 
@@ -1183,6 +1214,15 @@ public :  //<<*******ToDo reset public & private fct
 
 	*---------------------------------------------------------------------------------*/
 	void LoadSettings();
+
+
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief Save game steps on a text file (all board states)
+
+	*---------------------------------------------------------------------------------*/
+	void SaveGameSteps();
 };
 
 
@@ -1205,16 +1245,16 @@ public :  //<<*******ToDo reset public & private fct
 // 3 times same position
 // materiel insufisant roi vs roi
 
-// temp, fin de partie en temps,
+// x temp, fin de partie en temps,
 // son, mvt, echec, mat
 // orientation du plateaux
 
-// historique des coups,
+// x historique des coups,
 // annuler / refaire un coups / redemarrer la partie / abondon
 // sauvegarde / chargement de partie
 
-// bug  pion 2 cases + obstacle
-// bug time white while settinngs
+// x bug  pion 2 cases + obstacle
+// x bug time white while settinngs
 
 /* setings
 * sound on/off

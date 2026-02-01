@@ -40,6 +40,8 @@ Chess::infoCase::infoCase()
 	idPiece = -1;
 	pieceTeamIndex = -1;
 	pieceName = "-";
+	pieceEnName = "-";
+	piecePGNName = "-";
 	caseName = "-";
 	playerSide = -1; // player 1 by default
 	//bool caseHovered;
@@ -52,6 +54,8 @@ void Chess::infoCase::setToEmpty()
 	idPiece = -1;
 	pieceTeamIndex = -1;
 	pieceName = "-";
+	pieceEnName = "-";
+	piecePGNName = "-";
 	playerSide = -1;
 }
 
@@ -92,7 +96,7 @@ void Chess::Init()
 	//player1[16]->SetTeamIndex(16);
 
 	PrintBoardQuickInfo("Names",m_board);
-	PrintBoardQuickInfo("playerSide", m_board);
+	PrintBoardQuickInfo("ENG Small Names", m_board);
 
 	selectdPieceID = -1; // no piece is selected
 
@@ -111,6 +115,9 @@ void Chess::Init()
 	m_sizeText = 20;
 	m_fontText = LoadFontEx("assets/fonts/courrierNew.ttf", m_sizeText, nullptr, 0);
 	m_spacingText = 1;
+
+	//output files
+	m_gameHistoryFileName = "outputs/Last_game_history.txt";
 
 	//sound
 	InitAudioDevice();
@@ -146,6 +153,8 @@ void Chess::Init()
 	flag_possibleMouvemntsAreCalculated = false;
 	flag_CPU_Movement_ON = true; // automatic movement CPU
 	flag_isCPU_turn = false;
+	flag_isRoundFinished = false;
+	flag_isNewGame = true;
 	flag_isSoundON = true;
 }
 
@@ -261,6 +270,11 @@ void Chess::Update()
 			PionPromotion();
 
 			//----------------------------------
+			// save infos
+			//----------------------------------
+			SaveGameSteps();
+
+			//----------------------------------
 			// Change player side if turn is finished
 			//----------------------------------
 			if (IsTurnFinished())
@@ -295,10 +309,9 @@ void Chess::Update()
 
 
 
-			// print infos
+			// print / save infos
 			//----------------------------------
-			PrintBoardQuickInfo("indexes", m_board);
-
+			PrintBoardQuickInfo("ENG Small Names", m_board);
 			PrintBoardQuickInfo("Names", m_board);
 
 
@@ -346,7 +359,7 @@ void Chess::Update()
 			//---------------------
 			m_windowType = enWindow::GAME;
 
-			m_t1 = time(NULL); // curent time
+			m_t1 = time(NULL); // start time computing //curent time
 		}
 	}
 }
@@ -1601,6 +1614,12 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 
 	if (flag_isPlayer1Turn) // case player 1
 	{	
+		// start a new round
+		flag_isRoundFinished = false;
+
+		// not a new game anymore
+		flag_isNewGame = false;
+
 		// set move info
 		stMove move{ PosToCase(selectedPieceOriginalPos), selectedMoveCell, player1[selectdPieceID]->GetTeamIndex(), enPlayerNum::PLAYER1 };
 		
@@ -1615,6 +1634,7 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 			// allow the move
 			flag_player1InCheck = false;
 			flag_isMovementAllowed = true;
+
 			selectedPieceCurrentPos = CaseToPos(selectedMoveCell);
 
 			// move history
@@ -1631,6 +1651,7 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
 			flag_player1InCheck = true;
 			flag_isMovementAllowed = false;
+			
 		}
 	}
 
@@ -1655,7 +1676,9 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 			// move history
 			m_currentMove = move;
 			UpdateMovesHistory();
-			 // both players played
+
+			// both players played
+			flag_isRoundFinished = true;
 
 			//play sound
 			if (flag_isSoundON)
@@ -2311,6 +2334,42 @@ void Chess::LoadSettings()
 	}
 }
 
+void Chess::SaveGameSteps()
+{
+	std::ofstream file(m_gameHistoryFileName, std::ios::app);  //append mode
+
+
+	if (!file.is_open())
+	{
+		std::cerr << "error : Cannot oppen output text file!";
+		return;
+	}
+								
+
+	if (IsNewGame())
+	{
+		file << "\n\n\t==========================\n";
+		file <<     "\t===  New Game Started  ===\n";
+		file <<     "\t==========================\n";
+		file << "\n\tDate :" << GetDateTimeToString(GetSystemDateTime()) << "\n\n";
+	}
+	else	// only after 1st move
+	{
+		if(flag_isMovementAllowed)
+			file << PrintBoardQuickInfo("ENG Small Names", m_board);
+	}
+		
+
+	if (IsRoundFinished())
+	{
+		file << m_allMoves[m_moveIdx - 2];
+		file << "________________________________" << std::endl;
+	}
+
+	file.close();
+
+}
+
 
 
 bool Chess::IsCapturableObstacle(int const& row, int const& col) const
@@ -2378,6 +2437,11 @@ void Chess::MovePieceToNewCase(Piece& piece, ChessCase CCase)
 	MovePieceToNewPos(piece, newPos);
 }
 
+bool Chess::IsNewGame()
+{
+	return flag_isNewGame;
+}
+
 void Chess::ChangeTurn()
 {
 
@@ -2401,6 +2465,11 @@ void Chess::ChangeTurn()
 
 	// init t1 for tempo calculation
 	InitT1();
+}
+
+bool Chess::IsRoundFinished()
+{
+	return flag_isRoundFinished;
 }
 
 void Chess::SetTheme(Settings::Theme const& theme)
@@ -2821,6 +2890,8 @@ void Chess::InitBoardInfo()
 			m_board.at(i).at(j).idPiece = -1;
 			m_board.at(i).at(j).pieceTeamIndex = -1;
 			m_board.at(i).at(j).pieceName = "-"; // no piece
+			m_board.at(i).at(j).pieceEnName = "-";
+			m_board.at(i).at(j).piecePGNName = "-";
 			m_board.at(i).at(j).playerSide = -1;
 			m_board.at(i).at(j).cellPosition = GetCellPosition(i, j);
 			m_board.at(i).at(j).cellCoordinates = ChessCase(i, j);
@@ -2872,6 +2943,8 @@ void Chess::UpdateCellInfo(Piece const& piece  , int row , int col, Board &board
 		board.at(row).at(col).idPiece = piece.getId();
 		board.at(row).at(col).pieceTeamIndex = piece.GetTeamIndex();
 		board.at(row).at(col).pieceName = piece.GetName();
+		board.at(row).at(col).pieceEnName = piece.GetEnName();
+		board.at(row).at(col).piecePGNName = piece.GetPGNName();
 		board.at(row).at(col).playerSide = piece.GetPlayerSide();
 	}
 		
@@ -2885,6 +2958,8 @@ void Chess::SetCellInfo(Piece const& piece, int row, int col, Board& board)
 	board.at(row).at(col).idPiece = piece.getId();
 	board.at(row).at(col).pieceTeamIndex = piece.GetTeamIndex();
 	board.at(row).at(col).pieceName = piece.GetName();
+	board.at(row).at(col).pieceEnName = piece.GetEnName();
+	board.at(row).at(col).piecePGNName = piece.GetPGNName();
 	board.at(row).at(col).playerSide = piece.GetPlayerSide();
 	
 
@@ -3003,79 +3078,130 @@ void Chess::GetBoardRowColFromPiecePosition(Position const& pos, int& row, int& 
 	}
 }
 
-void Chess::PrintBoardQuickInfo(std::string infoType , Board const& board) const
+std::string Chess::PrintBoardQuickInfo(std::string infoType , Board const& board) const
 {
-	std::cout << std::endl;
+	std::ostringstream oss; // the goal is to get printed results by "cout" into a "oss"
+
+	oss << std::endl;
 
 	if (infoType == "Position")
 	{
-			std::cout << "Position" << std::endl;
+			oss << "Position" << std::endl;
 		for (int i = 0; i < 8; i++)
 		{
 			for (int j = 0; j < 8; j++)
 			{
-				std::cout << "(" << board.at(i).at(j).cellPosition.row << "," << board.at(i).at(j).cellPosition.col << ") ";
+				oss << "(" << board.at(i).at(j).cellPosition.row << "," << board.at(i).at(j).cellPosition.col << ") ";
 			}
-			std::cout << std::endl;
+			oss << std::endl;
 		}
 	}
 
 	else if (infoType == "Names")
 	{
-		std::cout << "Names" << std::endl;
+		oss << "Names" << std::endl;
 
 		for (int i = 0; i < 8; i++)
 		{
 			for (int j = 0; j < 8; j++)
 			{
-				std::cout << std::setw(4) << board.at(i).at(j).pieceName << " ";
+				oss << std::setw(4) << board.at(i).at(j).pieceName << " ";
 			}
-			std::cout << std::endl;
+			oss << std::endl;
 		}
+	}
+
+	else if (infoType == "ENG Names")
+	{
+		oss << "ENG Names" << std::endl;
+
+		for (int i = 0; i < 8; i++)
+		{
+			for (int j = 0; j < 8; j++)
+			{
+				oss << std::setw(4) << board.at(i).at(j).pieceEnName << " ";
+			}
+			oss << std::endl;
+		}
+	}
+
+	else if (infoType == "ENG Small Names")
+	{
+		std::string playerTurn = "";
+
+		oss << " ==================" << std::endl;
+		for (int i = 0; i < 8; i++)
+		{
+			oss << 8 - i <<"|";
+
+			for (int j = 0; j < 8; j++)
+			{
+				oss << std::setw(1) << board.at(i).at(j).piecePGNName << " "; // only the first letter
+			}
+
+			// write player turn
+				//-------------------
+
+			if (i == 1)
+				if (flag_isPlayer1Turn)
+					playerTurn = "\tWhite turn";
+				else
+					playerTurn = "\tBlack turn";
+			else
+				playerTurn = "";
+
+			oss <<"|" << playerTurn << std::endl;
+		}
+		oss << " ==================" << std::endl;
+		oss << "  a b c d e f g h" << std::endl;
 	}
 
 	else if (infoType == "empty")
 	{
-		std::cout << "empty" << std::endl;
+		oss << "empty" << std::endl;
 
 		for (int i = 0; i < 8; i++)
 		{
 			for (int j = 0; j < 8; j++)
 			{
-				std::cout << std::setw(4) << board.at(i).at(j).empty << " ";
+				oss << std::setw(4) << board.at(i).at(j).empty << " ";
 			}
-			std::cout << std::endl;
+			oss << std::endl;
 		}
 	}
 
 	else if (infoType == "playerSide")
 	{
-		std::cout << "playerSide" << std::endl;
+		oss << "playerSide" << std::endl;
 
 		for (int i = 0; i < 8; i++)
 		{
 			for (int j = 0; j < 8; j++)
 			{
-				std::cout << std::setw(3) << board.at(i).at(j).playerSide << " ";
+				oss << std::setw(3) << board.at(i).at(j).playerSide << " ";
 			}
-			std::cout << std::endl;
+			oss << std::endl;
 		}
 	}
 
 	else if (infoType == "indexes")
 	{
-		std::cout << "indexes" << std::endl;
+		oss << "indexes" << std::endl;
 
 		for (int i = 0; i < 8; i++)
 		{
 			for (int j = 0; j < 8; j++)
 			{
-				std::cout << std::setw(3) << board.at(i).at(j).pieceTeamIndex << " ";
+				oss << std::setw(3) << board.at(i).at(j).pieceTeamIndex << " ";
 			}
-			std::cout << std::endl;
+			oss << std::endl;
 		}
 	}
 
-	std::cout << std::endl;
+	oss << std::endl;
+
+	std::cout << YELLOW_COUT << oss.str() << RESET_COUT;
+
+	return oss.str(); 
 }
 

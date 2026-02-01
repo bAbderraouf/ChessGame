@@ -19,6 +19,8 @@ public :
 	virtual Piece* Clone() const = 0;
 	virtual int getId() const;
 	virtual std::string GetName() const;
+	virtual std::string GetEnName() const;
+	virtual std::string GetPGNName() const;
 	virtual bool GetPlayerSide() const;
 
 	virtual void InitPiece();
@@ -52,7 +54,7 @@ protected:
 	Image pieceImage;
 	Texture pieceTexture;
 	int imageSize;
-	std::string pieceName;
+	std::string pieceName, pieceEnName , piecePGNName;  /// piecePGNName : Portable Game Notation K Q R B N P
 	int m_teamIndex;
 	bool m_isCaptured;
 

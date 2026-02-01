@@ -52,6 +52,11 @@ Update()
 	update PionPromotion
 	------------
 		-PionPromotion()
+
+	------------
+	SaveGameSteps
+	------------
+		-SaveGameSteps();
 	
 	------------
 	 Change player side

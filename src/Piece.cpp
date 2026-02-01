@@ -14,7 +14,8 @@ Piece::Piece(bool player1Side)
 	m_isCaptured = false;
 	flag_isSelected = false;
 	flag_neverMoved = true;
-	pieceName = "";
+	pieceName = "";			/// piece french name
+	pieceEnName = "";		/// piece english name
 	imageSize = 75; // real image size
 	centerPos = GetCenterOfPiecePosition();
 
@@ -35,7 +36,8 @@ Piece::Piece(Piece const& p) :
 {
 	id = p.id;
 	pieceName = p.pieceName;
-
+	pieceEnName = p.pieceEnName;
+	piecePGNName = p.piecePGNName;
 
 	//InitPiece
 	pieceTexture = p.pieceTexture;
@@ -55,6 +57,16 @@ int Piece::getId() const
 std::string Piece::GetName() const
 {
 	return this->pieceName;
+}
+
+std::string Piece::GetEnName() const
+{
+	return this->pieceEnName;
+}
+
+std::string Piece::GetPGNName() const
+{
+	return this->piecePGNName;
 }
 
 bool Piece::GetPlayerSide() const
@@ -313,6 +325,8 @@ Pion::Pion(bool player1Side) : Piece(player1Side)
 {
 	id = 1;
 	pieceName = "Pion";
+	pieceEnName = "Pawn";
+	piecePGNName = "P";
 
 	//InitPiece
 	LoadPieceImage();
@@ -336,6 +350,8 @@ Fou::Fou(bool player1Side) : Piece(player1Side)
 {
 	id = 2;
 	pieceName = "Fou";
+	pieceEnName = "Bishop";
+	piecePGNName = "B";
 
 	//InitPiece
 	LoadPieceImage();
@@ -359,6 +375,8 @@ Cavalier::Cavalier(bool player1Side):Piece( player1Side)
 {
 	id = 3;
 	pieceName = "Cava";//lier";
+	pieceEnName = "Knight";
+	piecePGNName = "N";
 
 	//InitPiece
 	LoadPieceImage();
@@ -381,6 +399,8 @@ Tour::Tour(bool player1Side) :Piece( player1Side)
 {
 	id = 4;
 	pieceName = "Tour";
+	pieceEnName = "Rook"; // castle
+	piecePGNName = "R";
 
 	//InitPiece
 	LoadPieceImage();
@@ -404,6 +424,8 @@ Dame::Dame(bool player1Side) :Piece( player1Side)
 {
 	id = 5;
 	pieceName = "Dame";
+	pieceEnName = "Queen";
+	piecePGNName = "Q";
 
 	//InitPiece
 	LoadPieceImage();
@@ -427,6 +449,8 @@ Roi::Roi(bool player1Side) : Piece( player1Side)
 {
 	id = 6;
 	pieceName = "Roi";
+	pieceEnName = "King";
+	piecePGNName = "K";
 
 	//InitPiece
 	LoadPieceImage();
