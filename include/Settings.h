@@ -2,35 +2,16 @@
 
 #include "raylib.h"
 #include "Position.h"
-#include "Drawable.h"
+#include <memory>
 #include <iostream>
+#include "Drawable.h"
+#include "Utilis.h"
 
 /**
 * @brief this class goal is to grab and store chessGame settings 
 */
 class Settings
 {
-public: 
-	/**
-	* @brief Represents the speed category of a chess game.
-	*/
-	enum class GameMode {
-		Bulet,			/// 1min per player
-		Blitz,			/// 5min
-		Rapid			/// 20min
-	};
-
-
-	/**
-	* @brief Represents different themes existing in this game
-	*/
-	enum class Theme {
-		Blue,			
-		Brown,			
-		Magenta			
-	};
-
-
 
 private:
 
@@ -43,13 +24,19 @@ private:
 
 
 	// drawable object
-	std::unique_ptr<Drawable> 
-		imTheme1, imTheme2, imTheme3,
-		imBtnOK,
-		txtSoundON, txtSoundOFF, 
-		txtCpuON, txtCpuOFF,
-		txtSaveON, txtSaveOFF,
-		txtBulet, txtBlitz, txtRapid;
+	std::unique_ptr<Drawable> imTheme1;
+	std::unique_ptr<Drawable> imTheme2;
+	std::unique_ptr<Drawable> imTheme3;
+	std::unique_ptr<Drawable> imBtnOK;
+	std::unique_ptr<Drawable> txtSoundON;
+	std::unique_ptr<Drawable> txtSoundOFF;
+	std::unique_ptr<Drawable> txtCpuON; 
+	std::unique_ptr<Drawable> txtCpuOFF;
+	std::unique_ptr<Drawable> txtSaveON;
+	std::unique_ptr<Drawable> txtSaveOFF;
+	std::unique_ptr<Drawable> txtBulet;
+	std::unique_ptr<Drawable> txtBlitz;
+	std::unique_ptr<Drawable> txtRapid;
 
 	// positions
 	Vector2 posT1, posT2, posT3,
@@ -98,21 +85,6 @@ public:
 	//end of selection
 	bool IsSelectionDone();
 	
-	/**------------------------------------------------------------------------------------------------------
-	* @brief check if element is selected by mouse cursor (clicked)
-	* note : button should be presed
-	* @param cursorPos : cursor position coordinates (x,y)
-	* @param objectOutlineRect : rectangle defining the object to be selected
-	* @param leftMouseBtnClicked : to know if the left mouse button is clicked or not (get the flag state)
-	* @return true if selected (left mouse button pressed + cursor in the correct aera).
-	* @code 
-		Rectangle  rect{ 0, 0, float(windowWidth), float(topMargin) };
-		if(Settings::IsClicked(GetMousePosition(),rect, flag_leftMouseButtonPressed))
-			std::cout << RED_COUT << "***** clickeed *****"  << RESET_COUT << std::endl;
-	* @endcode
-	------------------------------------------------------------------------------------------------------*/
-	static bool IsClicked(Vector2 const& cursorPos, Rectangle const& objectOutlineRect, bool leftMouseBtnClicked);
-
 
 private :
 	/**

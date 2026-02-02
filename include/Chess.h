@@ -7,6 +7,7 @@
 #include "Position.h"
 #include "ChessCase.h"
 #include "Settings.h"
+#include "Utilis.h"
 #include <string>
 #include <iomanip> // for setw() : cout
 #include <array>
@@ -16,6 +17,7 @@
 #include <cstdlib>	// rand
 #include <fstream>
 #include <sstream>  // std::ostringstream
+#include <memory>
 
 #define RED_COUT   "\033[31m"
 #define BLUE_COUT  "\033[34m"
@@ -151,6 +153,10 @@ private:
 	};
 
 
+	stTheme m_defaultTheme;		/// default set of colors used for the game
+	Theme m_currentTheme;
+
+
 
 	// window type
 	// ------------
@@ -189,6 +195,17 @@ private:
 	int m_sizeText,			/// size of lateral text
 		m_spacingText;		/// spacing of lateral text
 	Font m_fontText;		/// used font for lateral text
+
+
+
+	//drawable( clickable)
+	//---------
+	std::unique_ptr<Drawable>	m_imgNewGame,			/// button to start a new game at any moment
+								m_imgChngeTheme;		/// button to change theme from selection
+
+	//drawable positions
+	Vector2 m_posNewGame, m_posChgeTheme;
+
 
 	//sound
 	//---------
@@ -280,9 +297,8 @@ public :  //<<*******ToDo reset public & private fct
 	* @param nRows, nCols : grid number of rows & columns (respectivly).
 	* @param cSize : grid cell size in pixel.
 	* @param lMargin, tMargin : left margin & top margin (space to add outside of the grid board).
-	* @param c1, c2 : grid cell colors.
 	* --------------------------------------------------------------------------------*/
-	Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin, int tMargin, Color c1, Color c2);
+	Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin, int tMargin);
 
 
 	/*--------------------------------------------------------------------------------
@@ -299,6 +315,13 @@ public :  //<<*******ToDo reset public & private fct
 	*---------------------------------------------------------------------------------*/
 	void Init();
 
+
+	/*--------------------------------------------------------------------------------
+	*  @brief reset game values :  pieces + internal variables 
+		(fixed values are initialized in Init() function)
+	*---------------------------------------------------------------------------------*/
+	void StartNewGame();
+
 	/*--------------------------------------------------------------------------------
 	*  @brief wait for inputs : drag piece, release, ...
 	*---------------------------------------------------------------------------------*/
@@ -309,10 +332,17 @@ public :  //<<*******ToDo reset public & private fct
 	*---------------------------------------------------------------------------------*/
 	void Update(); 
 
+
+
+
+
 	/*--------------------------------------------------------------------------------
 	*  @brief draw screen : window + grid + pieces + possible movements
 	*---------------------------------------------------------------------------------*/
 	void Draw();
+
+
+
 
 	//----------------------
 	// additional functions
@@ -380,10 +410,35 @@ public :  //<<*******ToDo reset public & private fct
 
 
 	/*--------------------------------------------------------------------------------
-	* @brief set a new theme fot the game (new set of colors).
+	* @brief change the theme of the game (use existing themes, new set of colors).
 	* @param generalColor : the selected theme
 	*---------------------------------------------------------------------------------*/
-	void SetTheme(Settings::Theme const& theme);
+	void ChangeTheme(Theme const& theme);
+
+
+
+	/*--------------------------------------------------------------------------------
+	* @brief change the theme of the game (use existing themes, new set of colors).
+	* @param generalColor : the selected theme
+	*---------------------------------------------------------------------------------*/
+	void SwitchThemes();
+
+
+
+	/*--------------------------------------------------------------------------------
+	* @brief get default theme fot the game (new set of colors).
+	* @return stTheme : the default theme
+	*---------------------------------------------------------------------------------*/
+	stTheme GetDefaultTheme();
+
+
+
+	/*--------------------------------------------------------------------------------
+	* @brief set different colors from a selected theme
+	* @param theme : a selected theme to be used
+	*---------------------------------------------------------------------------------*/
+	void SetColorsFromTheme( stTheme const & theme);
+
 
 
 	/*--------------------------------------------------------------------------------
@@ -1071,6 +1126,17 @@ public :  //<<*******ToDo reset public & private fct
 	*---------------------------------------------------------------------------------*/
 	void UpdateTempo();
 
+
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief update buttons states on the lateral screen
+
+	*---------------------------------------------------------------------------------*/
+	void UpdateButtons();
+
+
+
 	// text
 	//-----------
 
@@ -1115,7 +1181,15 @@ public :  //<<*******ToDo reset public & private fct
 
 	*---------------------------------------------------------------------------------*/
 	void DrawLetters();
+	
 
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief draw board letters A1, F1 ....
+
+	*---------------------------------------------------------------------------------*/
+	void DrawButtons();
 
 
 	/*--------------------------------------------------------------------------------
@@ -1258,12 +1332,26 @@ public :  //<<*******ToDo reset public & private fct
 // x bug time white while settinngs
 
 /* setings
-* sound on/off
-* time player
-* theme
-* with cpu ?
+* sound on/off	x
+* time player   x
+* theme			x
+* with cpu ?	x
+* save file txt 
+* show possible mvt
 */
 
+
+/* ===> reste
+  x 1- start new game
+	2- game over window
+  x 3- change theme during game
+	4- rock
+	5- promotion full feature
+	6- draw (3times ,...)
+	7- finish settings
+	8- change chess construtor (no need de c1,c2, make it internalà
+	9- son de chargement / win /
+*/
 
 /*
 * @brief → Description courte, obligatoire.

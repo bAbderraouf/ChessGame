@@ -1,6 +1,6 @@
 #include "Chess.h"
 
-Chess::Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin, int tMargin, Color c1, Color c2)
+Chess::Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin, int tMargin)
 	: selectedPieceOriginalPos(0, 0), selectedPieceCurrentPos(0, 0)
 {
 	// game window
@@ -14,11 +14,12 @@ Chess::Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin
 	cellSize = cSize;
 	leftMargin = lMargin;
 	topMargin = tMargin;
-	m_color1 = c1;
-	m_color2 = c2;
-	m_hoveredColor = Color{ 255, 204, 0,100 };// {0,255, 0,140 };
-	m_backgroundColor = Color{ 0, 0, 102 , 255 };
 
+	// colors :
+	// color1,color2,bground, hovered
+	//-------------------------------
+	m_defaultTheme = GetDefaultTheme();
+	SetColorsFromTheme(m_defaultTheme);
 
 	// init widow + grid + piece
 	Init();
@@ -73,10 +74,42 @@ void Chess::Init()
 	grid->SetMargins(leftMargin, topMargin);
 
 
+	// text
+	m_xText = leftMargin + 8 * cellSize + cellSize / 3;
+	m_sizeText = 20;
+	m_fontText = LoadFontEx("assets/fonts/courrierNew.ttf", m_sizeText, nullptr, 0);
+	m_spacingText = 1;
+
+	//output files
+	m_gameHistoryFileName = "outputs/Last_game_history.txt";
+
+	//sound
+	InitAudioDevice();
+	m_normalMoveSound = LoadSound("assets/sounds/movePiece2.wav");
+	m_checkSound = LoadSound("assets/sounds/checkKing.wav");
+	m_checkmateSound = LoadSound("assets/sounds/shoot.wav");
+	m_capturepieceSound = LoadSound("assets/sounds/shoot.wav");
+
+	//time	
+	m_tMaxPlayer1 = 600;// default seconds 
+	m_tMaxPlayer2 = 600;
+
+
+	//drawable 
+	m_posNewGame	= {(float)(8 * cellSize + leftMargin + 1.4f * cellSize), (float)(2.3f * cellSize + topMargin)};
+	m_posChgeTheme	= {(float)(8 * cellSize + leftMargin + 0.6f * cellSize), (float)(2.3f * cellSize + topMargin)};
+	m_imgNewGame	= std::make_unique<ImageObject>(m_posNewGame, "assets/images/buttons/restart2.png");
+	m_imgChngeTheme = std::make_unique<ImageObject>(m_posChgeTheme, "assets/images/buttons/changeTheme1.png");
+
+	// reset game parameters
+	StartNewGame();
+}
+
+void Chess::StartNewGame()
+{
 	// init m_Bord values
 	// should be before init pieces
 	InitBoardInfo();
-
 
 	// window type
 	m_windowType = enWindow::SETTINGS;
@@ -84,21 +117,18 @@ void Chess::Init()
 	//settings
 	m_settings = std::make_unique<Settings>();
 
-	
-	//pirngt m_bord positions
-
 
 	//init Pieces (m_board is created)
 	player1 = InitPlayersPieces(true); // player 1
 	player2 = InitPlayersPieces(false); // player 2	
-	
+
 	m_Initial_Board = m_board; // keep it in its initial state
 
 	//player1.push_back(std::make_unique<Dame>(true));
 	//player1[16]->SetPosition(m_board.at(4).at(4).cellPosition);
 	//player1[16]->SetTeamIndex(16);
 
-	PrintBoardQuickInfo("Names",m_board);
+	PrintBoardQuickInfo("Names", m_board);
 	PrintBoardQuickInfo("ENG Small Names", m_board);
 
 	selectdPieceID = -1; // no piece is selected
@@ -112,27 +142,6 @@ void Chess::Init()
 	m_allMoves = {};
 	m_moveIdx = 1;
 	m_currentMove = {};
-
-	// text
-	m_xText = leftMargin + 8 * cellSize + cellSize / 3;
-	m_sizeText = 20;
-	m_fontText = LoadFontEx("assets/fonts/courrierNew.ttf", m_sizeText, nullptr, 0);
-	m_spacingText = 1;
-
-	//output files
-	m_gameHistoryFileName = "outputs/Last_game_history.txt";
-
-	//sound
-	InitAudioDevice();
-	m_normalMoveSound	= LoadSound("assets/sounds/movePiece2.wav");
-	m_checkSound		= LoadSound("assets/sounds/checkKing.wav");
-	m_checkmateSound	= LoadSound("assets/sounds/shoot.wav");
-	m_capturepieceSound = LoadSound("assets/sounds/shoot.wav");
-
-	//time	
-	m_tMaxPlayer1 = 160;//seconds 
-	m_tMaxPlayer2 = 160;
-
 
 	// erase vectors
 	std::vector<PossibleMouvement>().swap(m_possibleMouvement);
@@ -201,10 +210,15 @@ void Chess::Update()
 
 	if (m_windowType == enWindow::GAME)
 	{
-	//----------------------------------
-	// update tempo
-	//----------------------------------
+		//----------------------------------
+		// update tempo
+		//----------------------------------
 		UpdateTempo();
+
+		//----------------------------------
+		// update buttons
+		//----------------------------------
+		UpdateButtons();
 
 
 		//----------------------------------
@@ -310,7 +324,8 @@ void Chess::Update()
 				std::cout << RED_COUT << "PAT !" << RESET_COUT << std::endl;
 			}
 
-
+			if (m_moveIdx == 3) //<*****Todo for test
+			//	StartNewGame();
 
 			// print / save infos
 			//----------------------------------
@@ -1962,6 +1977,7 @@ void Chess::UpdateMovesHistory()
 		std::cout << "Movement: " << YELLOW_COUT << m_allMoves[m_moveIdx-1] << RESET_COUT << std::endl;
 
 		m_moveIdx++;
+
 	}
 }
 
@@ -2008,6 +2024,27 @@ void Chess::UpdateTempo()
 			}
 }
 
+void Chess::UpdateButtons()
+{
+	// change theme btn
+	m_imgChngeTheme->Update(flag_leftMouseButtonPressed);
+	if (m_imgChngeTheme->IsClicked())
+	{
+		SwitchThemes();
+		m_imgChngeTheme->SetClicked(false);
+		m_imgChngeTheme->SetSelected(false);
+	}
+
+	// new game btn
+	m_imgNewGame->Update(flag_leftMouseButtonPressed);
+	if (m_imgNewGame->IsClicked())
+	{
+		StartNewGame();
+		m_imgNewGame->SetClicked(false);
+		m_imgNewGame->SetSelected(false);
+	}
+}
+
 void Chess::DrawPlayerTurn()
 {
 	float xText = m_xText , yText = topMargin;
@@ -2027,7 +2064,7 @@ void Chess::DrawPlayerTurn()
 void Chess::DrawState()
 {
 	// init position
-	float xText = m_xText, yText = 0.75 * cellSize + topMargin;
+	float xText = m_xText, yText = 0.5 * cellSize + topMargin;
 
 	std::string StateText = "";
 
@@ -2049,7 +2086,7 @@ void Chess::DrawState()
 
 void Chess::DrawTime()
 {
-	float xText = m_xText  , yText = 1.5*cellSize + topMargin;
+	float xText = m_xText  , yText = 1.*cellSize + topMargin;
 	Color lightBlue = { 204, 204, 255, 255 };
 
 	std::string title = "Time";
@@ -2127,6 +2164,15 @@ void Chess::DrawLetters()
 
 }
 
+void Chess::DrawButtons()
+{
+	// button change theme
+	m_imgChngeTheme->Draw();
+
+	// button start a new game
+	m_imgNewGame->Draw();
+}
+
 void Chess::DrawLateralTexts()
 {
 	DrawPlayerTurn(); // current turn
@@ -2138,6 +2184,8 @@ void Chess::DrawLateralTexts()
 	DrawLastMoves(); // moves history
 
 	DrawLetters();  // case names
+
+	DrawButtons();
 
 }
 
@@ -2304,7 +2352,7 @@ void Chess::LoadSettings()
 {
 	// Selected Theme 
 	//-----------------------
-	SetTheme(m_settings->GetTheme());
+	ChangeTheme(m_settings->GetTheme());
 
 	// player vs CPU ?
 	//-----------------------
@@ -2316,20 +2364,20 @@ void Chess::LoadSettings()
 
 	// cpu time (game mode)
 	//-----------------------
-	Settings::GameMode mode = m_settings->GetGameMode();
-	if (mode == Settings::GameMode::Bulet)
+	GameMode mode = m_settings->GetGameMode();
+	if (mode == GameMode::Bulet)
 	{
 		// 1min per player
 		m_tMaxPlayer1 = 60;
 		m_tMaxPlayer2 = 60; 
 	}
-	else if (mode == Settings::GameMode::Blitz)
+	else if (mode == GameMode::Blitz)
 	{
 		// 5min per player
 		m_tMaxPlayer1 = 5*60;
 		m_tMaxPlayer2 = 5*60;
 	}
-	else if (mode == Settings::GameMode::Rapid)
+	else if (mode == GameMode::Rapid)
 	{
 		// 20min per player
 		m_tMaxPlayer1 = 20 * 60;
@@ -2458,7 +2506,6 @@ void Chess::ChangeTurn()
 	flag_isMovementAllowed = false;
 	flag_isAnyPieceCaptured = false;
 
-	//SetTheme("brown"); // <<*****todo test
 
 	// check if current player is in check position
 	if(flag_isPlayer1Turn)
@@ -2475,60 +2522,85 @@ bool Chess::IsRoundFinished()
 	return flag_isRoundFinished;
 }
 
-void Chess::SetTheme(Settings::Theme const& theme)
+void Chess::ChangeTheme(Theme const& theme)
 {
 
 			//   theme 2
 	Color	darkBrown = { 128, 43, 0 ,255 },
 			lightBrown = { 225, 135, 64, 255 },
 			beige = { 255, 204, 156,255 },
-			///	 theme 1
-			ligthBlue = { 204, 204, 255, 255 }, // with blue
-			vdarkBlue = { 0, 0, 102 , 255 },
+
 			// theme 3
 			darkMagenta = { 153, 51, 51 , 255 },
 			lightMagenta = { 255, 80, 80 ,255 },
 			magenta = { 255, 204, 204 , 255 };
 
 	
-	stTheme theme1 = { ligthBlue , BLUE , m_hoveredColor , vdarkBlue };
+	stTheme theme1 = GetDefaultTheme();
 	stTheme theme2 = { lightBrown , beige , m_hoveredColor , darkBrown };
 	stTheme theme3 = { lightMagenta, magenta, m_hoveredColor, darkMagenta };
 
-	if (theme == Settings::Theme::Brown)
+	if (theme == Theme::Brown)	// set theme 2
 	{
-		// set theme 2
-		m_color1 = theme2.color1;
-		m_color2 = theme2.color2;
-		m_hoveredColor = theme2.heveredColor;
-		m_backgroundColor = theme2.backgroundColor;
+		SetColorsFromTheme(theme2);
+		m_currentTheme = Theme::Brown;
 		grid->SetColors(m_color1 , m_color2);
 
 	}
-	else if (theme == Settings::Theme::Blue)
+	else if (theme == Theme::Blue)	// set theme 1 (default)
 	{
-		
-		// set theme 1
-		m_color1 = theme1.color1;
-		m_color2 = theme1.color2;
-		m_hoveredColor = theme1.heveredColor;
-		m_backgroundColor = theme1.backgroundColor;
+		SetColorsFromTheme(theme1);
+		m_currentTheme = Theme::Blue;
 		grid->SetColors(m_color1, m_color2);
 
-		
 	}
-	else if (theme == Settings::Theme::Magenta)
-	{
-
-		// set theme 1
-		m_color1 = theme3.color1;
-		m_color2 = theme3.color2;
-		m_hoveredColor = theme3.heveredColor;
-		m_backgroundColor = theme3.backgroundColor;
+	else if (theme == Theme::Magenta)		// set theme 3
+	{		
+		SetColorsFromTheme(theme3);
+		m_currentTheme = Theme::Magenta;
 		grid->SetColors(m_color1, m_color2);
 
-
 	}
+
+}
+
+void Chess::SwitchThemes()
+{
+	switch (m_currentTheme)
+	{
+		case  Theme::Blue :
+			ChangeTheme(Theme::Brown);
+			break;
+
+		case  Theme::Brown:
+			ChangeTheme(Theme::Magenta);
+			break;
+
+		case  Theme::Magenta:
+			ChangeTheme(Theme::Blue);
+			break;
+	}
+}
+
+Chess::stTheme Chess::GetDefaultTheme()
+{
+	///	 theme 1
+	Color 	color1 = { 204, 204, 255, 255 }, // color1
+			color2 = BLUE,					// background
+			hoveredColor = { 255, 204, 0,100 },
+			backgroundColor = { 0, 0, 102 , 255 };  // dark blue
+
+	stTheme defaultTheme = { color1 , color2 , hoveredColor , backgroundColor };
+	return defaultTheme;
+}
+
+void Chess::SetColorsFromTheme(stTheme const& theme)
+{
+
+	m_color1 = theme.color1;
+	m_color2 = theme.color2;
+	m_hoveredColor = theme.heveredColor;
+	m_backgroundColor = theme.backgroundColor;
 
 }
 

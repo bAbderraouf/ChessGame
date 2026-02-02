@@ -1,13 +1,6 @@
 #include "Settings.h"
 
 
-bool Settings::IsClicked(Vector2 const& cursorPos, Rectangle const& objectOutlineRect, bool leftMouseBtnClicked)
-{
-	if (leftMouseBtnClicked)
-		return  CheckCollisionPointRec(cursorPos, objectOutlineRect);
-	else
-		return false;
-}
 
 Settings::Settings()
 {
@@ -20,12 +13,12 @@ Settings::~Settings()
 {
 }
 
-Settings::GameMode Settings::GetGameMode()
+GameMode Settings::GetGameMode()
 {
 	return m_gameMode;
 }
 
-Settings::Theme Settings::GetTheme()
+Theme Settings::GetTheme()
 {
 	return m_theme;
 }
@@ -118,7 +111,6 @@ void Settings::Update()
 {
 	if (m_flag_leftMouseButtonPressed) // selection attempt
 	{
-		
 		// cpu
 		UpdateCpuMode();
 
@@ -134,12 +126,8 @@ void Settings::Update()
 		// theme
 		UpdateTheme();
 
-
 		// apply btn
 		UpdateApplySettings();
-
-
-		//update(... if un est activé les autres doivent etre non actifs)
 
 		// init flag
 		m_flag_leftMouseButtonPressed = false;
@@ -149,33 +137,8 @@ void Settings::Update()
 
 void Settings::Draw()
 {
-	/*
-	// cpu
-	DrawRectangle(0, 0, 100, 100, GREEN);  
-	DrawRectangle(100, 0, 100, 100, RED);
-
-	// sound
-	DrawRectangle(0, 150, 100, 100, GREEN);
-	DrawRectangle(100, 150, 100, 100, RED);
-
-	// theme
-	DrawRectangle(0, 300, 200, 200, BLUE);
-	DrawRectangle(250, 300, 200, 200, BROWN);
-	DrawRectangle(500, 300, 200, 200, MAGENTA);
-
-
-	// mode
-	DrawRectangle(0, 550, 100, 100, YELLOW);
-	DrawRectangle(150, 550, 100, 100, GRAY);
-	DrawRectangle(300, 550, 100, 100, ORANGE);
-
-	// apply btn
-	DrawRectangle(500, 0, 100, 50, GREEN);
-
-	*/
 	//drawable
-	//img1->Draw();
-	//txt1->Draw();
+
 	imTheme1->Draw();
 	imTheme2->Draw();
 	imTheme3->Draw();
@@ -197,12 +160,15 @@ void Settings::Draw()
 void Settings::UpdateCpuMode()
 {
 	// cpu  ON OFF
-	if (IsClicked(GetMousePosition(), txtSoundON->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+	txtSoundON->Update(m_flag_leftMouseButtonPressed);
+	if (  txtSoundON->IsClicked())
 	{
 		txtSoundON->SetSelected(true);
 		m_flag_isSoundON = true;
 	}
-	if (IsClicked(GetMousePosition(), txtSoundOFF->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+
+	txtSoundOFF->Update(m_flag_leftMouseButtonPressed);
+	if ( txtSoundOFF->IsClicked())
 	{
 		txtSoundOFF->SetSelected(true);
 		m_flag_isSoundON = false;
@@ -213,11 +179,14 @@ void Settings::UpdateCpuMode()
 
 void Settings::UpdateSound()
 {
-	if (IsClicked(GetMousePosition(), txtCpuON->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+	txtCpuON->Update(m_flag_leftMouseButtonPressed);
+	if ( txtCpuON->IsClicked())
 	{
 		txtCpuON->SetSelected(true); m_flag_isCpuON = true;
 	}
-	if (IsClicked(GetMousePosition(), txtCpuOFF->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+
+	txtCpuOFF->Update(m_flag_leftMouseButtonPressed);
+	if (txtCpuOFF->IsClicked())
 	{
 		txtCpuOFF->SetSelected(true); m_flag_isCpuON = false;
 	}
@@ -228,11 +197,14 @@ void Settings::UpdateSound()
 
 void Settings::UpdateSave()
 {
-	if (IsClicked(GetMousePosition(), txtSaveON->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+	txtSaveON->Update(m_flag_leftMouseButtonPressed);
+	if (  txtSaveON->IsClicked())
 	{
 		txtSaveON->SetSelected(true); m_flag_isSaveON = true;
 	}
-	if (IsClicked(GetMousePosition(), txtSaveOFF->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+
+	txtSaveOFF->Update(m_flag_leftMouseButtonPressed);
+	if (  txtSaveOFF->IsClicked())
 	{
 		txtSaveOFF->SetSelected(true); m_flag_isSaveON = false;
 	}
@@ -242,17 +214,22 @@ void Settings::UpdateSave()
 
 void Settings::UpdateTheme()
 {
-	if (IsClicked(GetMousePosition(), imTheme1->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+	imTheme1->Update(m_flag_leftMouseButtonPressed);
+	if ( imTheme1->IsClicked())
 	{
 		imTheme1->SetSelected(true);
 		m_theme = Theme::Blue;
 	}
-	if (IsClicked(GetMousePosition(), imTheme2->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+
+	imTheme2->Update(m_flag_leftMouseButtonPressed);
+	if ( imTheme2->IsClicked())
 	{
 		imTheme2->SetSelected(true);
 		m_theme = Theme::Brown;
 	}
-	if (IsClicked(GetMousePosition(), imTheme3->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+
+	imTheme3->Update(m_flag_leftMouseButtonPressed);
+	if ( imTheme3->IsClicked())
 	{
 		m_theme = Theme::Magenta;
 		imTheme3->SetSelected(true);
@@ -264,15 +241,20 @@ void Settings::UpdateTheme()
 
 void Settings::UpdateGameMode()
 {
-	if (IsClicked(GetMousePosition(), txtBulet->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+	txtBulet->Update(m_flag_leftMouseButtonPressed);
+	if (txtBulet->IsClicked())
 	{
 		txtBulet->SetSelected(true); m_gameMode = GameMode::Bulet;
 	}
-	if (IsClicked(GetMousePosition(), txtBlitz->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+
+	txtBlitz->Update(m_flag_leftMouseButtonPressed);
+	if (txtBlitz->IsClicked())
 	{
 		txtBlitz->SetSelected(true); m_gameMode = GameMode::Blitz;
 	}
-	if (IsClicked(GetMousePosition(), txtRapid->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+
+	txtRapid->Update(m_flag_leftMouseButtonPressed);
+	if (txtRapid->IsClicked())
 	{
 		txtRapid->SetSelected(true); m_gameMode = GameMode::Rapid;
 	}
@@ -284,14 +266,12 @@ void Settings::UpdateGameMode()
 
 void Settings::UpdateApplySettings()
 {
-	// ok button
-	if (IsClicked(GetMousePosition(), imBtnOK->GetOutlineRect(), m_flag_leftMouseButtonPressed))
+	imBtnOK->Update(m_flag_leftMouseButtonPressed);
+	if (imBtnOK->IsClicked())
 	{
-		imBtnOK->SetSelected(true);
+		imBtnOK->SetClicked(false);
 		m_flag_isSlectionDone = true;
 	}
-	
-		
 }
 
 bool Settings::IsSelectionDone()

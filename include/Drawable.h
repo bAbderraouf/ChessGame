@@ -1,8 +1,10 @@
 #pragma once
 
 #include "raylib.h"
+#include "Utilis.h"
 #include <iostream>
 #include <string>
+#include <memory>
 
 
 class Drawable
@@ -23,7 +25,9 @@ public :
 
 	virtual void SetClicked(bool value) ;
 	virtual void SetSelected(bool value);
+	virtual bool IsClicked();
 	virtual void Draw() = 0;	
+	virtual void Update(bool const& isLeftMousePressed);
 	virtual void SetRectThinkness(int thinkness);
 	virtual Rectangle GetOutlineRect();
 

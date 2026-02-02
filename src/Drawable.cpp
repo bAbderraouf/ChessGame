@@ -1,4 +1,5 @@
 #include "Drawable.h"
+#include "raylib.h"
 
 Drawable::Drawable(Vector2 const & position)
 {
@@ -22,6 +23,21 @@ void Drawable::SetClicked(bool value)
 void Drawable::SetSelected(bool value)
 {
 	m_isSelected = value;
+}
+
+bool Drawable::IsClicked()
+{
+	return m_isClicked;
+}
+
+void Drawable::Update(bool const& isLeftMousePressed)
+{
+	if (IsClickedObject(GetMousePosition(), this->GetOutlineRect(), isLeftMousePressed))
+	{
+		this->SetSelected(true);
+		this->SetClicked(true);
+	}
+
 }
 
 void Drawable::SetRectThinkness(int thinkness)
@@ -64,6 +80,7 @@ void ImageObject::Draw()
 	if(m_isSelected)
 		DrawRectangleLines(m_objectPosition.x, m_objectPosition.y, m_objectSize.x, m_objectSize.y, GREEN);
 }
+
 
 TextObject::TextObject(Vector2 const& position, const char* text, int fontSize) : Drawable(position)
 {
