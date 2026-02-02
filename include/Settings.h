@@ -2,6 +2,7 @@
 
 #include "raylib.h"
 #include "Position.h"
+#include "Drawable.h"
 #include <iostream>
 
 /**
@@ -36,8 +37,30 @@ private:
 	Color m_backgroundColor;
 	bool m_flag_isCpuON;
 	bool m_flag_isSoundON;
+	bool m_flag_isSaveON;
 	GameMode m_gameMode;
 	Theme m_theme;
+
+
+	// drawable object
+	std::unique_ptr<Drawable> 
+		imTheme1, imTheme2, imTheme3,
+		imBtnOK,
+		txtSoundON, txtSoundOFF, 
+		txtCpuON, txtCpuOFF,
+		txtSaveON, txtSaveOFF,
+		txtBulet, txtBlitz, txtRapid;
+
+	// positions
+	Vector2 posT1, posT2, posT3,
+			posSoundON, posSoundOFF,
+			posCpuOn, posCpuOFF,
+			posSaveON, posSaveOFF,
+			posBulet, posBlitz, posRapid,
+			posBtnOK;
+
+	// font
+	int m_fontSize;
 
 	// flags
 	bool m_flag_leftMouseButtonPressed;
@@ -66,6 +89,7 @@ public:
 
 	void UpdateCpuMode();
 	void UpdateSound();
+	void UpdateSave();
 	void UpdateTheme();
 	void UpdateGameMode();
 	void UpdateApplySettings();

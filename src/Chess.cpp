@@ -81,6 +81,9 @@ void Chess::Init()
 	// window type
 	m_windowType = enWindow::SETTINGS;
 
+	//settings
+	m_settings = std::make_unique<Settings>();
+
 	
 	//pirngt m_bord positions
 
@@ -188,7 +191,7 @@ void Chess::Input()
 	}
 	else if (m_windowType == enWindow::SETTINGS)
 	{
-		m_settings.Input();
+		m_settings->Input();
 	}
 	
 }
@@ -198,7 +201,7 @@ void Chess::Update()
 
 	if (m_windowType == enWindow::GAME)
 	{
-		//----------------------------------
+	//----------------------------------
 	// update tempo
 	//----------------------------------
 		UpdateTempo();
@@ -345,11 +348,11 @@ void Chess::Update()
 
 	else if (m_windowType == enWindow::SETTINGS)
 	{
-		m_settings.Update();
+		m_settings->Update();
 
 		// check if selection is done 
 		//------------------------------
-		if (m_settings.IsSelectionDone())
+		if (m_settings->IsSelectionDone())
 		{
 			// load settings from selection
 			//-----------------------------
@@ -384,7 +387,7 @@ void Chess::Draw()
 	}
 	else if (m_windowType == enWindow::SETTINGS)
 	{
-		m_settings.Draw();
+		m_settings->Draw();
 	}
 }
 
@@ -2301,19 +2304,19 @@ void Chess::LoadSettings()
 {
 	// Selected Theme 
 	//-----------------------
-	SetTheme(m_settings.GetTheme());
+	SetTheme(m_settings->GetTheme());
 
 	// player vs CPU ?
 	//-----------------------
-	flag_CPU_Movement_ON = m_settings.GetIsCpuON();
+	flag_CPU_Movement_ON = m_settings->GetIsCpuON();
 
 	// Sound ON ? 
 	//-----------------------
-	flag_isSoundON = m_settings.GetIsSoundOn();
+	flag_isSoundON = m_settings->GetIsSoundOn();
 
 	// cpu time (game mode)
 	//-----------------------
-	Settings::GameMode mode = m_settings.GetGameMode();
+	Settings::GameMode mode = m_settings->GetGameMode();
 	if (mode == Settings::GameMode::Bulet)
 	{
 		// 1min per player

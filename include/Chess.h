@@ -160,13 +160,14 @@ private:
 	
 	// settings 
 	//----------
-	Settings m_settings;
+	//Settings m_settings;
+	std::unique_ptr<Settings> m_settings;
 
 
 	//pieces
 	//----------
 	std::vector<std::unique_ptr<Piece>> player1, player2;		/// player1 (white), player2 (black) 16pieces for each one
-	int selectdPieceID;;										/// selected (current) piece id (from 0 to 15)
+	int selectdPieceID; 										/// selected (current) piece id (from 0 to 15)
 	Position selectedPieceOriginalPos ,selectedPieceCurrentPos; /// original positon for the current piece (x,y) & (i,j)
 
 	std::vector<PossibleMouvement> m_possibleMouvement;			/// possible movement vecteur for each piece.
