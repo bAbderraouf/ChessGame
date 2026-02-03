@@ -19,13 +19,6 @@
 #include <sstream>  // std::ostringstream
 #include <memory>
 
-#define RED_COUT   "\033[31m"
-#define BLUE_COUT  "\033[34m"
-#define RESET_COUT "\033[0m"
-#define GREEN_COUT "\033[32m"
-#define YELLOW_COUT "\033[33m"
-#define WHITE_COUT "\033[37m"
-
 
 /**
 * @brief Class that manage all steps of a 2D chess game
@@ -34,28 +27,6 @@
 class Chess : public Game
 {
 private:
-
-	/**
-	* @brief date struct
-	*/
-	struct stDate {
-		short year; 
-		short month;
-		short day;
-		short hour;
-		short minute;
-		short second;
-	};
-
-
-	/**
-	* @brief duration time struct
-	*/
-	struct stDuration {
-		int seconds;
-		int minutes;
-		int hours;
-	};
 
 
 	/**
@@ -142,6 +113,7 @@ private:
 		  m_hoveredColor,		/// color of possible positions
 		  m_backgroundColor;	/// margins colors (outisde of the board)
 
+
 	/**
 	* @brief theme structure (needed colors)
 	*/
@@ -155,12 +127,14 @@ private:
 
 	stTheme m_defaultTheme;		/// default set of colors used for the game
 	Theme m_currentTheme;
+	
+	std::vector<stTheme> m_themeList;  /// list of themes used in the app
 
 
 
 	// window type
 	// ------------
-	enWindow m_windowType;
+	enWindow m_currentWindowType;		/// current window type (Game, Settings ...)
 
 	
 	
@@ -603,6 +577,17 @@ public :  //<<*******ToDo reset public & private fct
 	
 	*---------------------------------------------------------------------------------*/
 	Color GetBackgroundColor();
+
+
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief update window's background color according to current window type
+
+	*---------------------------------------------------------------------------------*/
+	void UpdateBackgroundColor(enWindow const & window);
+
+
 
 	
 	/*--------------------------------------------------------------------------------
@@ -1298,6 +1283,8 @@ public :  //<<*******ToDo reset public & private fct
 
 	*---------------------------------------------------------------------------------*/
 	void SaveGameSteps();
+
+	void GameOver();
 };
 
 
@@ -1330,6 +1317,7 @@ public :  //<<*******ToDo reset public & private fct
 
 // x bug  pion 2 cases + obstacle
 // x bug time white while settinngs
+// bug in start new game (check renit board)
 
 /* setings
 * sound on/off	x
@@ -1348,8 +1336,8 @@ public :  //<<*******ToDo reset public & private fct
 	4- rock
 	5- promotion full feature
 	6- draw (3times ,...)
-	7- finish settings
-	8- change chess construtor (no need de c1,c2, make it internalà
+  x 7- finish settings
+  x 8- change chess construtor (no need de c1,c2, make it internalà
 	9- son de chargement / win /
 */
 

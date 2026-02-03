@@ -37,13 +37,15 @@ private:
 	std::unique_ptr<Drawable> txtBulet;
 	std::unique_ptr<Drawable> txtBlitz;
 	std::unique_ptr<Drawable> txtRapid;
+	std::unique_ptr<Drawable> imgSettings;
+	std::unique_ptr<Drawable> imgSettingsTxt;
 
 	// positions
-	Vector2 posT1, posT2, posT3,
+	Vector2 posT1	  , posT2		, posT3,
 			posSoundON, posSoundOFF,
-			posCpuOn, posCpuOFF,
-			posSaveON, posSaveOFF,
-			posBulet, posBlitz, posRapid,
+			posCpuOn  , posCpuOFF,
+			posSaveON , posSaveOFF,
+			posBulet  , posBlitz	,posRapid,
 			posBtnOK;
 
 	// font
@@ -84,6 +86,7 @@ public:
 
 	//end of selection
 	bool IsSelectionDone();
+
 	
 
 private :

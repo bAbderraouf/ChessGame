@@ -2,6 +2,38 @@
 
 #include "raylib.h"
 
+#define RED_COUT   "\033[31m"
+#define BLUE_COUT  "\033[34m"
+#define RESET_COUT "\033[0m"
+#define GREEN_COUT "\033[32m"
+#define YELLOW_COUT "\033[33m"
+#define WHITE_COUT "\033[37m"
+
+
+/**
+* @brief date struct
+*/
+struct stDate {
+	short year;
+	short month;
+	short day;
+	short hour;
+	short minute;
+	short second;
+};
+
+
+/**
+* @brief duration time struct
+*/
+struct stDuration {
+	int seconds;
+	int minutes;
+	int hours;
+};
+
+
+
 /**
 * @brief Represents different themes existing in this game
 */
@@ -21,7 +53,6 @@ enum class GameMode {
 	Blitz,			/// 5min
 	Rapid			/// 20min
 };
-
 
 
 /**------------------------------------------------------------------------------------------------------

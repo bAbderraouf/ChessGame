@@ -1,11 +1,9 @@
 #include "Settings.h"
 
 
-
 Settings::Settings()
 {
 	// init default values
-
 	Init();
 }
 
@@ -35,71 +33,75 @@ bool Settings::GetIsSoundOn()
 
 void Settings::Init()
 {
-
 	// init default values
 	// cpu ON
 	// theme = blue
 	// time = 5min
 	// sound ON
 
-	m_flag_isCpuON = true;
-	m_flag_isSoundON = true;
-	m_flag_isSaveON = true;
-	m_gameMode = GameMode::Blitz;
-	m_theme = Theme::Blue;
+	m_flag_isCpuON		= true;
+	m_flag_isSoundON	= true;
+	m_flag_isSaveON		= true;
+	m_gameMode			= GameMode::Blitz;
+	m_theme				= Theme::Blue;
 
 	// init internal variables
 	m_backgroundColor = BLACK;
 	m_flag_leftMouseButtonPressed = false;
 	m_flag_isSlectionDone = false;
 
-
 	// font
 	m_fontSize = 20;
 
 	// positions
-	posT1 =  { 50,100 };
-	posT2 =  { 250,100 };
-	posT3 =  { 450,100 };
+	posT1 =  { 50 + 80 ,100 + 70 };
+	posT2 =  { 250 + 80,100 + 70 };
+	posT3 =  { 450 + 80,100 + 70 };
 
-	posSoundON = { 50,300 };
-	posSoundOFF  = { 250,300 };
+	posSoundON	= { 50 + 80 ,300 + 70 };
+	posSoundOFF	= { 250 + 80,300 + 70 };
 
-	posCpuOn = { 50,350 };
-	posCpuOFF = { 250,350 };
+	posCpuOn  = { 50 + 80 ,350 + 70 };
+	posCpuOFF = { 250 + 80,350 + 70 };
 
-	posBulet = { 50,400 };
-	posBlitz = { 250,400 };
-	posRapid = { 460,400 };
+	posBulet = { 50 + 80 ,400 + 70 };
+	posBlitz = { 250 + 80,400 + 70 };
+	posRapid = { 460 + 80,400 + 70 };
 
-	posSaveON = { 50,450 };
-	posSaveOFF = { 250,450 };
+	posSaveON	= { 50 + 80 ,450 + 70 };
+	posSaveOFF	= { 250 + 80,450 + 70 };
 
-	posBtnOK = { 690,550 };
+	posBtnOK = { 630 ,550 };
+	Vector2 posSettings = { 480 + 180,  0 };
+	Vector2 posSettingsTxt = { 240,  0 };
+
 
 	//drawable object
 
-	imTheme1 = std::make_unique<ImageObject>(posT1, "assets/images/theme/Blue.png");
-	imTheme2 = std::make_unique<ImageObject>(posT2, "assets/images/theme/Brown.png");
-	imTheme3 = std::make_unique<ImageObject>(posT3, "assets/images/theme/Magenta.png");
-	imBtnOK = std::make_unique<ImageObject>(posBtnOK, "assets/images/buttons/check_60.png");
+	imTheme1	= std::make_unique<ImageObject>(posT1, "assets/images/theme/Blue.png");
+	imTheme2	= std::make_unique<ImageObject>(posT2, "assets/images/theme/Brown.png");
+	imTheme3	= std::make_unique<ImageObject>(posT3,	"assets/images/theme/Magenta.png");
+	imBtnOK		= std::make_unique<MixedObject>(posBtnOK, "Apply", m_fontSize, "assets/images/buttons/check_60.png", 7);
 
-	txtSoundON	= std::make_unique<TextObject>(posSoundON, "Sound ON", m_fontSize);
-	txtSoundOFF = std::make_unique<TextObject>(posSoundOFF, "Sound OFF", m_fontSize);
+	txtSoundON	= std::make_unique<MixedObject>(posSoundON, "Sound ON", m_fontSize, "assets/images/buttons/sound_on.png", 5);
+	txtSoundOFF = std::make_unique<MixedObject>(posSoundOFF, "Sound OFF", m_fontSize, "assets/images/buttons/mute.png", 5);
 
-	txtSaveON = std::make_unique<TextObject>(posSaveON, "Save ON", m_fontSize);
-	txtSaveOFF = std::make_unique<TextObject>(posSaveOFF, "Save OFF", m_fontSize);
+	txtSaveON	= std::make_unique<TextObject>(posSaveON, "Save ON", m_fontSize);
+	txtSaveOFF	= std::make_unique<TextObject>(posSaveOFF, "Save OFF", m_fontSize);
 
-	txtCpuON	= std::make_unique<TextObject>(posCpuOn, "CPU ON", m_fontSize);
-	txtCpuOFF	= std::make_unique<TextObject>(posCpuOFF, "CPU OFF", m_fontSize);
-	txtBulet	= std::make_unique<TextObject>(posBulet, "Bulet 1min", m_fontSize);
-	txtBlitz	= std::make_unique<TextObject>(posBlitz, "Blitz 5min", m_fontSize);
-	txtRapid	= std::make_unique<TextObject>(posRapid, "Rapid 20min", m_fontSize);
+	txtCpuON	= std::make_unique<TextObject>(posCpuOn, "1 vs CPU", m_fontSize);
+	txtCpuOFF	= std::make_unique<TextObject>(posCpuOFF, "1 vs 1", m_fontSize);
+
+	txtBulet	= std::make_unique<MixedObject>(posBulet, "Bullet", m_fontSize,"assets/images/buttons/1min.png", 5);
+	txtBlitz	= std::make_unique<MixedObject>(posBlitz, "Blitz", m_fontSize ,"assets/images/buttons/5min.png", 5);
+	txtRapid	= std::make_unique<MixedObject>(posRapid, "Rapid", m_fontSize,"assets/images/buttons/20min.png", 5);
+	imgSettings = std::make_unique<ImageObject>(posSettings, "assets/images/buttons/settings.png");
+	imgSettingsTxt = std::make_unique<ImageObject>(posSettingsTxt, "assets/images/buttons/settings2.png");
+
 }
 
 void Settings::Input()
 {
-
 	// LEFT mouse mouse PRESSED
 	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
 	{
@@ -138,7 +140,6 @@ void Settings::Update()
 void Settings::Draw()
 {
 	//drawable
-
 	imTheme1->Draw();
 	imTheme2->Draw();
 	imTheme3->Draw();
@@ -147,48 +148,63 @@ void Settings::Draw()
 	txtSoundON->Draw();
 	txtSoundOFF->Draw();
 
-	txtSaveON->Draw();
-	txtSaveOFF->Draw();
+	//txtSaveON->Draw();
+	//txtSaveOFF->Draw();
 
 	txtCpuON->Draw();
 	txtCpuOFF->Draw();
 	txtBulet->Draw();
 	txtBlitz->Draw();
 	txtRapid->Draw();
+
+	imgSettings->Draw();
+	imgSettingsTxt->Draw();
 }
 
-void Settings::UpdateCpuMode()
+void Settings::UpdateSound()
 {
 	// cpu  ON OFF
 	txtSoundON->Update(m_flag_leftMouseButtonPressed);
 	if (  txtSoundON->IsClicked())
 	{
-		txtSoundON->SetSelected(true);
+		txtSoundON->SetClicked(true);
 		m_flag_isSoundON = true;
+
+		// ignore selection (radio btn effect)
+		txtSoundOFF->SetClicked(false);
 	}
 
 	txtSoundOFF->Update(m_flag_leftMouseButtonPressed);
 	if ( txtSoundOFF->IsClicked())
 	{
-		txtSoundOFF->SetSelected(true);
+		txtSoundOFF->SetClicked(true);
 		m_flag_isSoundON = false;
+
+		// ignore selection (radio btn effect)
+		txtSoundON->SetClicked(false);
 	}
 
 	std::cout << "Sound on ? : " << m_flag_isSoundON << std::endl;
 }
 
-void Settings::UpdateSound()
+void Settings::UpdateCpuMode()
 {
 	txtCpuON->Update(m_flag_leftMouseButtonPressed);
 	if ( txtCpuON->IsClicked())
 	{
-		txtCpuON->SetSelected(true); m_flag_isCpuON = true;
+		txtCpuON->SetClicked(true); 
+		m_flag_isCpuON = true;
+		// ignore selection (radio btn effect)
+		txtCpuOFF->SetClicked(false);
 	}
 
 	txtCpuOFF->Update(m_flag_leftMouseButtonPressed);
 	if (txtCpuOFF->IsClicked())
 	{
-		txtCpuOFF->SetSelected(true); m_flag_isCpuON = false;
+		txtCpuOFF->SetClicked(true); 
+		m_flag_isCpuON = false;
+		// ignore selection (radio btn effect)
+		txtCpuON->SetClicked(false);
 	}
 
 	std::cout << "Cpu on ? : " << m_flag_isSoundON << std::endl;
@@ -200,13 +216,19 @@ void Settings::UpdateSave()
 	txtSaveON->Update(m_flag_leftMouseButtonPressed);
 	if (  txtSaveON->IsClicked())
 	{
-		txtSaveON->SetSelected(true); m_flag_isSaveON = true;
+		txtSaveON->SetClicked(true); 
+		m_flag_isSaveON = true;
+		// ignore selection (radio btn effect)
+		txtSaveOFF->SetClicked(false);
 	}
 
 	txtSaveOFF->Update(m_flag_leftMouseButtonPressed);
 	if (  txtSaveOFF->IsClicked())
 	{
-		txtSaveOFF->SetSelected(true); m_flag_isSaveON = false;
+		txtSaveOFF->SetClicked(true); 
+		m_flag_isSaveON = false;
+		// ignore selection (radio btn effect)
+		txtSaveON->SetClicked(false);
 	}
 
 	std::cout << "Save on ? : " << m_flag_isSaveON << std::endl;
@@ -217,22 +239,28 @@ void Settings::UpdateTheme()
 	imTheme1->Update(m_flag_leftMouseButtonPressed);
 	if ( imTheme1->IsClicked())
 	{
-		imTheme1->SetSelected(true);
+		imTheme1->SetClicked(true);
 		m_theme = Theme::Blue;
+		imTheme2->SetClicked(false);
+		imTheme3->SetClicked(false);
 	}
 
 	imTheme2->Update(m_flag_leftMouseButtonPressed);
 	if ( imTheme2->IsClicked())
 	{
-		imTheme2->SetSelected(true);
+		imTheme2->SetClicked(true);
 		m_theme = Theme::Brown;
+		imTheme1->SetClicked(false);
+		imTheme3->SetClicked(false);
 	}
 
 	imTheme3->Update(m_flag_leftMouseButtonPressed);
 	if ( imTheme3->IsClicked())
 	{
 		m_theme = Theme::Magenta;
-		imTheme3->SetSelected(true);
+		imTheme3->SetClicked(true);
+		imTheme2->SetClicked(false);
+		imTheme1->SetClicked(false);
 	}
 
 	std::string r = (m_theme == Theme::Blue) ? "blue" : (m_theme == Theme::Brown ? "brown" : "magenta");
@@ -244,19 +272,34 @@ void Settings::UpdateGameMode()
 	txtBulet->Update(m_flag_leftMouseButtonPressed);
 	if (txtBulet->IsClicked())
 	{
-		txtBulet->SetSelected(true); m_gameMode = GameMode::Bulet;
+		txtBulet->SetClicked(true); 
+		m_gameMode = GameMode::Bulet;
+
+		// ignore selection (radio btn effect)
+		txtBlitz->SetClicked(false);
+		txtRapid->SetClicked(false);
 	}
 
 	txtBlitz->Update(m_flag_leftMouseButtonPressed);
 	if (txtBlitz->IsClicked())
 	{
-		txtBlitz->SetSelected(true); m_gameMode = GameMode::Blitz;
+		txtBlitz->SetClicked(true); 
+		m_gameMode = GameMode::Blitz;
+
+		// ignore selection (radio btn effect)
+		txtBulet->SetClicked(false);
+		txtRapid->SetClicked(false);
 	}
 
 	txtRapid->Update(m_flag_leftMouseButtonPressed);
 	if (txtRapid->IsClicked())
 	{
-		txtRapid->SetSelected(true); m_gameMode = GameMode::Rapid;
+		txtRapid->SetClicked(true); 
+		m_gameMode = GameMode::Rapid;
+
+		// ignore selection (radio btn effect)
+		txtBulet->SetClicked(false);
+		txtBlitz->SetClicked(false);
 	}
 
 	std::string r = (m_gameMode == GameMode::Blitz) ? "blitz" : (m_gameMode == GameMode::Bulet ? "bulet" : "rapid");

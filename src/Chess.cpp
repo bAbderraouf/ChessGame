@@ -66,9 +66,6 @@ void Chess::Init()
 	InitWindow(windowWidth, windowHeigh, "Raouf's 2D Chess Game");
 	setGameFPS(gameFps);	// frames per second
 
-	m_screenshot = LoadImageFromScreen();
-	ExportImage(m_screenshot, "capture.png");
-
 	//grid
 	grid = new Grid(numRows, numCols, cellSize , m_color1, m_color2);
 	grid->SetMargins(leftMargin, topMargin);
@@ -85,9 +82,9 @@ void Chess::Init()
 
 	//sound
 	InitAudioDevice();
-	m_normalMoveSound = LoadSound("assets/sounds/movePiece2.wav");
-	m_checkSound = LoadSound("assets/sounds/checkKing.wav");
-	m_checkmateSound = LoadSound("assets/sounds/shoot.wav");
+	m_normalMoveSound	= LoadSound("assets/sounds/movePiece2.wav");
+	m_checkSound		= LoadSound("assets/sounds/checkKing.wav");
+	m_checkmateSound	= LoadSound("assets/sounds/shoot.wav");
 	m_capturepieceSound = LoadSound("assets/sounds/shoot.wav");
 
 	//time	
@@ -101,6 +98,24 @@ void Chess::Init()
 	m_imgNewGame	= std::make_unique<ImageObject>(m_posNewGame, "assets/images/buttons/restart2.png");
 	m_imgChngeTheme = std::make_unique<ImageObject>(m_posChgeTheme, "assets/images/buttons/changeTheme1.png");
 
+
+	//list of colors used
+			//  theme 2
+	Color	darkBrown = { 128, 43, 0 ,255 },
+			lightBrown = { 225, 135, 64, 255 },
+			beige = { 255, 204, 156,255 },
+
+			// theme 3
+			darkMagenta = { 153, 51, 51 , 255 },
+			lightMagenta = { 255, 80, 80 ,255 },
+			magenta = { 255, 204, 204 , 255 };
+
+	//theme list
+	m_themeList.push_back(GetDefaultTheme());
+	m_themeList.push_back({ lightBrown , beige , m_hoveredColor , darkBrown }); // theme2
+	m_themeList.push_back({ lightMagenta, magenta, m_hoveredColor, darkMagenta }); //theme3
+
+
 	// reset game parameters
 	StartNewGame();
 }
@@ -112,7 +127,7 @@ void Chess::StartNewGame()
 	InitBoardInfo();
 
 	// window type
-	m_windowType = enWindow::SETTINGS;
+	m_currentWindowType = enWindow::SETTINGS;
 
 	//settings
 	m_settings = std::make_unique<Settings>();
@@ -172,7 +187,7 @@ void Chess::StartNewGame()
 
 void Chess::Input()
 {
-	if (m_windowType == enWindow::GAME)
+	if (m_currentWindowType == enWindow::GAME)
 	{
 		// LEFT mouse mouse PRESSED
 		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
@@ -198,7 +213,7 @@ void Chess::Input()
 			flag_leftMouseButtonReleased = true;
 		}
 	}
-	else if (m_windowType == enWindow::SETTINGS)
+	else if (m_currentWindowType == enWindow::SETTINGS)
 	{
 		m_settings->Input();
 	}
@@ -207,8 +222,10 @@ void Chess::Input()
 
 void Chess::Update()
 {
+	// set background color according to current window type (Game, Settings)
+	UpdateBackgroundColor(m_currentWindowType);
 
-	if (m_windowType == enWindow::GAME)
+	if (m_currentWindowType == enWindow::GAME)
 	{
 		//----------------------------------
 		// update tempo
@@ -361,7 +378,7 @@ void Chess::Update()
 
 	}
 
-	else if (m_windowType == enWindow::SETTINGS)
+	else if (m_currentWindowType == enWindow::SETTINGS)
 	{
 		m_settings->Update();
 
@@ -375,7 +392,7 @@ void Chess::Update()
 
 			// back to game window
 			//---------------------
-			m_windowType = enWindow::GAME;
+			m_currentWindowType = enWindow::GAME;
 
 			m_t1 = time(NULL); // start time computing //curent time
 		}
@@ -384,7 +401,7 @@ void Chess::Update()
 
 void Chess::Draw() 
 {
-	if (m_windowType == enWindow::GAME)
+	if (m_currentWindowType == enWindow::GAME)
 	{
 		// grid
 		grid->Draw();
@@ -400,7 +417,7 @@ void Chess::Draw()
 		//draw text
 		DrawLateralTexts();
 	}
-	else if (m_windowType == enWindow::SETTINGS)
+	else if (m_currentWindowType == enWindow::SETTINGS)
 	{
 		m_settings->Draw();
 	}
@@ -1293,6 +1310,29 @@ Color Chess::GetBackgroundColor()
 	return m_backgroundColor;
 }
 
+void Chess::UpdateBackgroundColor(enWindow const& window)
+{
+	if (window == enWindow::GAME)
+	{
+		switch (m_currentTheme)
+		{
+			case Theme::Blue:
+				m_backgroundColor = m_themeList[0].backgroundColor;
+				break;
+			case Theme::Brown:
+				m_backgroundColor = m_themeList[1].backgroundColor;
+				break;
+			case Theme::Magenta:
+				m_backgroundColor = m_themeList[2].backgroundColor;
+				break;
+		}	
+	}
+	else if (window == enWindow::SETTINGS)
+	{
+		m_backgroundColor = m_themeList[0].backgroundColor;
+	}
+}
+
 
 ChessCase Chess::PosToCase(Position pos)
 {
@@ -2032,7 +2072,6 @@ void Chess::UpdateButtons()
 	{
 		SwitchThemes();
 		m_imgChngeTheme->SetClicked(false);
-		m_imgChngeTheme->SetSelected(false);
 	}
 
 	// new game btn
@@ -2041,7 +2080,6 @@ void Chess::UpdateButtons()
 	{
 		StartNewGame();
 		m_imgNewGame->SetClicked(false);
-		m_imgNewGame->SetSelected(false);
 	}
 }
 
@@ -2189,7 +2227,7 @@ void Chess::DrawLateralTexts()
 
 }
 
-Chess::stDate Chess::GetSystemDateTime(void)
+stDate Chess::GetSystemDateTime(void)
 {
 	time_t  t_now = time(NULL); // curent time
 
@@ -2221,7 +2259,7 @@ std::string Chess::GetDateTimeToString(stDate const& date, std::string sep)
 	return dateTime;
 }
 
-Chess::stDuration Chess::SecondsToDuration(time_t seconds)
+stDuration Chess::SecondsToDuration(time_t seconds)
 {
 	stDuration diff;
 	int m = 0,  s = 0;
@@ -2421,6 +2459,12 @@ void Chess::SaveGameSteps()
 
 }
 
+void Chess::GameOver()
+{
+	m_screenshot = LoadImageFromScreen();
+	ExportImage(m_screenshot, "capture.png");
+}
+
 
 
 bool Chess::IsCapturableObstacle(int const& row, int const& col) const
@@ -2524,39 +2568,29 @@ bool Chess::IsRoundFinished()
 
 void Chess::ChangeTheme(Theme const& theme)
 {
-
-			//   theme 2
-	Color	darkBrown = { 128, 43, 0 ,255 },
-			lightBrown = { 225, 135, 64, 255 },
-			beige = { 255, 204, 156,255 },
-
-			// theme 3
-			darkMagenta = { 153, 51, 51 , 255 },
-			lightMagenta = { 255, 80, 80 ,255 },
-			magenta = { 255, 204, 204 , 255 };
-
-	
-	stTheme theme1 = GetDefaultTheme();
-	stTheme theme2 = { lightBrown , beige , m_hoveredColor , darkBrown };
-	stTheme theme3 = { lightMagenta, magenta, m_hoveredColor, darkMagenta };
+	/*
+		theme1 : m_themeList[0] (default)
+		theme2 : m_themeList[1]
+		theme3 : m_themeList[2]
+	*/
 
 	if (theme == Theme::Brown)	// set theme 2
 	{
-		SetColorsFromTheme(theme2);
+		SetColorsFromTheme(m_themeList[1]);
 		m_currentTheme = Theme::Brown;
 		grid->SetColors(m_color1 , m_color2);
 
 	}
 	else if (theme == Theme::Blue)	// set theme 1 (default)
 	{
-		SetColorsFromTheme(theme1);
+		SetColorsFromTheme(m_themeList[0]);
 		m_currentTheme = Theme::Blue;
 		grid->SetColors(m_color1, m_color2);
 
 	}
 	else if (theme == Theme::Magenta)		// set theme 3
 	{		
-		SetColorsFromTheme(theme3);
+		SetColorsFromTheme(m_themeList[2]);
 		m_currentTheme = Theme::Magenta;
 		grid->SetColors(m_color1, m_color2);
 

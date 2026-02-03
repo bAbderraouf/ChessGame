@@ -7,16 +7,19 @@
 #include <memory>
 
 
+
 class Drawable
 {
 protected :
 
 	bool		m_isClicked;
-	bool		m_isSelected;		/// selected = clicked + hold selection
 	Color		m_outlineRecColor;
 	Vector2		m_objectPosition;
 	Vector2		m_objectSize;
 	int			m_outlineRecThinkness;
+
+	Font fontCourrier;
+	int fontSize, spacing;
 
 public :
 
@@ -24,7 +27,6 @@ public :
 	~Drawable();
 
 	virtual void SetClicked(bool value) ;
-	virtual void SetSelected(bool value);
 	virtual bool IsClicked();
 	virtual void Draw() = 0;	
 	virtual void Update(bool const& isLeftMousePressed);
@@ -60,4 +62,21 @@ public:
 private:
 	const char* m_text;
 	int m_fontSize;
+};
+
+class MixedObject : public Drawable	// image + text
+{
+public:
+	MixedObject(Vector2 const& txtPosition, const char* text, int fontSize,  const char* imgFileName , int const & distance);
+	~MixedObject();
+
+	void Draw() override;
+
+private:
+	const char* m_text;
+	int m_fontSize;
+	Image		m_image;
+	Texture2D	m_texture;
+	Vector2		m_imgSize;
+	int		m_distance;
 };
