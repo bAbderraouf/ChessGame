@@ -7,6 +7,7 @@
 #include "Position.h"
 #include "ChessCase.h"
 #include "Settings.h"
+#include "GameOver.h"
 #include "Utilis.h"
 #include <string>
 #include <iomanip> // for setw() : cout
@@ -48,6 +49,7 @@ private:
 	enum class enWindow {
 		GAME = 0,
 		SETTINGS = 1,
+		GAME_OVER = 2,
 	};
 
 
@@ -93,6 +95,7 @@ private:
 
 	Grid* grid;		/// an instance from Grid class to make the board
 	Piece* piece;	/// an instance from Piece class to generate pieces
+	Winner m_winner;/// variable containing the winner
 
 
 	//window
@@ -138,10 +141,13 @@ private:
 
 	
 	
-	// settings 
+	// settings window
 	//----------
-	//Settings m_settings;
-	std::unique_ptr<Settings> m_settings;
+	std::unique_ptr<Settings> m_settingsWindow;
+
+	// game over window
+	//----------
+	std::unique_ptr<GameOver> m_gameOverWindow;
 
 
 	//pieces
@@ -186,6 +192,8 @@ private:
 	Sound	m_normalMoveSound,		/// sound to use for each move
 			m_checkSound,
 			m_checkmateSound,
+			m_restartGameSound,
+			m_timeOverSound,
 			m_capturepieceSound;
 
 	//time
@@ -260,6 +268,7 @@ private:
 			flag_isCPU_turn,					/// 1 : player2 (black) turn
 			flag_isRoundFinished,				/// 1 : if both players are played (white turn + black turn)
 			flag_isNewGame,
+			flag_isScreenDrawed,
 			flag_isSoundON;
 
 public :  //<<*******ToDo reset public & private fct
@@ -296,31 +305,67 @@ public :  //<<*******ToDo reset public & private fct
 	*---------------------------------------------------------------------------------*/
 	void StartNewGame();
 
+
 	/*--------------------------------------------------------------------------------
-	*  @brief wait for inputs : drag piece, release, ...
+	*  @brief wait for general inputs 
 	*---------------------------------------------------------------------------------*/
 	void Input();
 
+
 	/*--------------------------------------------------------------------------------
-	*  @brief update chess game states.
+	*  @brief wait for GameWindow inputs : drag piece, release, ...
+	*---------------------------------------------------------------------------------*/
+	void InputGameWindow();
+
+
+	/*--------------------------------------------------------------------------------
+	*  @brief general update : all chess game states.
 	*---------------------------------------------------------------------------------*/
 	void Update(); 
 
 
+	/*--------------------------------------------------------------------------------
+	*  @brief update game window.
+	*---------------------------------------------------------------------------------*/
+	void UpdateGameWindow();
 
 
 
 	/*--------------------------------------------------------------------------------
-	*  @brief draw screen : window + grid + pieces + possible movements
+	*  @brief update settings window.
+	*---------------------------------------------------------------------------------*/
+	void UpdateSettingsWindow();
+
+
+
+	/*--------------------------------------------------------------------------------
+	*  @brief update gameOver window.
+	*---------------------------------------------------------------------------------*/
+	void UpdateGameOverWindow();
+
+
+
+
+	/*--------------------------------------------------------------------------------
+	*  @brief draw all game states
 	*---------------------------------------------------------------------------------*/
 	void Draw();
 
 
+	/*--------------------------------------------------------------------------------
+	*  @brief draw game window screen : window + grid + pieces + possible movements
+	*---------------------------------------------------------------------------------*/
+	void DrawGameWindow();
 
 
 	//----------------------
 	// additional functions
 	//----------------------
+
+	/*--------------------------------------------------------------------------------
+	*  @brief to know if current state is drawed or net yet
+	*---------------------------------------------------------------------------------*/
+	bool IsScreenDrawed();
 
 	/*--------------------------------------------------------------------------------
 	* @brief set game Frames per seconds.
@@ -1284,7 +1329,24 @@ public :  //<<*******ToDo reset public & private fct
 	*---------------------------------------------------------------------------------*/
 	void SaveGameSteps();
 
-	void GameOver();
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief open game over window when the game is finished
+
+	*---------------------------------------------------------------------------------*/
+	void OpenGameOverScreen();
+
+
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief get the winner after game over
+	* @return the winner type (black, white, draw , none)
+
+	*---------------------------------------------------------------------------------*/
+	Winner GetWinner();
+
 };
 
 
@@ -1331,25 +1393,12 @@ public :  //<<*******ToDo reset public & private fct
 
 /* ===> reste
   x 1- start new game
-	2- game over window
+  x 2- game over window
   x 3- change theme during game
-	4- rock
+	4- rock + en passant
 	5- promotion full feature
 	6- draw (3times ,...)
   x 7- finish settings
   x 8- change chess construtor (no need de c1,c2, make it internalà
-	9- son de chargement / win /
+  x 9- son de chargement / win /
 */
-
-/*
-* @brief → Description courte, obligatoire.
-
-@param → Pour chaque paramètre.
-
-@return → Pour les fonctions non-void.
-
-@throw → Si la fonction peut lever une exception.
-
-@code ... @endcode → Exemple d’utilisation (très apprécié).
-*/
-

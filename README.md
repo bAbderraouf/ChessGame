@@ -17,7 +17,7 @@ It features a custom chess engine with full rule validation, turn and state mana
 - Board representation (grid-based)
 - Supported game modes: Bullet, Blitz, and Rapid.
 - Settings can be selected before starting the game.
-
+- Save a detailled history of movements of last games.
 
 # Project Goals
 - Problem solving, (project built from scratch).

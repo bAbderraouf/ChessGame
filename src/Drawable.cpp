@@ -11,10 +11,14 @@ Drawable::Drawable(Vector2 const & position)
 	fontSize = 30;
 	spacing = 0; 
 	fontCourrier = LoadFontEx("assets/fonts/courrierNew.ttf", fontSize, nullptr, 0);
+
+	//sound
+	m_clickedSound = LoadSound("assets/sounds/selection.wav");
 }
 
 Drawable::~Drawable()
 {
+	
 }
 
 void Drawable::SetClicked(bool value)
@@ -33,6 +37,8 @@ void Drawable::Update(bool const& isLeftMousePressed)
 	if (IsClickedObject(GetMousePosition(), this->GetOutlineRect(), isLeftMousePressed))
 	{
 		this->SetClicked(true);
+		PlaySound(m_clickedSound);
+
 	}
 
 }
@@ -57,7 +63,7 @@ ImageObject::ImageObject(Vector2 const& position,  const char* fileName) : Drawa
 		return;
 	}
 
-	m_objectSize = { (float)m_image.width , (float)m_image.height };
+	m_objectSize = this->GetSize();
 
 	m_texture = LoadTextureFromImage(m_image);
 
@@ -70,18 +76,25 @@ ImageObject::~ImageObject()
 
 void ImageObject::Draw()
 {
-	Color amina = { 0, 255, 255 , 200 };
+	Color selectionColor = { 0, 255, 255 , 200 };
 
 	// draw image
-	//DrawTexture(m_texture, m_objectPosition.x, m_objectPosition.y, WHITE);
 	DrawTextureEx(m_texture, m_objectPosition, 0 , 1, WHITE);
 
 	// define outline rect
 	Rectangle rect = { m_objectPosition.x - 5, m_objectPosition.y - 5, m_objectSize.x + 10, m_objectSize.y + 10 };
 
 	// draw outline rect
-	if(m_isClicked)
-		DrawRectangleLinesEx(rect, m_outlineRecThinkness, amina);
+	if (m_isClicked)
+	{
+		DrawRectangleLinesEx(rect, m_outlineRecThinkness, selectionColor);
+	}
+		
+}
+
+Vector2 ImageObject::GetSize()
+{
+	return { (float)m_image.width , (float)m_image.height };
 }
 
 
@@ -101,17 +114,24 @@ TextObject::~TextObject()
 
 void TextObject::Draw()
 {
-	Color amina = { 0, 255, 255 , 200};
+	Color selectionColor = { 0, 255, 255 , 200};
 
 	// draw Text
 	//DrawText(m_text, m_objectPosition.x, m_objectPosition.y, m_fontSize, WHITE);
-	Vector2 size = MeasureTextEx(fontCourrier, m_text, fontSize, spacing);
+	Vector2 size = this->GetSize();
 	DrawTextEx(fontCourrier, m_text,{ m_objectPosition.x , m_objectPosition.y  }, fontSize, spacing, WHITE);
 
 	// draw outline rect
 	Rectangle rect = { m_objectPosition.x - 5, m_objectPosition.y - 5, size.x + 10, size.y + 10 };
 	if (m_isClicked)
-		DrawRectangleLinesEx(rect, m_outlineRecThinkness, amina);
+	{
+		DrawRectangleLinesEx(rect, m_outlineRecThinkness, selectionColor);
+	}
+}
+
+Vector2 TextObject::GetSize()
+{
+	return  MeasureTextEx(fontCourrier, m_text, fontSize, spacing);
 }
 
 MixedObject::MixedObject(Vector2 const& txtPosition, const char* text, int fontSize,  const char* imgFileName ,int const& distance):Drawable(txtPosition)
@@ -147,7 +167,7 @@ MixedObject::~MixedObject()
 
 void MixedObject::Draw()
 {
-	Color amina = { 0, 255, 255 , 200 };
+	Color selectionColor = { 0, 255, 255 , 200 };
 
 	// draw Text
 	DrawTextEx(fontCourrier, m_text, { m_objectPosition.x , m_objectPosition.y }, fontSize, spacing, WHITE);
@@ -169,6 +189,19 @@ void MixedObject::Draw()
 	// draw outline rect
 	Rectangle rect = { m_objectPosition.x - 5, m_objectPosition.y - 5, m_objectSize.x + 10, m_objectSize.y + 10 };
 	if (m_isClicked)
-		DrawRectangleLinesEx(rect, m_outlineRecThinkness, amina);
+	{
+		DrawRectangleLinesEx(rect, m_outlineRecThinkness, selectionColor);
+	}
+		
 
+}
+
+Vector2 MixedObject::GetSize()
+{
+	//calcul total size
+	Vector2 imgSize = { (float)m_image.width , (float)m_image.height };
+	Vector2 textSize = MeasureTextEx(fontCourrier, m_text, fontSize, spacing);
+	m_objectSize = { textSize.x + imgSize.x + m_distance , std::max(textSize.y , imgSize.y) };
+
+	return m_objectSize;
 }

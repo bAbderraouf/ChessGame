@@ -59,6 +59,8 @@ int main()
 		chessGame.Draw();
 		EndDrawing();
 
+		//game over
+		//chessGame.SetScreenShot();
 	
 	}
 

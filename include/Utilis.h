@@ -55,6 +55,17 @@ enum class GameMode {
 };
 
 
+/**
+* @brief who wins the game
+*/
+enum class Winner {
+	White,			
+	Black,			
+	Draw,
+	None,
+};
+
+
 /**------------------------------------------------------------------------------------------------------
 * @brief check if element is selected by mouse cursor (clicked)
 * note : button should be presed

@@ -17,6 +17,8 @@ protected :
 	Vector2		m_objectPosition;
 	Vector2		m_objectSize;
 	int			m_outlineRecThinkness;
+	
+	Sound m_clickedSound;
 
 	Font fontCourrier;
 	int fontSize, spacing;
@@ -32,6 +34,7 @@ public :
 	virtual void Update(bool const& isLeftMousePressed);
 	virtual void SetRectThinkness(int thinkness);
 	virtual Rectangle GetOutlineRect();
+	virtual Vector2 GetSize() = 0;
 
 };
 
@@ -43,6 +46,7 @@ public :
 	~ImageObject();
 
 	void Draw() override;
+	Vector2 GetSize() override;
 
 private:
 	Image		m_image;
@@ -58,6 +62,7 @@ public:
 	~TextObject();
 
 	void Draw() override;
+	Vector2 GetSize() override;
 
 private:
 	const char* m_text;
@@ -71,6 +76,7 @@ public:
 	~MixedObject();
 
 	void Draw() override;
+	Vector2 GetSize() override;
 
 private:
 	const char* m_text;

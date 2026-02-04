@@ -84,8 +84,10 @@ void Chess::Init()
 	InitAudioDevice();
 	m_normalMoveSound	= LoadSound("assets/sounds/movePiece2.wav");
 	m_checkSound		= LoadSound("assets/sounds/checkKing.wav");
-	m_checkmateSound	= LoadSound("assets/sounds/shoot.wav");
-	m_capturepieceSound = LoadSound("assets/sounds/shoot.wav");
+	m_checkmateSound	= LoadSound("assets/sounds/victory.wav");
+	m_restartGameSound	= LoadSound("assets/sounds/restartGame.wav");
+	m_timeOverSound		= LoadSound("assets/sounds/timeOver.wav");
+	m_capturepieceSound = LoadSound("assets/sounds/pieceCapture2.wav");
 
 	//time	
 	m_tMaxPlayer1 = 600;// default seconds 
@@ -95,7 +97,7 @@ void Chess::Init()
 	//drawable 
 	m_posNewGame	= {(float)(8 * cellSize + leftMargin + 1.4f * cellSize), (float)(2.3f * cellSize + topMargin)};
 	m_posChgeTheme	= {(float)(8 * cellSize + leftMargin + 0.6f * cellSize), (float)(2.3f * cellSize + topMargin)};
-	m_imgNewGame	= std::make_unique<ImageObject>(m_posNewGame, "assets/images/buttons/restart2.png");
+	m_imgNewGame	= std::make_unique<ImageObject>(m_posNewGame, "assets/images/buttons/restart8.png");
 	m_imgChngeTheme = std::make_unique<ImageObject>(m_posChgeTheme, "assets/images/buttons/changeTheme1.png");
 
 
@@ -130,12 +132,18 @@ void Chess::StartNewGame()
 	m_currentWindowType = enWindow::SETTINGS;
 
 	//settings
-	m_settings = std::make_unique<Settings>();
+	m_settingsWindow = std::make_unique<Settings>();
 
+	//clear all pieces
+	player1.clear();
+	player2.clear();
 
 	//init Pieces (m_board is created)
 	player1 = InitPlayersPieces(true); // player 1
 	player2 = InitPlayersPieces(false); // player 2	
+
+	// set winner
+	m_winner = Winner::None;
 
 	m_Initial_Board = m_board; // keep it in its initial state
 
@@ -171,7 +179,7 @@ void Chess::StartNewGame()
 	flag_player1InCheck = false;
 	flag_player2InCheck = false;
 	flag_checkMate = false;
-	flag_isPat = true;
+	flag_isPat = false;
 	flag_timeOverPlayer1 = false;
 	flag_timeOverPlayer2 = false;
 	flag_GameOver = false;
@@ -182,6 +190,7 @@ void Chess::StartNewGame()
 	flag_isCPU_turn = false;
 	flag_isRoundFinished = false;
 	flag_isNewGame = true;
+	flag_isScreenDrawed = false;
 	flag_isSoundON = true;
 }
 
@@ -189,35 +198,44 @@ void Chess::Input()
 {
 	if (m_currentWindowType == enWindow::GAME)
 	{
-		// LEFT mouse mouse PRESSED
-		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-		{
-			flag_leftMouseButtonPressed = true;
-		}
-
-		// RIGHT mouse mouse PRESSED
-		if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON))
-		{
-			flag_rightMouseButtonPressed = true;
-		}
-
-		// LEFT mouse mouse is DOWN
-		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-		{
-			flag_leftMouseButtonDown = true;
-		}
-
-		// LEFT mouse mouse is RELEASED
-		if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-		{
-			flag_leftMouseButtonReleased = true;
-		}
+		InputGameWindow();
 	}
 	else if (m_currentWindowType == enWindow::SETTINGS)
 	{
-		m_settings->Input();
+		m_settingsWindow->Input();
 	}
 	
+	else if (m_currentWindowType == enWindow::GAME_OVER)
+	{
+		m_gameOverWindow->Input();
+	}
+}
+
+void Chess::InputGameWindow()
+{
+	// LEFT mouse mouse PRESSED
+	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+	{
+		flag_leftMouseButtonPressed = true;
+	}
+
+	// RIGHT mouse mouse PRESSED
+	if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON))
+	{
+		flag_rightMouseButtonPressed = true;
+	}
+
+	// LEFT mouse mouse is DOWN
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+	{
+		flag_leftMouseButtonDown = true;
+	}
+
+	// LEFT mouse mouse is RELEASED
+	if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+	{
+		flag_leftMouseButtonReleased = true;
+	}
 }
 
 void Chess::Update()
@@ -225,207 +243,263 @@ void Chess::Update()
 	// set background color according to current window type (Game, Settings)
 	UpdateBackgroundColor(m_currentWindowType);
 
-	if (m_currentWindowType == enWindow::GAME)
+	switch (m_currentWindowType) {
+		case enWindow::GAME :
+			UpdateGameWindow(); 
+			break;
+		case enWindow::SETTINGS : 
+			UpdateSettingsWindow(); 
+			break;
+		case enWindow::GAME_OVER :
+			UpdateGameOverWindow(); 
+			break;
+	}
+
+	flag_isScreenDrawed = false;
+}
+
+void Chess::UpdateGameWindow()
+{
+
+	//----------------------------------
+	// update tempo
+	//----------------------------------
+	UpdateTempo();
+
+	//----------------------------------
+	// update buttons
+	//----------------------------------
+	UpdateButtons();
+
+
+	//----------------------------------
+	// check if time is over
+	//----------------------------------
+	if (IsTimeOver())
 	{
-		//----------------------------------
-		// update tempo
-		//----------------------------------
-		UpdateTempo();
-
-		//----------------------------------
-		// update buttons
-		//----------------------------------
-		UpdateButtons();
+		PlaySound(m_timeOverSound);
+		flag_GameOver = true;
+	}
 
 
+	//----------------------
+	// Piece selected 
+	//----------------------
+	if (flag_leftMouseButtonPressed)
+	{
+		flag_leftMouseButtonPressed = false;
+	}
+
+	//----------------------
+	// Drag piece
+	//----------------------
+	if (flag_leftMouseButtonDown || IsCPUTurn())
+	{
+		flag_leftMouseButtonDown = false;
+
+		DragPiece();
+	}
+
+	//----------------------
+	// piece released
+	//----------------------
+	if (flag_leftMouseButtonReleased || IsCPUTurn())
+	{
+		flag_leftMouseButtonReleased = false;
+
+		if (selectdPieceID != -1 && flag_isAnyPieceSelected)
+		{
+			ReleasePiece();
+
+			// chek movement type (if captured)
+
+			if (flag_isPlayer1Turn)
+				flag_isAnyPieceCaptured = IsAnyPieceCaptured(*player1[selectdPieceID]);  //<<*******ToDo better without paramaetre (check player side inside the fct)
+			else
+				flag_isAnyPieceCaptured = IsAnyPieceCaptured(*player2[selectdPieceID]);
+
+			if (flag_isAnyPieceCaptured)
+				PlaySound(m_capturepieceSound);
+
+
+		}
+	
 		//----------------------------------
-		// check if time is over
+		// update m_board for each piece released
 		//----------------------------------
-		if (IsTimeOver())
+		UpdateBoardInfo(flag_isPlayer1Turn);
+
+		//----------------------------------
+		// update PionPromotion
+		//----------------------------------
+		PionPromotion();
+
+		//----------------------------------
+		// save infos
+		//----------------------------------
+		SaveGameSteps();
+
+		//----------------------------------
+		// Change player side if turn is finished
+		//----------------------------------
+		if (IsTurnFinished())
+		{
+			ChangeTurn();
+			flag_isNewGame = false;
+		}
+
+		//----------------------------------
+		// is check state ?
+		//----------------------------------
+		if (flag_isSoundON)
+			if (IsCheck() && !IsCheckmat())
+				PlaySound(m_checkSound);
+
+		//----------------------------------
+		// is checkMate state ?
+		//----------------------------------
+		if (IsCheckmat())
+		{
+			flag_checkMate = true;
 			flag_GameOver = true;
 
-
-		//----------------------
-		// Piece selected 
-		//----------------------
-		if (flag_leftMouseButtonPressed)
-		{
-			flag_leftMouseButtonPressed = false;
-
-			// if 
-			Position step(-1 * cellSize, 0);
-
-			//get  possible positions
-
-
-			//MovePieceByStep(*player1[3], step);
+			PlaySound(m_checkmateSound);
+			std::cout << RED_COUT << "CHECKMATE" << RESET_COUT << std::endl;
 		}
 
-		//----------------------
-		// Drag piece
-		//----------------------
-		if (flag_leftMouseButtonDown || IsCPUTurn())
+		//----------------------------------
+		// is pat state ?
+		//----------------------------------
+		if (IsPat())
 		{
-			flag_leftMouseButtonDown = false;
-
-			DragPiece();
+			flag_isPat = true;
+			flag_GameOver = true;
+			std::cout << RED_COUT << "PAT !" << RESET_COUT << std::endl;
 		}
 
-		//----------------------
-		// piece released
-		//----------------------
-		if (flag_leftMouseButtonReleased || IsCPUTurn())
-		{
-			flag_leftMouseButtonReleased = false;
 
-			if (selectdPieceID != -1 && flag_isAnyPieceSelected)
-			{
-				ReleasePiece();
-
-				// chek movement type (if captured)
-
-				if (flag_isPlayer1Turn)
-					flag_isAnyPieceCaptured = IsAnyPieceCaptured(*player1[selectdPieceID]);  //<<*******ToDo better without paramaetre (check player side inside the fct)
-				else
-					flag_isAnyPieceCaptured = IsAnyPieceCaptured(*player2[selectdPieceID]);
-
-			}
+		// print / save infos
+		//----------------------------------
+		PrintBoardQuickInfo("ENG Small Names", m_board);
+		PrintBoardQuickInfo("Names", m_board);
 
 
+		// reset values
+		//----------------------------------
+		selectdPieceID = -1; // no selected piece
 
-			//----------------------------------
-			// update m_board for each piece released
-			//----------------------------------
-			UpdateBoardInfo(flag_isPlayer1Turn);
+		flag_isAnyPieceSelected = false;
 
-			//----------------------------------
-			// update PionPromotion
-			//----------------------------------
-			PionPromotion();
+		// erase vectors
+		m_possibleMouvement = {}; // reset to empty vector	
+		std::vector<PossibleMouvement>().swap(m_possibleMouvement);
 
-			//----------------------------------
-			// save infos
-			//----------------------------------
-			SaveGameSteps();
-
-			//----------------------------------
-			// Change player side if turn is finished
-			//----------------------------------
-			if (IsTurnFinished())
-				ChangeTurn();
-
-			//----------------------------------
-			// is check state ?
-			//----------------------------------
-			if (flag_isSoundON)
-				if (IsCheck())
-					PlaySound(m_checkSound);
-
-			//----------------------------------
-			// is checkMate state ?
-			//----------------------------------
-			if (IsCheckmat())
-			{
-				flag_checkMate = true;
-				flag_GameOver = true;
-				std::cout << RED_COUT << "CHECKMATE" << RESET_COUT << std::endl;
-			}
-
-			//----------------------------------
-			// is pat state ?
-			//----------------------------------
-			if (IsPat())
-			{
-				flag_isPat = true;
-				flag_GameOver = true;
-				std::cout << RED_COUT << "PAT !" << RESET_COUT << std::endl;
-			}
-
-			if (m_moveIdx == 3) //<*****Todo for test
-			//	StartNewGame();
-
-			// print / save infos
-			//----------------------------------
-			PrintBoardQuickInfo("ENG Small Names", m_board);
-			PrintBoardQuickInfo("Names", m_board);
-
-
-			// reset values
-			//----------------------------------
-			selectdPieceID = -1; // no selected piece
-
-			flag_isAnyPieceSelected = false;
-
-			// erase vectors
-			m_possibleMouvement = {}; // reset to empty vector	
-			std::vector<PossibleMouvement>().swap(m_possibleMouvement);
-
-
-		}
-
-		//----------------------
-		// change player side  (after each finished move)
-		//----------------------
-		if (flag_rightMouseButtonPressed)
-		{
-			flag_rightMouseButtonPressed = false;
-
-			// change player side
-
-			ChangeTurn();  //<<****ToDo to be remove at the end (only for tests)
-
-		}
 
 	}
 
-	else if (m_currentWindowType == enWindow::SETTINGS)
+
+	if (flag_GameOver) //<*****Todo for test
 	{
-		m_settings->Update();
+		OpenGameOverScreen();
+	}
 
-		// check if selection is done 
-		//------------------------------
-		if (m_settings->IsSelectionDone())
-		{
-			// load settings from selection
-			//-----------------------------
-			LoadSettings();
+	//----------------------
+	// change player side  (after each finished move)
+	//----------------------
+	if (flag_rightMouseButtonPressed)
+	{
+		flag_rightMouseButtonPressed = false;
 
-			// back to game window
-			//---------------------
-			m_currentWindowType = enWindow::GAME;
+		// change player side
 
-			m_t1 = time(NULL); // start time computing //curent time
-		}
+		ChangeTurn();  //<<****ToDo to be remove at the end (only for tests)
+
+	}
+
+}
+
+void Chess::UpdateSettingsWindow()
+{
+
+	m_settingsWindow->Update();
+
+	// check if selection is done 
+	//------------------------------
+	if (m_settingsWindow->IsSelectionDone())
+	{
+		// load settings from selection
+		//-----------------------------
+		LoadSettings();
+
+		//play sound
+		PlaySound(m_restartGameSound);
+
+		// back to game window
+		//---------------------
+		m_currentWindowType = enWindow::GAME;
+
+		m_t1 = time(NULL); // start time computing //curent time
+	}
+}
+
+void Chess::UpdateGameOverWindow()
+{
+	m_gameOverWindow->Update();
+
+	// check if selection is done 
+	//------------------------------
+	if (m_gameOverWindow->IsRestartGameRequested())
+	{
+		// startNewGame
+		//-----------------------------
+		StartNewGame();
+
 	}
 }
 
 void Chess::Draw() 
 {
-	if (m_currentWindowType == enWindow::GAME)
+	switch (m_currentWindowType) 
 	{
-		// grid
-		grid->Draw();
-
-		// draw possible pos for selected piece 
-		// (no need to specify side)
-		DrawPossiblePositions(m_hoveredColor);
-
-		// players (all pieces)
-		DrawPlayerPieces(player1);
-		DrawPlayerPieces(player2);
-
-		//draw text
-		DrawLateralTexts();
+		case enWindow::GAME:
+			DrawGameWindow();
+			break;
+		case enWindow::SETTINGS:
+			m_settingsWindow->Draw();
+			break;
+		case enWindow::GAME_OVER:
+			m_gameOverWindow->Draw();
+			break;
 	}
-	else if (m_currentWindowType == enWindow::SETTINGS)
-	{
-		m_settings->Draw();
-	}
+
+	flag_isScreenDrawed = true;
+}
+
+void Chess::DrawGameWindow()
+{
+	// grid
+	grid->Draw();
+
+	// draw possible pos for selected piece 
+	// (no need to specify side)
+	DrawPossiblePositions(m_hoveredColor);
+
+	// players (all pieces)
+	DrawPlayerPieces(player1);
+	DrawPlayerPieces(player2);
+
+	//draw text
+	DrawLateralTexts();
 }
 
 //----------------------
 // additionel functions 
 //----------------------
+
+bool Chess::IsScreenDrawed()
+{
+	return flag_isScreenDrawed;
+}
 
 void Chess::setGameFPS(int fps)
 {
@@ -561,7 +635,6 @@ void Chess::DrawPossiblePositions(Color color)
 	}
 
 }
-
 												
 bool Chess::GetPossiblePositionsOnBoard(Piece const& piece, std::vector<PossibleMouvement> & PossibleMvt, enActionType const& ActionType)
 {
@@ -1099,6 +1172,19 @@ bool Chess::IsAnyPieceCaptured(Piece const& piece) //<<**********toDo to review 
 					capturedPRowForPlayer1 = windowHeigh - (1.5 * cellSize),
 					capturedPRowForPlayer2 = windowHeigh - (3 * cellSize) ;
 	int static cpt1 = 0, cpt2 = 0;
+
+
+	// reset static values for new game cases
+	if (IsNewGame())  
+	{
+		cpt1 = 0;
+		cpt2 = 0;
+
+		capturedPColForPlayer1 = leftMargin + 8 * cellSize + cellSize / 3,//+ cellSize/3, 
+		capturedPColForPlayer2 = leftMargin + 8 * cellSize + cellSize / 3,//+ cellSize/3,
+		capturedPRowForPlayer1 = windowHeigh - (1.5 * cellSize),
+		capturedPRowForPlayer2 = windowHeigh - (3 * cellSize);
+	}
 
 	for (auto const& p : m_possibleMouvement)
 	{
@@ -1676,7 +1762,7 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 		flag_isRoundFinished = false;
 
 		// not a new game anymore
-		flag_isNewGame = false;
+		//flag_isNewGame = false;
 
 		// set move info
 		stMove move{ PosToCase(selectedPieceOriginalPos), selectedMoveCell, player1[selectdPieceID]->GetTeamIndex(), enPlayerNum::PLAYER1 };
@@ -2390,19 +2476,19 @@ void Chess::LoadSettings()
 {
 	// Selected Theme 
 	//-----------------------
-	ChangeTheme(m_settings->GetTheme());
+	ChangeTheme(m_settingsWindow->GetTheme());
 
 	// player vs CPU ?
 	//-----------------------
-	flag_CPU_Movement_ON = m_settings->GetIsCpuON();
+	flag_CPU_Movement_ON = m_settingsWindow->GetIsCpuON();
 
 	// Sound ON ? 
 	//-----------------------
-	flag_isSoundON = m_settings->GetIsSoundOn();
+	flag_isSoundON = m_settingsWindow->GetIsSoundOn();
 
 	// cpu time (game mode)
 	//-----------------------
-	GameMode mode = m_settings->GetGameMode();
+	GameMode mode = m_settingsWindow->GetGameMode();
 	if (mode == GameMode::Bulet)
 	{
 		// 1min per player
@@ -2435,7 +2521,7 @@ void Chess::SaveGameSteps()
 	}
 								
 
-	if (IsNewGame())
+	if (IsNewGame() && !flag_isAnyPieceSelected)
 	{
 		file << "\n\n\t==========================\n";
 		file <<     "\t===  New Game Started  ===\n";
@@ -2459,12 +2545,61 @@ void Chess::SaveGameSteps()
 
 }
 
-void Chess::GameOver()
+void Chess::OpenGameOverScreen()
 {
-	m_screenshot = LoadImageFromScreen();
-	ExportImage(m_screenshot, "capture.png");
+	if (IsScreenDrawed())
+	{
+
+		//capture last move
+		m_screenshot = LoadImageFromScreen();
+		ExportImage(m_screenshot, "assets/images/capture/capture.png");
+
+
+		Vector2 windowSize;
+		windowSize.x = (float)(windowWidth);
+		windowSize.y = (float)(windowHeigh);
+
+		//set the winner
+		m_winner = GetWinner();
+
+		if (m_winner == Winner::None)
+		{
+			std::cerr << "error : there no Winner!";
+			return;
+		}
+
+		//new game over window
+		m_gameOverWindow = std::make_unique<GameOver>(windowSize , m_winner);
+
+		//switch to game over window
+		m_currentWindowType = enWindow::GAME_OVER;
+
+	}
 }
 
+Winner Chess::GetWinner()
+{
+	if (flag_GameOver)
+	{
+		if (IsCheckmat())
+			if (flag_isPlayer1Turn)
+				return Winner::Black;
+			else
+				return Winner::White;
+		if (IsTimeOver())
+			if (flag_timeOverPlayer1)
+				return Winner::Black;
+			else
+				return Winner::White;
+		if (IsPat())
+			return Winner::Draw;
+		else
+			return Winner::None;
+	}
+	else
+		return Winner::None;
+
+}
 
 
 bool Chess::IsCapturableObstacle(int const& row, int const& col) const
@@ -2534,7 +2669,7 @@ void Chess::MovePieceToNewCase(Piece& piece, ChessCase CCase)
 
 bool Chess::IsNewGame()
 {
-	return flag_isNewGame;
+	return flag_isNewGame; 
 }
 
 void Chess::ChangeTurn()
