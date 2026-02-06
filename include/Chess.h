@@ -995,13 +995,12 @@ public :  //<<*******ToDo reset public & private fct
 
 	/*--------------------------------------------------------------------------------
 
-	* @brief get legal move type (normal, promotion, capture, check )
-	* Note : the movement sould be legal (the piece can move to this position)
+	* @brief set move flags (normal, promotion, capture, check )
 	* @param move : current move to be checked
-	* @return legal move type (normal, promotion, capture, check )
+	* @param board: the current board matrix
 
 	*---------------------------------------------------------------------------------*/
-	MoveFlags SetMoveFlags(stMove const& move, Board const& board);
+	void SetMoveFlags(stMove const& move, Board const& board);
 
 
 	/*
@@ -1016,7 +1015,8 @@ public :  //<<*******ToDo reset public & private fct
 
 	/*--------------------------------------------------------------------------------
 
-	* @brief check if the current move is legal (valid : no check position + can move to this case)
+	* @brief check if the current move is legal
+			(valid : no check position for the current player by the oposite one, means: we can move to this case)
 	* @param move : current move to be checked
 	* @return true if the move is legal
 

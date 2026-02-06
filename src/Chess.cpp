@@ -1366,14 +1366,14 @@ bool Chess::IsAnyPieceCaptured(Piece const& piece) //<<**********toDo to review 
 }
 
 
-bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& playerNum)
+bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& currentPlayerNum)
 {
 
 
 	// local variable to get possible mouvement for each piece.
 	std::vector<PossibleMouvement> possMvt = {};
 
-	if (playerNum == enPlayerNum::PLAYER1)
+	if (currentPlayerNum == enPlayerNum::PLAYER1)
 	{
 		// player 1 turn = > we should check player2 pieces if they present a check position for player1
 		//for (auto const& piece : player2) // for each piece
@@ -1811,7 +1811,7 @@ bool Chess::IsLegalMove(stMove const& move, Board const& board)
 
 }
 
-MoveFlags Chess::SetMoveFlags(stMove const& move, Board const& board)
+void Chess::SetMoveFlags(stMove const& move, Board const& board)
 {
 
 	/* ( Quick infos about return type )
@@ -1826,30 +1826,28 @@ MoveFlags Chess::SetMoveFlags(stMove const& move, Board const& board)
 	*/
 
 	// set falgs  
-	MoveFlags mvFlgs;
 
 	if (IsSameCellMove(move, board))	// cant move
-		mvFlgs.isSameCell = true;
+		m_currentMoveFlags.isSameCell = true;
 
 	if (IsTeamCellMove(move, board)) // cant move
-		mvFlgs.isTeamCell = true;
+		m_currentMoveFlags.isTeamCell = true;
 
-	if (IsLegalMove(move, board) == false) // cant move
-		mvFlgs.isNotLegal = true;
+	if (IsLegalMove(move, board)) // cant move
+		m_currentMoveFlags.isNotLegal = true;
 
 	if (IsNormalMove(move, board)) // could be promotion
-		mvFlgs.isNormal = true;
+		m_currentMoveFlags.isNormal = true;
 
 	if (IsPromotionMove(move, board)) // could be capture
-		mvFlgs.isPromotion = true;
+		m_currentMoveFlags.isPromotion = true;
 
 	if (IsCaptureMove(move, board))
-		mvFlgs.isCapture = true;
+		m_currentMoveFlags.isCapture = true;
 
 	if (IsCheckMove(move, board))
-		mvFlgs.isCheck = true;
-
-	return mvFlgs;
+		m_currentMoveFlags.isCheck = true;
+ 
 }
 
 bool Chess::IsNormalMove(stMove const& move, Board const& board)
@@ -1871,7 +1869,12 @@ bool Chess::IsCaptureMove(stMove const& move, Board const& board)
 		toRow = move.toCell.row,
 		toColl = move.toCell.col;
 
-	bool differentTeams = (board.at(toRow).at(toColl).playerSide != board.at(fromRow).at(fromColl).playerSide);
+	bool toTeamSide = board.at(toRow).at(toColl).playerSide;
+	bool fromTeamSide = board.at(fromRow).at(fromColl).playerSide;
+
+	bool isToCellEmpty = board.at(toRow).at(toColl).empty;
+
+	bool differentTeams = isToCellEmpty ? false : (toTeamSide != fromTeamSide);
 
 	bool NoKingInToCell = board.at(toRow).at(toColl).piecePGNName != "K"; // security check not needed
 
@@ -1899,9 +1902,42 @@ bool Chess::IsPromotionMove(stMove const& move, Board const& board)
 
 bool Chess::IsCheckMove(stMove const& move, Board const& board)
 {
-	// MoveType::Check = 4,	 : if we move to this cell the other player will be in check position
+	// MoveType::Check = 4,	 : if we move to this cell the OTHER player will be in check position
 
-	return (IsLegalMove(move, board) == false);  //  IsLegalMove() == false : the other plaeyr is in check position after this move
+
+	int fromRow = move.fromCell.row,
+		fromColl = move.fromCell.col,
+		toRow = move.toCell.row,
+		toColl = move.toCell.col;
+
+
+	// make a copy from board
+	//-------------------------
+	Board temp_board = board;
+
+	//set starting cell to empty
+	//---------------------------
+	temp_board.at(fromRow).at(fromColl).setToEmpty();
+
+	//set next cell info
+	//--------------------
+	if (move.pieceTeamSide == enPlayerNum::PLAYER1) // player 1
+		SetCellInfo(*player1[move.pieceTeamIndex], toRow, toColl, temp_board);
+	else
+		SetCellInfo(*player2[move.pieceTeamIndex], toRow, toColl, temp_board);
+
+
+	// check current player side
+	enPlayerNum currentPlayerNum	= move.pieceTeamSide;
+	enPlayerNum oppositePlayerNum	= (currentPlayerNum == enPlayerNum::PLAYER1) ? enPlayerNum::PLAYER2 : enPlayerNum::PLAYER1;
+
+
+	//board is updated with next move info 
+	// now we should check if check possitions exists for the opposite player
+	//------------------------------------------------
+
+	return  IsPlayerInCheckPosition(temp_board, oppositePlayerNum);
+  
 }
 
 bool Chess::IsSameCellMove(stMove const& move, Board const& board)
@@ -1919,8 +1955,15 @@ bool Chess::IsTeamCellMove(stMove const& move, Board const& board)
 		fromColl = move.fromCell.col,
 		toRow = move.toCell.row,
 		toColl = move.toCell.col;
+
+	bool toTeamSide = board.at(toRow).at(toColl).playerSide;
+	bool fromTeamSide = board.at(fromRow).at(fromColl).playerSide;
 	
-	return (board.at(toRow).at(toColl).playerSide == board.at(fromRow).at(fromColl).playerSide);
+	bool isToCellEmpty = board.at(toRow).at(toColl).empty;
+
+	bool SameTeam = isToCellEmpty ? false : (toTeamSide == fromTeamSide);
+
+	return SameTeam;
 }
 
 
@@ -1944,18 +1987,28 @@ std::string Chess::GetCurrentMoveText(stMove const& move , Board const& lastBoar
 
 	std::string piece = GetEnglishPieceName(lastBoardState.at(move.fromCell.row).at(move.fromCell.col).pieceName);
 	std::string from = ToLowerCase(lastBoardState.at(move.fromCell.row).at(move.fromCell.col).caseName);
-	std::string mouvementType = lastBoardState.at(move.toCell.row).at(move.toCell.col).empty ? "" : "x"; // if capture => "x" else ""
+	std::string mouvementType = ""; //= lastBoardState.at(move.toCell.row).at(move.toCell.col).empty ? "" : "x"; // if capture => "x" else ""
 	std::string to = ToLowerCase(lastBoardState.at(move.toCell.row).at(move.toCell.col).caseName);
 	std::string check_checkMate = "";
 
 
+	
 	if (flag_checkMate)
 	{
-		//check_checkMate = "#";
+		check_checkMate = "#";
 	}
 	else if (m_currentMoveFlags.isCheck)
 	{
-		//check_checkMate = "+";
+		check_checkMate = "+";
+	}
+	
+	if (m_currentMoveFlags.isCapture)
+	{
+		mouvementType = "x";
+	}
+	else if (m_currentMoveFlags.isNormal)
+	{
+		mouvementType = "";
 	}
 
 	// promotion case : (piece == pawn) && (ToPos = 0 or 7)
@@ -2026,7 +2079,7 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 
 
 			// get informations about current move
-			m_currentMoveFlags = SetMoveFlags(m_currentMove, m_board);
+			SetMoveFlags(m_currentMove, m_board);
 
 			//play sound
 			if (flag_isSoundON)
@@ -2069,7 +2122,7 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 
 
 			// get informations about current move
-			m_currentMoveFlags = SetMoveFlags(m_currentMove, m_board);
+			SetMoveFlags(m_currentMove, m_board);
 
 			// both players played
 			flag_isRoundFinished = true;
@@ -2929,15 +2982,16 @@ void Chess::ChangeTurn()
 	flag_isMovementAllowed = false;
 	flag_isAnyPieceCaptured = false;
 
+
+	// check if current player is in check position
+	if (flag_isPlayer1Turn)				//<*******Todo to be changed by m_currentMoveFlags values
+		flag_player1InCheck = m_currentMoveFlags.isCheck; //IsPlayerInCheckPosition(m_board , enPlayerNum::PLAYER1);
+	else
+		flag_player2InCheck = m_currentMoveFlags.isCheck; //IsPlayerInCheckPosition(m_board, enPlayerNum::PLAYER2);
+
 	// reset current move flags
 	m_currentMoveFlags.ResetFlags();
 
-
-	// check if current player is in check position
-	if(flag_isPlayer1Turn)
-		flag_player1InCheck = IsPlayerInCheckPosition(m_board , enPlayerNum::PLAYER1);
-	else
-		flag_player2InCheck = IsPlayerInCheckPosition(m_board, enPlayerNum::PLAYER2);
 
 	// init t1 for tempo calculation
 	InitT1();
