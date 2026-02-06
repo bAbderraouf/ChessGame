@@ -8,6 +8,7 @@
 #include "ChessCase.h"
 #include "Settings.h"
 #include "GameOver.h"
+#include "Promotion.h"
 #include "Utilis.h"
 #include <string>
 #include <iomanip> // for setw() : cout
@@ -50,6 +51,7 @@ private:
 		GAME = 0,
 		SETTINGS = 1,
 		GAME_OVER = 2,
+		PROMOTION = 3,
 	};
 
 
@@ -150,11 +152,18 @@ private:
 	std::unique_ptr<GameOver> m_gameOverWindow;
 
 
+	// promotion window
+	//----------
+	std::unique_ptr<Promotion> m_promotion;
+
 	//pieces
 	//----------
 	std::vector<std::unique_ptr<Piece>> player1, player2;		/// player1 (white), player2 (black) 16pieces for each one
 	int selectdPieceID; 										/// selected (current) piece id (from 0 to 15)
-	Position selectedPieceOriginalPos ,selectedPieceCurrentPos; /// original positon for the current piece (x,y) & (i,j)
+	Position selectedPieceOriginalPos, selectedPieceCurrentPos, /// original positon for the current piece (x,y) & (i,j)
+				m_promotionPosition;							/// if any promotion get pawn position
+
+	std::string m_promotionPieceName;
 
 	std::vector<PossibleMouvement> m_possibleMouvement;			/// possible movement vecteur for each piece.
 
@@ -243,7 +252,8 @@ private:
 	
 	
 	Board	m_board,			/// a matrix of type infoCase containing all cell cases informations
-			m_Initial_Board;	/// initial state of that matrix stored after initialization
+			m_Initial_Board,	/// initial state of that matrix stored after initialization
+			m_lastBoard;		/// last borad state (before validating the last move)
 
 	//flags
 	//--------
@@ -269,7 +279,12 @@ private:
 			flag_isRoundFinished,				/// 1 : if both players are played (white turn + black turn)
 			flag_isNewGame,
 			flag_isScreenDrawed,
+			flag_isPromotion,
+			flag_isPromotionDone,
 			flag_isSoundON;
+
+	// current move flags
+	MoveFlags m_currentMoveFlags;
 
 public :  //<<*******ToDo reset public & private fct
 	
@@ -343,6 +358,12 @@ public :  //<<*******ToDo reset public & private fct
 	*---------------------------------------------------------------------------------*/
 	void UpdateGameOverWindow();
 
+
+
+	/*--------------------------------------------------------------------------------
+	*  @brief update promotion window.
+	*---------------------------------------------------------------------------------*/
+	void UpdatePromotionWindow();
 
 
 
@@ -974,12 +995,45 @@ public :  //<<*******ToDo reset public & private fct
 
 	/*--------------------------------------------------------------------------------
 
+	* @brief get legal move type (normal, promotion, capture, check )
+	* Note : the movement sould be legal (the piece can move to this position)
+	* @param move : current move to be checked
+	* @return legal move type (normal, promotion, capture, check )
+
+	*---------------------------------------------------------------------------------*/
+	MoveFlags SetMoveFlags(stMove const& move, Board const& board);
+
+
+	/*
+		Normal = 1,			/// move to empty cell
+		Capture = 2,		/// move to not empty cell (containing enemy piece
+		Promotion = 3,		/// pawn arived to board limit (could be capture)
+		Check = 4,			/// if we move to this cell the other player will be in check position
+		NotLegal = 5,		/// cant move :  not legal move (current team will still in check position)
+		SameCell = 6,		/// cant move :  attempt to move to the same cell
+		TeamCell = 7,		/// cant move :  cell occupied by team side
+	*/
+
+	/*--------------------------------------------------------------------------------
+
 	* @brief check if the current move is legal (valid : no check position + can move to this case)
 	* @param move : current move to be checked
 	* @return true if the move is legal
 
 	*---------------------------------------------------------------------------------*/
 	bool IsLegalMove(stMove const & move, Board const& board);
+
+	bool IsNormalMove(stMove const& move, Board const& board);
+
+	bool IsCaptureMove(stMove const& move, Board const& board);
+
+	bool IsPromotionMove(stMove const& move, Board const& board);
+
+	bool IsCheckMove(stMove const& move, Board const& board);
+
+	bool IsSameCellMove(stMove const& move, Board const& board);
+
+	bool IsTeamCellMove(stMove const& move, Board const& board);
 
 
 
@@ -1000,7 +1054,7 @@ public :  //<<*******ToDo reset public & private fct
 	* @return string describing current move according to game rules
 
 	*---------------------------------------------------------------------------------*/
-	std::string GetCurrentMoveText(stMove const & move);
+	std::string GetCurrentMoveText(stMove const & move , Board const& lastBoardState);
 
 
 
@@ -1125,7 +1179,7 @@ public :  //<<*******ToDo reset public & private fct
 	* @brief update movements history according to game rules
 
 	*---------------------------------------------------------------------------------*/
-	void UpdateMovesHistory();
+	void UpdateMovesHistory(Board const & lastBoardState);
 
 
 
@@ -1135,7 +1189,7 @@ public :  //<<*******ToDo reset public & private fct
 	* @return input in lower cases
 
 	*---------------------------------------------------------------------------------*/
-	std::string ToLowerCase(std::string& const str);
+	std::string ToLowerCase(std::string const& str);
 
 
 	//time
@@ -1396,7 +1450,7 @@ public :  //<<*******ToDo reset public & private fct
   x 2- game over window
   x 3- change theme during game
 	4- rock + en passant
-	5- promotion full feature
+  x 5- promotion full feature
 	6- draw (3times ,...)
   x 7- finish settings
   x 8- change chess construtor (no need de c1,c2, make it internalà

@@ -67,7 +67,7 @@ Update()
 	------------
 	update PionPromotion
 	------------
-		-PionPromotion()
+		-PionPromotion()  
 
 	------------
 	SaveGameSteps
@@ -84,6 +84,7 @@ Update()
 	------------
 		-IsCheckmat()
 
+
 	------------
 	InitVectors(m_possibleMouvement)
 	InitFlags()
@@ -95,3 +96,10 @@ Draw()
 	DrawPlayerPieces()
 	DrawLateralText()
 ---------------------------------------------------------------------------------------------
+
+
+pb : finish promotion (optimization + test + notation) + flag
+	test notation
+	test save
+	solve notation +  # =
+

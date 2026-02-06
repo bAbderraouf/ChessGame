@@ -11,6 +11,7 @@ GameOver::GameOver(Vector2 const& windowSize, Winner const& winner)
 
 GameOver::~GameOver()
 {
+	delete winnerPicFileName;
 }
 
 

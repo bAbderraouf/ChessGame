@@ -1,6 +1,9 @@
 #pragma once
 
 #include "raylib.h"
+#include "Position.h"
+#include <string>
+
 
 #define RED_COUT   "\033[31m"
 #define BLUE_COUT  "\033[34m"
@@ -65,6 +68,36 @@ enum class Winner {
 	None,
 };
 
+/**
+* @brief defines pieces names
+*/
+enum class PieceName {
+	Pawn = 1,
+	Rook = 2,
+	Knight = 3,
+	Bishop = 4,
+	Queen = 5,
+	King = 6,
+};
+
+
+
+/**
+* @brief defines different moves flags
+*/
+struct MoveFlags {
+	bool isNormal;			/// move to empty cell 
+	bool isCapture;			/// move to not empty cell (containing enemy piece 
+	bool isPromotion;		/// pawn arived to board limit (could be capture)
+	bool isCheck;			/// if we move to this cell the other player will be in check position
+	bool isNotLegal;		/// cant move :  not legal move (current team will still in check position) 
+	bool isSameCell;		/// cant move :  attempt to move to the same cell
+	bool isTeamCell;		/// cant move :  cell occupied by team side 
+	
+	// checkmat & pat will be checked after allowing the move
+	void ResetFlags();
+};
+
 
 /**------------------------------------------------------------------------------------------------------
 * @brief check if element is selected by mouse cursor (clicked)
@@ -80,3 +113,10 @@ enum class Winner {
 * @endcode
 ------------------------------------------------------------------------------------------------------*/
 bool IsClickedObject(Vector2 const& cursorPos, Rectangle const& objectOutlineRect, bool leftMouseBtnClicked);
+
+
+Vector2 PosToVect2(Position const & pos);
+
+
+std::string GetPGNNameFromPieceName(PieceName const& name);
+

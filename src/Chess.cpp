@@ -1,7 +1,7 @@
 #include "Chess.h"
 
 Chess::Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin, int tMargin)
-	: selectedPieceOriginalPos(0, 0), selectedPieceCurrentPos(0, 0)
+	: selectedPieceOriginalPos(0, 0), selectedPieceCurrentPos(0, 0), m_promotionPosition(0,0)
 {
 	// game window
 	windowWidth = w;
@@ -146,6 +146,7 @@ void Chess::StartNewGame()
 	m_winner = Winner::None;
 
 	m_Initial_Board = m_board; // keep it in its initial state
+	m_lastBoard = m_board;
 
 	//player1.push_back(std::make_unique<Dame>(true));
 	//player1[16]->SetPosition(m_board.at(4).at(4).cellPosition);
@@ -191,7 +192,12 @@ void Chess::StartNewGame()
 	flag_isRoundFinished = false;
 	flag_isNewGame = true;
 	flag_isScreenDrawed = false;
+	flag_isPromotion = false;
+	flag_isPromotionDone = false;
 	flag_isSoundON = true;
+
+	// reset current move flags
+	m_currentMoveFlags.ResetFlags();
 }
 
 void Chess::Input()
@@ -199,6 +205,7 @@ void Chess::Input()
 	if (m_currentWindowType == enWindow::GAME)
 	{
 		InputGameWindow();
+
 	}
 	else if (m_currentWindowType == enWindow::SETTINGS)
 	{
@@ -209,6 +216,12 @@ void Chess::Input()
 	{
 		m_gameOverWindow->Input();
 	}
+
+	else if (m_currentWindowType == enWindow::PROMOTION)
+	{
+		m_promotion->Input();
+	}
+		
 }
 
 void Chess::InputGameWindow()
@@ -253,6 +266,10 @@ void Chess::Update()
 		case enWindow::GAME_OVER :
 			UpdateGameOverWindow(); 
 			break;
+		case enWindow::PROMOTION:
+			UpdatePromotionWindow();
+			break;
+
 	}
 
 	flag_isScreenDrawed = false;
@@ -297,7 +314,8 @@ void Chess::UpdateGameWindow()
 	{
 		flag_leftMouseButtonDown = false;
 
-		DragPiece();
+		if(flag_isPromotion == false)
+			DragPiece();
 	}
 
 	//----------------------
@@ -322,79 +340,97 @@ void Chess::UpdateGameWindow()
 				PlaySound(m_capturepieceSound);
 
 
-		}
-	
-		//----------------------------------
-		// update m_board for each piece released
-		//----------------------------------
-		UpdateBoardInfo(flag_isPlayer1Turn);
+		}	
 
-		//----------------------------------
-		// update PionPromotion
-		//----------------------------------
-		PionPromotion();
+		   //----------------------------------
+		   // update m_board for each piece released (keep last state in m_lastBoard)
+		   //----------------------------------
+			UpdateBoardInfo(flag_isPlayer1Turn);
 
-		//----------------------------------
-		// save infos
-		//----------------------------------
-		SaveGameSteps();
-
-		//----------------------------------
-		// Change player side if turn is finished
-		//----------------------------------
-		if (IsTurnFinished())
-		{
-			ChangeTurn();
-			flag_isNewGame = false;
-		}
-
-		//----------------------------------
-		// is check state ?
-		//----------------------------------
-		if (flag_isSoundON)
-			if (IsCheck() && !IsCheckmat())
-				PlaySound(m_checkSound);
-
-		//----------------------------------
-		// is checkMate state ?
-		//----------------------------------
-		if (IsCheckmat())
-		{
-			flag_checkMate = true;
-			flag_GameOver = true;
-
-			PlaySound(m_checkmateSound);
-			std::cout << RED_COUT << "CHECKMATE" << RESET_COUT << std::endl;
-		}
-
-		//----------------------------------
-		// is pat state ?
-		//----------------------------------
-		if (IsPat())
-		{
-			flag_isPat = true;
-			flag_GameOver = true;
-			std::cout << RED_COUT << "PAT !" << RESET_COUT << std::endl;
-		}
+			//----------------------------------
+			// update PionPromotion
+			//----------------------------------
+			PionPromotion();
 
 
-		// print / save infos
-		//----------------------------------
-		PrintBoardQuickInfo("ENG Small Names", m_board);
-		PrintBoardQuickInfo("Names", m_board);
+			// moves history
+			//-----------------
+			if (flag_isMovementAllowed)
+			{
+				UpdateMovesHistory(m_lastBoard);
+
+			}
+				
 
 
-		// reset values
-		//----------------------------------
-		selectdPieceID = -1; // no selected piece
-
-		flag_isAnyPieceSelected = false;
-
-		// erase vectors
-		m_possibleMouvement = {}; // reset to empty vector	
-		std::vector<PossibleMouvement>().swap(m_possibleMouvement);
+			//----------------------------------
+			// save infos
+			//----------------------------------
+			SaveGameSteps();
 
 
+			//----------------------------------
+			// Change player side if turn is finished
+			//----------------------------------
+			if (IsTurnFinished())
+			{
+				ChangeTurn();
+				flag_isNewGame = false;
+			}
+
+
+			//----------------------------------
+			// is checkMate state ?
+			//----------------------------------
+			if (IsCheckmat())
+			{
+				flag_checkMate = true;
+				flag_GameOver = true;
+
+				PlaySound(m_checkmateSound);
+				std::cout << RED_COUT << "CHECKMATE" << RESET_COUT << std::endl;
+			}
+
+			//----------------------------------
+			// is pat state ?
+			//----------------------------------
+			if (IsPat())
+			{
+				flag_isPat = true;
+				flag_GameOver = true;
+				std::cout << RED_COUT << "PAT !" << RESET_COUT << std::endl;
+			}
+
+			//----------------------------------
+			// play check sound
+			//----------------------------------
+			if (IsCheck() && !flag_checkMate)
+				if (flag_isSoundON)
+					PlaySound(m_checkSound);
+
+
+			// print / save infos
+			//----------------------------------
+			PrintBoardQuickInfo("ENG Small Names", m_board);
+			PrintBoardQuickInfo("Names", m_board);
+
+
+			// reset values
+			//----------------------------------
+
+			if (flag_isPromotion == false)
+			{
+				selectdPieceID = -1; // no selected piece
+
+				flag_isAnyPieceSelected = false;
+
+			}
+
+			// erase vectors
+			m_possibleMouvement = {}; // reset to empty vector	
+			std::vector<PossibleMouvement>().swap(m_possibleMouvement);
+
+		
 	}
 
 
@@ -457,6 +493,70 @@ void Chess::UpdateGameOverWindow()
 	}
 }
 
+void Chess::UpdatePromotionWindow()
+{
+
+	m_promotion->Update();
+
+	if (m_promotion->IsPromotionDone())
+	{
+		// get selection type from rect (get id piece)
+		PieceName promotionPiece = m_promotion->GetSelectedPiece();
+		
+		//--------Replace pawn by the selection ------
+		std::unique_ptr<Piece> p;
+
+		if (promotionPiece == PieceName::Queen)
+			p = std::make_unique<Dame>(flag_isPlayer1Turn);
+
+		else if (promotionPiece == PieceName::Rook)
+			p = std::make_unique<Tour>(flag_isPlayer1Turn);
+
+		else if (promotionPiece == PieceName::Bishop)
+			p = std::make_unique<Fou>(flag_isPlayer1Turn);
+
+		else if (promotionPiece == PieceName::Knight)
+			p = std::make_unique<Cavalier>(flag_isPlayer1Turn);
+		//---------------------------------------------
+
+		if (flag_isPlayer1Turn)
+		{
+			player1[selectdPieceID] = std::move(p);
+
+			player1[selectdPieceID]->SetPosition(m_promotionPosition);
+			player1[selectdPieceID]->SetImageSize(cellSize);
+			player1[selectdPieceID]->SetTeamIndex(selectdPieceID);
+
+			ChessCase cellPos = PosToCase(m_promotionPosition);
+			UpdateCellInfo(*player1[selectdPieceID], cellPos.row, cellPos.col, m_board);
+		}
+		else
+		{
+			player2[selectdPieceID] = std::move(p);
+
+			player2[selectdPieceID]->SetPosition(m_promotionPosition);
+			player2[selectdPieceID]->SetImageSize(cellSize);
+			player2[selectdPieceID]->SetTeamIndex(selectdPieceID);
+
+			ChessCase cellPos = PosToCase(m_promotionPosition);
+			UpdateCellInfo(*player2[selectdPieceID], cellPos.row, cellPos.col, m_board);
+		}
+
+		m_currentWindowType = enWindow::GAME;
+
+
+		m_promotionPieceName = GetPGNNameFromPieceName(promotionPiece);
+
+		flag_isPromotionDone = true;
+
+		flag_isPromotion = false;
+
+		flag_isMovementAllowed = true;
+
+		selectdPieceID = -1;
+	}
+}
+
 void Chess::Draw() 
 {
 	switch (m_currentWindowType) 
@@ -470,6 +570,10 @@ void Chess::Draw()
 		case enWindow::GAME_OVER:
 			m_gameOverWindow->Draw();
 			break;
+		case enWindow::PROMOTION:
+			DrawGameWindow();
+			m_promotion->Draw();
+			break;
 	}
 
 	flag_isScreenDrawed = true;
@@ -481,7 +585,6 @@ void Chess::DrawGameWindow()
 	grid->Draw();
 
 	// draw possible pos for selected piece 
-	// (no need to specify side)
 	DrawPossiblePositions(m_hoveredColor);
 
 	// players (all pieces)
@@ -1386,7 +1489,7 @@ bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& playe
 
 bool Chess::IsTurnFinished()
 {
-	if (flag_isMovementAllowed || flag_isAnyPieceCaptured)
+	if ((flag_isMovementAllowed || flag_isAnyPieceCaptured) && (flag_isPromotion==false))
 		return true;
 	return false;
 }
@@ -1674,10 +1777,6 @@ bool Chess::IsSelectedMoveLegal(Piece const& piece, ChessCase const& nextPositio
 
 bool Chess::IsLegalMove(stMove const& move, Board const& board)
 {
-	//if (IsSameCoordinates(move.fromCell, move.toCell)) // should move to a new postion to finish the turn
-	//	return false;
-	//else
-	//{
 		// make a copy from board
 		//-------------------------
 		Board temp_board = board;
@@ -1709,9 +1808,121 @@ bool Chess::IsLegalMove(stMove const& move, Board const& board)
 		bool isAnyCheckPosition = IsPlayerInCheckPosition(temp_board, move.pieceTeamSide); // still in check or not
 
 		return (isAnyCheckPosition ? false : true);
-	//}
 
 }
+
+MoveFlags Chess::SetMoveFlags(stMove const& move, Board const& board)
+{
+
+	/* ( Quick infos about return type )
+		Normal = 1,			/// move to empty cell
+		Capture = 2,		/// move to not empty cell (containing enemy piece
+		Promotion = 3,		/// pawn arived to board limit (could be capture)
+		Check = 4,			/// if we move to this cell the other player will be in check position
+		NotLegal = 5,		/// cant move :  not legal move (current team will still in check position)
+		SameCell = 6,		/// cant move :  attempt to move to the same cell
+		TeamCell = 7,		/// cant move :  cell occupied by team side
+
+	*/
+
+	// set falgs  
+	MoveFlags mvFlgs;
+
+	if (IsSameCellMove(move, board))	// cant move
+		mvFlgs.isSameCell = true;
+
+	if (IsTeamCellMove(move, board)) // cant move
+		mvFlgs.isTeamCell = true;
+
+	if (IsLegalMove(move, board) == false) // cant move
+		mvFlgs.isNotLegal = true;
+
+	if (IsNormalMove(move, board)) // could be promotion
+		mvFlgs.isNormal = true;
+
+	if (IsPromotionMove(move, board)) // could be capture
+		mvFlgs.isPromotion = true;
+
+	if (IsCaptureMove(move, board))
+		mvFlgs.isCapture = true;
+
+	if (IsCheckMove(move, board))
+		mvFlgs.isCheck = true;
+
+	return mvFlgs;
+}
+
+bool Chess::IsNormalMove(stMove const& move, Board const& board)
+{
+	/// MoveType::NormalMove  : move to empty cell
+
+	int toRow = move.toCell.row,
+		toColl = move.toCell.col;
+
+	return  board.at(toRow).at(toColl).empty;
+}
+
+bool Chess::IsCaptureMove(stMove const& move, Board const& board)
+{
+	// MoveType::Capture : move to not empty cell (containing enemy piece)
+
+	int fromRow = move.fromCell.row,
+		fromColl = move.fromCell.col,
+		toRow = move.toCell.row,
+		toColl = move.toCell.col;
+
+	bool differentTeams = (board.at(toRow).at(toColl).playerSide != board.at(fromRow).at(fromColl).playerSide);
+
+	bool NoKingInToCell = board.at(toRow).at(toColl).piecePGNName != "K"; // security check not needed
+
+	return (differentTeams && NoKingInToCell);
+}
+
+bool Chess::IsPromotionMove(stMove const& move, Board const& board)
+{
+
+	// MoveType::Promotion	: pawn arived to board limit (could be capture  and/or check)
+
+	int fromRow = move.fromCell.row,
+		fromColl = move.fromCell.col,
+		toRow = move.toCell.row,
+		toColl = move.toCell.col;
+
+	bool isPawn = ( board.at(fromRow).at(fromColl).piecePGNName == "P");
+
+	bool teamSide = board.at(fromRow).at(fromColl).playerSide ;
+
+	bool isArrived = teamSide ? (toRow == 0) : (toRow == 7);
+
+	return (isPawn && isArrived);
+}
+
+bool Chess::IsCheckMove(stMove const& move, Board const& board)
+{
+	// MoveType::Check = 4,	 : if we move to this cell the other player will be in check position
+
+	return (IsLegalMove(move, board) == false);  //  IsLegalMove() == false : the other plaeyr is in check position after this move
+}
+
+bool Chess::IsSameCellMove(stMove const& move, Board const& board)
+{
+	// MoveType::SameCell = 6,   cant move :  attempt to move to the same cell
+
+	return IsSameCoordinates(move.fromCell , move.toCell);
+}
+
+bool Chess::IsTeamCellMove(stMove const& move, Board const& board)
+{
+	// MoveType::TeamCell = 7,	 cant move :  cell occupied by team side  
+
+	int fromRow = move.fromCell.row,
+		fromColl = move.fromCell.col,
+		toRow = move.toCell.row,
+		toColl = move.toCell.col;
+	
+	return (board.at(toRow).at(toColl).playerSide == board.at(fromRow).at(fromColl).playerSide);
+}
+
 
 Chess::stMove Chess::SetMoveInfo(ChessCase const& fromCell, ChessCase const& toCell, int pieceTeamIndex, enPlayerNum playerSide)
 {
@@ -1719,7 +1930,7 @@ Chess::stMove Chess::SetMoveInfo(ChessCase const& fromCell, ChessCase const& toC
 	return move;
 }
 
-std::string Chess::GetCurrentMoveText(stMove const& move)
+std::string Chess::GetCurrentMoveText(stMove const& move , Board const& lastBoardState)
 {
 	// chess notation : [Piece][File][Rank]x[Destination] [Check/Checkmate]
 	// Piece : nom piece (Roi : K , Dame : Q, tour : R,  Fou : B,  Cavalier : N, pion : "")	
@@ -1727,13 +1938,40 @@ std::string Chess::GetCurrentMoveText(stMove const& move)
 	// rank : col number
 	// destination : to (file + rank )
 	// check : +  checkmate : #
+	// promotion : e8=Q  : pawn => Queen
 
-	std::string piece = GetEnglishPieceName(m_board.at(move.fromCell.row).at(move.fromCell.col).pieceName);
-	std::string from = ToLowerCase(m_board.at(move.fromCell.row).at(move.fromCell.col).caseName);
-	std::string mouvementType = m_board.at(move.toCell.row).at(move.toCell.col).empty ? "" : "x"; // if capture => "x" else ""
-	std::string to = ToLowerCase(m_board.at(move.toCell.row).at(move.toCell.col).caseName);
+	PrintBoardQuickInfo("Names", lastBoardState);
 
-	return piece + from + mouvementType + to;
+	std::string piece = GetEnglishPieceName(lastBoardState.at(move.fromCell.row).at(move.fromCell.col).pieceName);
+	std::string from = ToLowerCase(lastBoardState.at(move.fromCell.row).at(move.fromCell.col).caseName);
+	std::string mouvementType = lastBoardState.at(move.toCell.row).at(move.toCell.col).empty ? "" : "x"; // if capture => "x" else ""
+	std::string to = ToLowerCase(lastBoardState.at(move.toCell.row).at(move.toCell.col).caseName);
+	std::string check_checkMate = "";
+
+
+	if (flag_checkMate)
+	{
+		//check_checkMate = "#";
+	}
+	else if (m_currentMoveFlags.isCheck)
+	{
+		//check_checkMate = "+";
+	}
+
+	// promotion case : (piece == pawn) && (ToPos = 0 or 7)
+	if( flag_isPromotionDone)
+	{
+		std::string str = to + "=" + m_promotionPieceName + check_checkMate;
+
+		// reset values
+		m_promotionPieceName = "";
+		flag_isPromotionDone = false;
+
+		return str;
+
+	}
+
+	return piece + from + mouvementType + to + check_checkMate;
 }
 
 std::string Chess::GetEnglishPieceName(std::string const& pieceName)
@@ -1767,7 +2005,7 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 		// set move info
 		stMove move{ PosToCase(selectedPieceOriginalPos), selectedMoveCell, player1[selectdPieceID]->GetTeamIndex(), enPlayerNum::PLAYER1 };
 		
-		if (IsSameCoordinates(move.fromCell, move.toCell))
+		if (IsSameCoordinates(move.fromCell, move.toCell)) 
 		{
 			// back to orignal position
 			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
@@ -1781,13 +2019,20 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 
 			selectedPieceCurrentPos = CaseToPos(selectedMoveCell);
 
-			// move history
+			// for move history
 			m_currentMove = move;
-			UpdateMovesHistory();
+			m_lastBoard = m_board; // n-1 state of m_bord
+			//UpdateMovesHistory();
+
+
+			// get informations about current move
+			m_currentMoveFlags = SetMoveFlags(m_currentMove, m_board);
 
 			//play sound
 			if (flag_isSoundON)
 				PlaySound(m_normalMoveSound);
+
+
 		}
 		else
 		{
@@ -1819,7 +2064,12 @@ void Chess::ValidateCurrentMove(ChessCase & selectedMoveCell)
 
 			// move history
 			m_currentMove = move;
-			UpdateMovesHistory();
+			m_lastBoard = m_board;
+			//UpdateMovesHistory();
+
+
+			// get informations about current move
+			m_currentMoveFlags = SetMoveFlags(m_currentMove, m_board);
 
 			// both players played
 			flag_isRoundFinished = true;
@@ -1855,60 +2105,54 @@ Chess::stPiece Chess::GetPieceFromBoardCell(infoCase const& cell )
 
 void Chess::PionPromotion()
 {
+	
+
 	if (selectdPieceID != -1)
 	{
+
 		if (flag_isPlayer1Turn)
 		{
-			if (player1[selectdPieceID]->getId() == 1 && PosToCase(player1[selectdPieceID]->GetPosition()).row == 0)
-			{
-				
-				
-				// remplacer le pion par une damme
-				auto p = std::make_unique<Dame>(flag_isPlayer1Turn);
-				player1[selectdPieceID] = std::move(p); 
-				
-				player1[selectdPieceID]->SetPosition(selectedPieceCurrentPos);
-				player1[selectdPieceID]->SetImageSize(cellSize);
-				player1[selectdPieceID]->SetTeamIndex(selectdPieceID);
+			// get postion
+			Position promotionPos = player1[selectdPieceID]->GetPosition();
 
-				ChessCase cellPos = PosToCase(selectedPieceCurrentPos);
-				UpdateCellInfo(*player1[selectdPieceID], cellPos.row , cellPos.col , m_board);
+			if (player1[selectdPieceID]->getId() == 1 && PosToCase(promotionPos).row == 0)
+			{
+				//get position
+				m_promotionPosition = promotionPos;
+
+				if(flag_isPromotion == false)
+				m_promotion = std::make_unique<Promotion>(m_promotionPosition,cellSize,topMargin,leftMargin);
+				
+				// lock the game during the promotoin + allow promotion to be draw
+				m_currentWindowType = enWindow::PROMOTION;
+
+				flag_isPromotion = true;
 			}
 		}
 		else
 		{
-			if (player2[selectdPieceID]->getId() == 1 && PosToCase(player2[selectdPieceID]->GetPosition()).row == 7)
+			// get postion
+			Position promotionPos = player2[selectdPieceID]->GetPosition();
+
+			if (player2[selectdPieceID]->getId() == 1 && PosToCase(promotionPos).row == 7)
 			{
 
-				// remplacer le pion par une damme
-				auto p = std::make_unique<Dame>(flag_isPlayer1Turn);
-				player2[selectdPieceID] = std::move(p);
+				//get position
+				m_promotionPosition = promotionPos;
 
-				player2[selectdPieceID]->SetPosition(selectedPieceCurrentPos);
-				player2[selectdPieceID]->SetImageSize(cellSize);
-				player2[selectdPieceID]->SetTeamIndex(selectdPieceID);
+				if(flag_isPromotion == false)
+				m_promotion = std::make_unique<Promotion>(m_promotionPosition, cellSize, topMargin, leftMargin);
+				
 
-				ChessCase cellPos = PosToCase(selectedPieceCurrentPos);
-				UpdateCellInfo(*player2[selectdPieceID], cellPos.row, cellPos.col, m_board);
+				// lock the game during the promotoin + allow promotion to be draw
+				m_currentWindowType = enWindow::PROMOTION;
+				flag_isPromotion = true;
 			}
 		}
 	}
 
-	/*
-	//set piece to corresponding position
-		vectOfPieces[i]->SetPosition(GetPostionFromBoardCaseName(caseNames[i]));
-
-		//set initial position for current piece
-		vectOfPieces[i]->SetInitialPosition(vectOfPieces[i]->GetPosition());
-
-		// get corresponndging board row & col
-		int row, col;
-		GetBoardRowColFromCaseName(caseNames[i], row, col);
-
-		// update m_board corresponding case
-		UpdateCellInfo(*vectOfPieces[i], row, col, m_board);
-	*/
 }
+
 
 bool Chess::IsCheck()
 {
@@ -2086,14 +2330,14 @@ void Chess::ErrorIndex(int row, int col)
 	}
 }
 
-void Chess::UpdateMovesHistory()
+void Chess::UpdateMovesHistory(Board const & lastBoardState)
 {
 	// player 1
 	if(flag_isPlayer1Turn)
-		m_WhiteMove = GetCurrentMoveText(m_currentMove);
+		m_WhiteMove = GetCurrentMoveText(m_currentMove , lastBoardState);
 	else	// both players are played
 	{
-		m_BlackMove = GetCurrentMoveText(m_currentMove);
+		m_BlackMove = GetCurrentMoveText(m_currentMove , lastBoardState);
 
 		// update vector
 		m_turnMove = std::to_string(m_moveIdx) + "." + m_WhiteMove + "-" + m_BlackMove;
@@ -2107,7 +2351,7 @@ void Chess::UpdateMovesHistory()
 	}
 }
 
-std::string Chess::ToLowerCase(std::string& const str)
+std::string Chess::ToLowerCase(std::string const& str)
 {
 	std::string result = "";
 
@@ -2685,6 +2929,9 @@ void Chess::ChangeTurn()
 	flag_isMovementAllowed = false;
 	flag_isAnyPieceCaptured = false;
 
+	// reset current move flags
+	m_currentMoveFlags.ResetFlags();
+
 
 	// check if current player is in check position
 	if(flag_isPlayer1Turn)
@@ -2776,8 +3023,6 @@ void Chess::SetColorsFromTheme(stTheme const& theme)
 void Chess::DragPiece()
 {
 
-	
-
 	//----------------------
 	// get mouse delta position
 	//----------------------
@@ -2818,28 +3063,18 @@ void Chess::DragPiece()
 
 			//----------------------------------------------------------------
 			// get possible postions
-			// m_selectedPieceMovementType : is updated
 			
 			if (!flag_possibleMouvemntsAreCalculated) //<<*******ToDo no need to that
 			{
 				UpdateBoardInfo(flag_isPlayer1Turn);
 				Position pos = player1[selectdPieceID]->GetPosition();
 				ChessCase coords = PosToCase(pos);
-				bool valid = GenerateLegalMoves(coords, m_board, m_possibleMouvement, enActionType::MOUVEMENT);
-
-				//bool valid = GetPossiblePositionsOnBoard(*player1[selectdPieceID), m_possibleMouvement, enActionType::MOUVEMENT);
+				GenerateLegalMoves(coords, m_board, m_possibleMouvement, enActionType::MOUVEMENT);
 
 				flag_possibleMouvemntsAreCalculated = true;
-				
-				if (!valid)
-					return;
+
 			}
 
-			
-			// is player in check position ?
-			//player 1 turn => 
-			//if (!inCheckVect.empty()) //<<**********toDo we removed incheckVect
-				//flag_player2InCheck = true;
 			//----------------------------------------------------------------
 
 			// set centerPiece = mousePos
@@ -2878,29 +3113,18 @@ void Chess::DragPiece()
 
 				//----------------------------------------------------------------
 				// get possible postions
-				// m_selectedPieceMovementType : is updated
-
 
 				if (!flag_possibleMouvemntsAreCalculated)
 				{
 					UpdateBoardInfo(flag_isPlayer1Turn);
 					Position pos = player2[selectdPieceID]->GetPosition();
 					ChessCase coords = PosToCase(pos);
-					bool valid = GenerateLegalMoves(coords, m_board, m_possibleMouvement, enActionType::MOUVEMENT);
+					GenerateLegalMoves(coords, m_board, m_possibleMouvement, enActionType::MOUVEMENT);
 
-					//bool valid = GetPossiblePositionsOnBoard(*player2[selectdPieceID], m_possibleMouvement, enActionType::MOUVEMENT);
 					flag_possibleMouvemntsAreCalculated = true;
-					if (!valid)
-						return;
 				}
 
 
-
-
-				// is player in check position ?
-				//player 2 turn => 
-				//if (!inCheckVect.empty())			//<<**********toDo not existing anymore
-					//flag_player1InCheck = true;
 				//----------------------------------------------------------------
 
 				// set centerPiece = mousePos
