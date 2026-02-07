@@ -40,7 +40,9 @@ void MoveFlags::ResetFlags()
 	isCapture = false;			/// move to not empty cell (containing enemy piece 
 	isPromotion = false;		/// pawn arived to board limit (could be capture)
 	isCheck = false;			/// if we move to this cell the other player will be in check position
-	isNotLegal= false;		/// cant move :  not legal move (current team will still in check position) 
-	isSameCell = false;		/// cant move :  attempt to move to the same cell
+	isLegal= false;				/// can move :  legal move (current team will not still in check position) 
+	isSameCell = false;			/// cant move :  attempt to move to the same cell
 	isTeamCell = false;
+	isKingCastle = false;
+	isQueenCastle = false;
 }

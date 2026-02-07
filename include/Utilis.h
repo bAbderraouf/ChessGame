@@ -90,9 +90,11 @@ struct MoveFlags {
 	bool isCapture;			/// move to not empty cell (containing enemy piece 
 	bool isPromotion;		/// pawn arived to board limit (could be capture)
 	bool isCheck;			/// if we move to this cell the other player will be in check position
-	bool isNotLegal;		/// cant move :  not legal move (current team will still in check position) 
+	bool isLegal;			/// can move :  legal move (current team will not still in check position) 
 	bool isSameCell;		/// cant move :  attempt to move to the same cell
 	bool isTeamCell;		/// cant move :  cell occupied by team side 
+	bool isKingCastle;		/// king castle (king side)
+	bool isQueenCastle;		/// queen castle (queen side)
 	
 	// checkmat & pat will be checked after allowing the move
 	void ResetFlags();

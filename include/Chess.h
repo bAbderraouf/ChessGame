@@ -38,7 +38,7 @@ private:
 	struct PossibleMouvement {
 		Position possiblePosition;	/// a possible position on the board (x,y)
 		ChessCase possibleCase;		/// a possible position on the board (i,j)
-		int movementType;			/// 4 types : -1:check; 0:empty cell; 1:obstacle team side; 2:obstacle enemy side (capture)
+		int movementType;			/// 6 types : -1:check; 0:empty cell; 1:obstacle team side; 2:obstacle enemy side (capture); 3/4 : king/queen castle
 		bool canMove;				/// can make the move or not ?
 	};
 	
@@ -86,6 +86,13 @@ private:
 		enPlayerNum pieceTeamSide;
 	};
 
+	/**
+	* @brief to define the castle side
+	*/
+	enum class CastleSide {
+		KingSide = 1,
+		QueenSide = 2,
+	};
 
 	/**
 	* @brief we can define a piece by its teamSide and teamIndex
@@ -165,7 +172,7 @@ private:
 
 	std::string m_promotionPieceName;
 
-	std::vector<PossibleMouvement> m_possibleMouvement;			/// possible movement vecteur for each piece.
+	std::vector<PossibleMouvement> m_possibleMouvement;			/// possible movement vecteur for each selected piece.
 
 	//moves history 
 	//--------------
@@ -591,6 +598,7 @@ public :  //<<*******ToDo reset public & private fct
 
 	* @brief generate the possible positions (movements) on the board, for the current piece
 	* according to the game rules
+	* @param cellCoords : current cell coordinates (i,j) its containing infos about selected piece
 	* @param board : the current board matrix state
 	* @param possibleMvt : a vector of possible movements for the selected piece.
 	* @param ActionType : are we generating for a movement type or checkPosition type ?
@@ -601,6 +609,13 @@ public :  //<<*******ToDo reset public & private fct
 								std::vector<PossibleMouvement>& PossibleMvt, 
 								enActionType const& ActionType);
 
+	int GetMoveTypeFromPossibleMovements(std::vector<PossibleMouvement> const& possibleMoves, ChessCase const& toCell);
+
+	bool IsKingCastelingAllowed(ChessCase const & cellCoords, Board const& board);
+	bool IsQueenCastelingAllowed(ChessCase const & cellCoords, Board const& board);
+
+	bool IsNoAttackersOnEmptyCastle(CastleSide castleSide, enPlayerNum const& playerNum);
+	bool IsCellAttacked(ChessCase const& cellCoords, enPlayerNum const& playerNum);
 
 	/*--------------------------------------------------------------------------------
 
@@ -817,6 +832,20 @@ public :  //<<*******ToDo reset public & private fct
 
 
 
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief compare coordinates of 2 cells from the internal board variable
+	* @param row,col : i,j coordinates for current cell case
+	* @param caseName : case name E2,A4 ....
+	* @return row & col
+
+	*---------------------------------------------------------------------------------*/
+	ChessCase GetCellCoordsFromCaseName(std::string const & caseName);
+
+
+
+
 	/*--------------------------------------------------------------------------------
 
 	* @brief get cell case coordinates (i,j) from a piece position (x,y)
@@ -998,12 +1027,7 @@ public :  //<<*******ToDo reset public & private fct
 	* @brief set move flags (normal, promotion, capture, check )
 	* @param move : current move to be checked
 	* @param board: the current board matrix
-
-	*---------------------------------------------------------------------------------*/
-	void SetMoveFlags(stMove const& move, Board const& board);
-
-
-	/*
+	
 		Normal = 1,			/// move to empty cell
 		Capture = 2,		/// move to not empty cell (containing enemy piece
 		Promotion = 3,		/// pawn arived to board limit (could be capture)
@@ -1011,28 +1035,88 @@ public :  //<<*******ToDo reset public & private fct
 		NotLegal = 5,		/// cant move :  not legal move (current team will still in check position)
 		SameCell = 6,		/// cant move :  attempt to move to the same cell
 		TeamCell = 7,		/// cant move :  cell occupied by team side
-	*/
+
+	*---------------------------------------------------------------------------------*/
+	void SetMoveFlags(stMove const& move, Board const& board );
+
+
 
 	/*--------------------------------------------------------------------------------
 
 	* @brief check if the current move is legal
 			(valid : no check position for the current player by the oposite one, means: we can move to this case)
 	* @param move : current move to be checked
+	* @param board : the current board matrix
 	* @return true if the move is legal
 
 	*---------------------------------------------------------------------------------*/
 	bool IsLegalMove(stMove const & move, Board const& board);
 
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief check if the current move normal (move to empty cell)
+	* @param move : current move to be checked
+	* @param board : the current board matrix
+	* @return true if the move is normal
+
+	*---------------------------------------------------------------------------------*/
 	bool IsNormalMove(stMove const& move, Board const& board);
 
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief check if the current move capture not empty cell (containing enemy piece)
+	* @param move : current move to be checked
+	* @param board : the current board matrix
+	* @return true if the move is capture move
+
+	*---------------------------------------------------------------------------------*/
 	bool IsCaptureMove(stMove const& move, Board const& board);
 
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief check if the current move is pawn promotion move 
+	*  pawn arived to board limit
+	* @param move : current move to be checked
+	* @param board : the current board matrix
+	* @return true if the move is paw promotion
+
+	*---------------------------------------------------------------------------------*/
 	bool IsPromotionMove(stMove const& move, Board const& board);
 
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief check if the current move is check for oppsite player
+	* @param move : current move to be checked
+	* @param board : the current board matrix
+	* @return true if the opposite player is in check position
+
+	*---------------------------------------------------------------------------------*/
 	bool IsCheckMove(stMove const& move, Board const& board);
 
+
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief check if the we are triying to move to the same cell
+	* @param move : current move to be checked
+	* @param board : the current board matrix
+	* @return true if its a same cell
+	*---------------------------------------------------------------------------------*/
 	bool IsSameCellMove(stMove const& move, Board const& board);
 
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief check if we are triying to move to a cell containing same team piece
+	* @param move : current move to be checked
+	* @param board : the current board matrix
+	* @return true if the destination is containing a piece from the same team
+
+	*---------------------------------------------------------------------------------*/
 	bool IsTeamCellMove(stMove const& move, Board const& board);
 
 
@@ -1456,3 +1540,4 @@ public :  //<<*******ToDo reset public & private fct
   x 8- change chess construtor (no need de c1,c2, make it internalà
   x 9- son de chargement / win /
 */
+
