@@ -609,13 +609,43 @@ public :  //<<*******ToDo reset public & private fct
 								std::vector<PossibleMouvement>& PossibleMvt, 
 								enActionType const& ActionType);
 
-	int GetMoveTypeFromPossibleMovements(std::vector<PossibleMouvement> const& possibleMoves, ChessCase const& toCell);
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief get possiblemovment index corresponding to the current move attempt (toCell)
+	* @param possibleMoves
+	* @param toCell : the current move attempt.
+	* @return : -1 if index not found, the correct index otherwise
+
+	*---------------------------------------------------------------------------------*/
+	int GetPossibleMovementsID(std::vector<PossibleMouvement> const& possibleMoves, ChessCase const& toCell);
 
 	bool IsKingCastelingAllowed(ChessCase const & cellCoords, Board const& board);
+
 	bool IsQueenCastelingAllowed(ChessCase const & cellCoords, Board const& board);
 
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief check if empty castle cases are attacked by the opposite player
+	* @param cellCoords : the current move attempt.
+	* @return : true if cses are attacked
+
+	*---------------------------------------------------------------------------------*/
 	bool IsNoAttackersOnEmptyCastle(CastleSide castleSide, enPlayerNum const& playerNum);
+
+
+
+	/*--------------------------------------------------------------------------------
+
+	* @brief check if this cell is attacked by the opposite player
+	* @param cellCoords : the current move attempt.
+	* @return : true if cell is attacked
+	
+	*---------------------------------------------------------------------------------*/
 	bool IsCellAttacked(ChessCase const& cellCoords, enPlayerNum const& playerNum);
+
+
 
 	/*--------------------------------------------------------------------------------
 
@@ -1037,7 +1067,7 @@ public :  //<<*******ToDo reset public & private fct
 		TeamCell = 7,		/// cant move :  cell occupied by team side
 
 	*---------------------------------------------------------------------------------*/
-	void SetMoveFlags(stMove const& move, Board const& board );
+	MoveFlags SetMoveFlags(stMove const& move, MoveFlags & mvFlgs,  Board const& board , std::vector<PossibleMouvement> const& possibleMvt);
 
 
 
@@ -1174,6 +1204,22 @@ public :  //<<*******ToDo reset public & private fct
 	void ValidateCurrentMove( ChessCase & selectedMoveCell );
 
 
+	/*--------------------------------------------------------------------------------
+
+	* @brief after check if the empty cases between king and Rook are not attacked
+	* @param true : if legal castle move
+
+	*---------------------------------------------------------------------------------*/
+	bool IsLegalCastleMove();
+
+	
+	/*--------------------------------------------------------------------------------
+
+	* @brief after check if current move is a castle move
+	* @param true : it its a castle move
+
+	*---------------------------------------------------------------------------------*/
+	bool IsCastleMove();
 
 
 	/*--------------------------------------------------------------------------------
@@ -1235,6 +1281,9 @@ public :  //<<*******ToDo reset public & private fct
 	*---------------------------------------------------------------------------------*/
 	std::vector<int> GetRemainingPiecesIds(enPlayerNum const & side);
 
+	bool IsInsuficientMaterial();
+
+	bool IsExisting(std::vector<int> remainingPieces , int const & idPiece);
 
 
 	/*--------------------------------------------------------------------------------

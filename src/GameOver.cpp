@@ -11,7 +11,6 @@ GameOver::GameOver(Vector2 const& windowSize, Winner const& winner)
 
 GameOver::~GameOver()
 {
-	delete winnerPicFileName;
 }
 
 
@@ -35,7 +34,7 @@ void GameOver::Init()
 
 	// drawable objects
 	lastMoveSShot = std::make_unique<ImageObject>(posSShot, "assets/images/capture/capture.png");
-	winnerPic = std::make_unique<ImageObject>(posWinnerPic, winnerPicFileName);
+	winnerPic = std::make_unique<ImageObject>(posWinnerPic, winnerPicFileName.c_str());
 	winnerText = std::make_unique<TextObject>(posWinnerTxt, "White wins!", m_fontSize);
 	restartGameBtn = std::make_unique<MixedObject>(posRestartBtn, "Restart", m_fontSize, "assets/images/buttons/restartGame.png", 5);
 }

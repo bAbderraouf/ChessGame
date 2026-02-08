@@ -26,7 +26,7 @@ private:
 	// positions
 	Vector2 posSShot, posWinnerPic, posWinnerTxt, posRestartBtn;
 
-	const char* winnerPicFileName;
+	std::string winnerPicFileName;
 
 	Winner m_whoWins;
 

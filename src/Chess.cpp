@@ -337,8 +337,9 @@ void Chess::UpdateGameWindow()
 			else
 				flag_isAnyPieceCaptured = IsAnyPieceCaptured(*player2[selectdPieceID]);
 
-			if (flag_isAnyPieceCaptured)
-				PlaySound(m_capturepieceSound);
+			if (flag_isSoundON)
+				if (flag_isAnyPieceCaptured)
+					PlaySound(m_capturepieceSound);
 
 
 		}
@@ -361,8 +362,6 @@ void Chess::UpdateGameWindow()
 			UpdateMovesHistory(m_lastBoard);
 
 		}
-
-
 
 		//----------------------------------
 		// save infos
@@ -388,8 +387,11 @@ void Chess::UpdateGameWindow()
 			flag_checkMate = true;
 			flag_GameOver = true;
 
-			PlaySound(m_checkmateSound);
-			std::cout << RED_COUT << "CHECKMATE" << RESET_COUT << std::endl;
+			if (flag_isSoundON)
+			{
+				PlaySound(m_checkmateSound);
+				std::cout << RED_COUT << "CHECKMATE" << RESET_COUT << std::endl;
+			}
 		}
 
 		//----------------------------------
@@ -426,17 +428,16 @@ void Chess::UpdateGameWindow()
 
 			flag_isAnyPieceSelected = false;
 
+			// reset current move flags
+			m_currentMoveFlags.ResetFlags();
 		}
 
 		// erase vectors
 		m_possibleMouvement = {}; // reset to empty vector	
 		std::vector<PossibleMouvement>().swap(m_possibleMouvement);
-
-
 	}
 
-
-	if (flag_GameOver) //<*****Todo for test
+	if (flag_GameOver) 
 	{
 		OpenGameOverScreen();
 	}
@@ -470,7 +471,8 @@ void Chess::UpdateSettingsWindow()
 		LoadSettings();
 
 		//play sound
-		PlaySound(m_restartGameSound);
+		if(flag_isSoundON)
+			PlaySound(m_restartGameSound);
 
 		// back to game window
 		//---------------------
@@ -939,8 +941,7 @@ bool Chess::GetPossiblePositionsOnBoard(Piece const& piece, std::vector<Possible
 
 	}
 
-	// check valid condition
-	return true; //(possiblePos.size() == movementTypes.size());  //<<**********toDo
+	return true; 
 }
 
 bool Chess::GenerateLegalMoves(ChessCase const& cellCoords,
@@ -1252,7 +1253,7 @@ bool Chess::GenerateLegalMoves(ChessCase const& cellCoords,
 		if (IsValidIdx(r, c))
 			AddPossiblePossitionFromBoard(ActionType, board, PossibleMvt, r, c, attacker);
 
-		// king castle    // <*****todo (test)
+		// king castle    
 		if (ActionType == enActionType::MOUVEMENT)
 		{
 			if (IsKingCastelingAllowed(cellCoords, board))
@@ -1263,7 +1264,7 @@ bool Chess::GenerateLegalMoves(ChessCase const& cellCoords,
 					AddPossiblePossitionFromBoard(ActionType, board, PossibleMvt, r, c, attacker);
 			}
 
-			// queen castle    // <*****todo (test)
+			// queen castle     
 			if (IsQueenCastelingAllowed(cellCoords, board))
 			{
 				r = rowCell;
@@ -1278,24 +1279,20 @@ bool Chess::GenerateLegalMoves(ChessCase const& cellCoords,
 
 	}
 
-	// check valid condition
-	return true; //(possiblePos.size() == movementTypes.size());  //<<**********toDo
+	return true; 
 }
 
-int Chess::GetMoveTypeFromPossibleMovements(std::vector<PossibleMouvement> const& possibleMoves, ChessCase const& toCell)
+int Chess::GetPossibleMovementsID(std::vector<PossibleMouvement> const& possibleMoves, ChessCase const& toCell)
 {
-	int result = -2; // invalid value
+	int result = -1; // invalid value
 
 	Position pos = CaseToPos(toCell);
 
 	if (possibleMoves.empty() == false)
 	{
-		for (auto const& mv : possibleMoves)
-			if (mv.possiblePosition.col == pos.col && mv.possiblePosition.row == pos.row)
-			{
-				result = mv.movementType;
-				return result;
-			}
+		for (int i = 0; i < possibleMoves.size(); i++)		
+			if (possibleMoves[i].possiblePosition.col == pos.col && possibleMoves[i].possiblePosition.row == pos.row)
+				return i; // index found
 	}
 
 	return result;
@@ -1500,12 +1497,11 @@ bool Chess::IsNoAttackersOnEmptyCastle(CastleSide castleSide, enPlayerNum const&
 	return true;
 }
 
-bool Chess::IsCellAttacked(ChessCase const& cellCoords, enPlayerNum const& playerNum) // <*****todo
+bool Chess::IsCellAttacked(ChessCase const& cellCoords, enPlayerNum const& playerNum) 
 {
 	// get all possible positions for the opposite player pieces
 	// if any possible possision == cellCoords  return true
 
-	// <*****todo (check if we should make a copy from m_bord ? take is as input ?)
 	Board board = m_board;
 
 	// local variable to get possible mouvement for each piece.
@@ -1696,7 +1692,7 @@ bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& curre
 							std::cout << "(==========================)" << RESET_COUT << std::endl;
 
 
-							flag_player1InCheck = true;
+							//flag_player1InCheck = true;
 							return true;
 						}
 					}
@@ -1751,7 +1747,7 @@ bool Chess::IsPlayerInCheckPosition(Board const& board, enPlayerNum const& curre
 							std::cout << "(==========================)" << std::endl;
 							*/
 
-							flag_player2InCheck = true;
+							//flag_player2InCheck = true;
 							return true;
 						}
 					}
@@ -1927,16 +1923,20 @@ int Chess::AddPossiblePossitionFromBoard(enActionType const& ActionType,
 		if (board.at(row).at(col).empty)
 		{
 			//check if castle case
-			if (board.at(attackerCoords.row).at(attackerCoords.col).idPiece == 6) //king
+			if ((board.at(attackerCoords.row).at(attackerCoords.col).idPiece == 6) && (attackerCoords.col - col == 2))
 			{
-				if (attackerCoords.col - col == 2) // queen castel
-					movementType = 4;
-				if (attackerCoords.col - col == -2) // king castel
-					movementType = 3;
+				// queen castel
+				movementType = 4;
+			}
+			else if((board.at(attackerCoords.row).at(attackerCoords.col).idPiece == 6) && (attackerCoords.col - col == -2)) 
+			{
+				// king castel
+				movementType = 3;
 			}
 			else
 			{
 				movementType = 1;	// normal move
+				
 			}
 
 			if (ActionType == enActionType::MOUVEMENT)
@@ -2074,6 +2074,8 @@ bool Chess::IsSelectedMoveLegal(Piece const& piece, ChessCase const& nextPositio
 
 bool Chess::IsLegalMove(stMove const& move, Board const& board)
 {
+	bool isLegalMove = false;
+
 	// make a copy from board
 	//-------------------------
 	Board temp_board = board;
@@ -2104,11 +2106,22 @@ bool Chess::IsLegalMove(stMove const& move, Board const& board)
 	//------------------------------------------------
 	bool isAnyCheckPosition = IsPlayerInCheckPosition(temp_board, move.pieceTeamSide); // still in check or not
 
-	return (isAnyCheckPosition ? false : true);
+	isLegalMove = (isAnyCheckPosition ? false : true);
+
+	// validate castle case
+	//----------------------
+	bool isLegalCastleMove = true;
+
+	if(IsCastleMove())
+	{
+		isLegalCastleMove = IsLegalCastleMove();
+	}
+
+	return isLegalMove && isLegalCastleMove;
 
 }
 
-void Chess::SetMoveFlags(stMove const& move, Board const& board)
+MoveFlags Chess::SetMoveFlags(stMove const& move, MoveFlags& mvFlgs, Board const& board, std::vector<PossibleMouvement> const& possibleMvt)
 {
 
 	/* ( Quick infos about return type )
@@ -2126,67 +2139,47 @@ void Chess::SetMoveFlags(stMove const& move, Board const& board)
 	//-----------
 
 	if (IsSameCellMove(move, board))	// cant move
-		m_currentMoveFlags.isSameCell = true;
+		mvFlgs.isSameCell = true;
 
 	if (IsTeamCellMove(move, board)) // cant move
-		m_currentMoveFlags.isTeamCell = true;
-
-	if (IsLegalMove(move, board)) // cant move
-		m_currentMoveFlags.isLegal = true;
+		mvFlgs.isTeamCell = true;
 
 	if (IsNormalMove(move, board)) // could be promotion
-		m_currentMoveFlags.isNormal = true;
+		mvFlgs.isNormal = true;
 
 	if (IsPromotionMove(move, board)) // could be capture
-		m_currentMoveFlags.isPromotion = true;
+		mvFlgs.isPromotion = true;
 
 	if (IsCaptureMove(move, board))
-		m_currentMoveFlags.isCapture = true;
+		mvFlgs.isCapture = true;
 
 	if (IsCheckMove(move, board))
-		m_currentMoveFlags.isCheck = true;
+		mvFlgs.isCheck = true;
 
 
 	// get moveement type from possible movement vector
 	//--------------------------------------------------
-	int moveType = GetMoveTypeFromPossibleMovements(m_possibleMouvement, move.toCell);
+	int idx = GetPossibleMovementsID(possibleMvt, move.toCell);
 
 	// update castle flags 
 	//---------------------
-	if (moveType != -2)
+	if (idx != -1)
 	{
-		if (moveType == 3)
-			m_currentMoveFlags.isKingCastle = true;
-		if (moveType == 4)
-			m_currentMoveFlags.isQueenCastle = true;
+		if (possibleMvt[idx].movementType == 3)
+			mvFlgs.isKingCastle = true;
+
+		if (possibleMvt[idx].movementType == 4)
+			mvFlgs.isQueenCastle = true;
 	}
-	
-	
 
-	/*
-	// validate castle case
-		//----------------------
-		bool noAttackersInEmptyCases = false;
-		if (m_currentMoveFlags.isKingCastle && m_currentMoveFlags.isKingCastle)
-		{
-			if (flag_isPlayer1Turn)
-			{
-				if (m_currentMoveFlags.isKingCastle)
-					noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::KingSide, enPlayerNum::PLAYER1);
-				else if (m_currentMoveFlags.isQueenCastle)
-					noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::QueenSide, enPlayerNum::PLAYER1);
-			}
-			else
-			{
-				if (m_currentMoveFlags.isKingCastle)
-					noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::KingSide, enPlayerNum::PLAYER2);
-				else if (m_currentMoveFlags.isQueenCastle)
-					noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::QueenSide, enPlayerNum::PLAYER2);
-			}
+	// call order is important
+	if (IsLegalMove(move, board)) //  move allowed
+		mvFlgs.isLegal = true;
 
-			m_currentMoveFlags.isLegal = (m_currentMoveFlags.isLegal && noAttackersInEmptyCases);
-		}
-	*/
+
+
+	return mvFlgs;
+
 }
 
 bool Chess::IsNormalMove(stMove const& move, Board const& board)
@@ -2406,10 +2399,11 @@ void Chess::ValidateCurrentMove(ChessCase& selectedMoveCell)
 
 		m_currentMove = move;
 
-		SetMoveFlags(m_currentMove, m_board);
+		SetMoveFlags(m_currentMove, m_currentMoveFlags , m_board , m_possibleMouvement);
 
+		flag_player1InCheck = m_currentMoveFlags.isCheck;
 
-		if (IsSameCoordinates(move.fromCell, move.toCell))
+		if (m_currentMoveFlags.isSameCell)
 		{
 			// back to orignal position
 			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
@@ -2418,31 +2412,26 @@ void Chess::ValidateCurrentMove(ChessCase& selectedMoveCell)
 		else if (m_currentMoveFlags.isLegal) // no self check position
 		{
 			// allow the move
-			flag_player1InCheck = false;
+			//flag_player1InCheck = false;
 			flag_isMovementAllowed = true;
 
 			selectedPieceCurrentPos = CaseToPos(selectedMoveCell);
 
 			// for move history
-			m_currentMove = move;
 			m_lastBoard = m_board; // n-1 state of m_bord
-			//UpdateMovesHistory();
 
-
-			// get informations about current move
-			//SetMoveFlags(m_currentMove, m_board);
 
 			//play sound
 			if (flag_isSoundON)
 				PlaySound(m_normalMoveSound);
 
-
+		
 		}
 		else
 		{
 			// back to orignal position
 			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
-			flag_player1InCheck = true;
+			//flag_player1InCheck = true;
 			flag_isMovementAllowed = false;
 
 		}
@@ -2458,9 +2447,11 @@ void Chess::ValidateCurrentMove(ChessCase& selectedMoveCell)
 
 		m_currentMove = move;
 
-		SetMoveFlags(m_currentMove, m_board);
+		SetMoveFlags(m_currentMove, m_currentMoveFlags, m_board, m_possibleMouvement);
 
-		if (IsSameCoordinates(move.fromCell, move.toCell))
+		flag_player2InCheck = m_currentMoveFlags.isCheck;
+
+		if (m_currentMoveFlags.isSameCell)
 		{
 			// back to orignal position
 			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
@@ -2469,18 +2460,13 @@ void Chess::ValidateCurrentMove(ChessCase& selectedMoveCell)
 		else if (m_currentMoveFlags.isLegal)
 		{
 			// allow the move
-			flag_player2InCheck = false;
+			//flag_player2InCheck = false;
 			flag_isMovementAllowed = true;
 			selectedPieceCurrentPos = CaseToPos(selectedMoveCell);
 
 			// move history
-			m_currentMove = move;
 			m_lastBoard = m_board;
-			//UpdateMovesHistory();
 
-
-			// get informations about current move
-			//SetMoveFlags(m_currentMove, m_board);
 
 			// both players played
 			flag_isRoundFinished = true;
@@ -2494,10 +2480,40 @@ void Chess::ValidateCurrentMove(ChessCase& selectedMoveCell)
 		{
 			// back to orignal position
 			selectedMoveCell = PosToCase(selectedPieceOriginalPos);  // return the original position (before the drag)
-			flag_player2InCheck = true;
+			//flag_player2InCheck = true;
 			flag_isMovementAllowed = false;
 		}
 	}
+}
+
+bool Chess::IsLegalCastleMove()
+{
+
+		// validate castle case
+		//----------------------
+	bool noAttackersInEmptyCases = true;
+
+	if (flag_isPlayer1Turn)
+	{
+		if (m_currentMoveFlags.isKingCastle)
+			noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::KingSide, enPlayerNum::PLAYER1);
+		else if (m_currentMoveFlags.isQueenCastle)
+			noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::QueenSide, enPlayerNum::PLAYER1);
+	}
+	else
+	{
+		if (m_currentMoveFlags.isKingCastle)
+			noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::KingSide, enPlayerNum::PLAYER2);
+		else if (m_currentMoveFlags.isQueenCastle)
+			noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::QueenSide, enPlayerNum::PLAYER2);
+	}
+
+	return noAttackersInEmptyCases;
+}
+
+bool Chess::IsCastleMove()
+{
+	return (m_currentMoveFlags.isKingCastle || m_currentMoveFlags.isQueenCastle);
 }
 
 Chess::stPiece Chess::GetPieceFromBoardCell(infoCase const& cell)
@@ -2575,6 +2591,7 @@ bool Chess::IsCheckmat()
 	// local variable to get possible mouvement for each piece.
 	std::vector<PossibleMouvement> possMvt = {};
 
+
 	if (flag_isPlayer1Turn && flag_player1InCheck) // player1 turn + player1 in check
 	{
 		//------------------------------------------------------
@@ -2589,8 +2606,12 @@ bool Chess::IsCheckmat()
 			if (mvt.movementType != 0) // piece from team side is present
 			{
 				stMove move{ kingCellPos , mvt.possibleCase, player1[14]->GetTeamIndex() ,enPlayerNum::PLAYER1 };
+				MoveFlags moveFlgs;
+				moveFlgs.ResetFlags();
+				
+				SetMoveFlags(move, moveFlgs, m_board, possMvt);
 
-				if (IsLegalMove(move, m_board))
+				if (moveFlgs.isLegal)
 					return false;
 			}
 		}
@@ -2613,8 +2634,13 @@ bool Chess::IsCheckmat()
 					if (mvt.movementType != 0) // piece from team side is present
 					{
 						stMove move{ currentPieceCell , mvt.possibleCase, piece->GetTeamIndex() ,enPlayerNum::PLAYER1 };
+						
+						MoveFlags moveFlgs;
+						moveFlgs.ResetFlags();
 
-						if (IsLegalMove(move, m_board))
+						SetMoveFlags(move, moveFlgs, m_board, possMvt);
+
+						if (moveFlgs.isLegal)
 							return false;
 					}
 				}
@@ -2637,7 +2663,12 @@ bool Chess::IsCheckmat()
 			{
 				stMove move{ kingCellPos , mvt.possibleCase, player2[14]->GetTeamIndex() ,enPlayerNum::PLAYER2 };
 
-				if (IsLegalMove(move, m_board))
+				MoveFlags moveFlgs;
+				moveFlgs.ResetFlags();
+
+				SetMoveFlags(move, moveFlgs, m_board, possMvt);
+
+				if (moveFlgs.isLegal)
 					return false;
 			}
 		}
@@ -2661,7 +2692,12 @@ bool Chess::IsCheckmat()
 					{
 						stMove move{ currentPieceCell , mvt.possibleCase, piece->GetTeamIndex() ,enPlayerNum::PLAYER2 };
 
-						if (IsLegalMove(move, m_board))
+						MoveFlags moveFlgs;
+						moveFlgs.ResetFlags();
+
+						SetMoveFlags(move, moveFlgs, m_board, possMvt);
+
+						if (moveFlgs.isLegal)
 							return false;
 					}
 				}
@@ -2675,7 +2711,7 @@ bool Chess::IsCheckmat()
 
 bool Chess::IsPat()   //<<********ToDo to be finished
 {
-	bool threeTimesSamePos = true;
+	bool threeTimesSamePos = false;
 
 	// 3 times same pos
 	//-------------------
@@ -2683,11 +2719,16 @@ bool Chess::IsPat()   //<<********ToDo to be finished
 
 	if (numMvoes > 3)
 	{
-		auto move = m_allMoves[numMvoes - 1].substr(1); // last game  1. e2e4 - e7e5
+		int startIdx = m_allMoves[numMvoes - 1].find('.');
+		auto move = m_allMoves[numMvoes - 1].substr(startIdx); // last game  1. e2e4 - e7e5
 
-		for (int i = numMvoes - 2; i < numMvoes - 1 - 3; i--)
+		for (int i = numMvoes - 2; i > numMvoes - 1 - 3; i--)
 		{
-			if (move != m_allMoves[i].substr(1))
+			threeTimesSamePos = true;
+			int idx = m_allMoves[i].find('.');
+			auto i_move = m_allMoves[i].substr(idx); // last game  1. e2e4 - e7e5
+
+			if (move != i_move.substr(1))
 			{
 				threeTimesSamePos = false;
 				break;
@@ -2701,17 +2742,12 @@ bool Chess::IsPat()   //<<********ToDo to be finished
 
 	// insuficient material
 	//----------------------
-	bool insuficientMaterial = true;
-
-	auto materialP1 = GetRemainingPiecesIds(enPlayerNum::PLAYER1);
-	auto materialP2 = GetRemainingPiecesIds(enPlayerNum::PLAYER2);
-
-	if (materialP1.size() > 2 || materialP2.size() > 2)
-		insuficientMaterial = false;
+	bool insuficientMaterial = IsInsuficientMaterial();
 
 
 	bool isPat = threeTimesSamePos || insuficientMaterial || noPossibleMovesForCurrentPlayer;
-	return false; //isPat;
+
+	return ( insuficientMaterial);  //isPat;
 }
 
 std::vector<int> Chess::GetRemainingPiecesIds(enPlayerNum const& side)
@@ -2720,11 +2756,57 @@ std::vector<int> Chess::GetRemainingPiecesIds(enPlayerNum const& side)
 
 	for (auto const& p : side == enPlayerNum::PLAYER1 ? player1 : player2)
 	{
-		if (p->IsCaptured() != 2)
+		if (p->IsCaptured() == false)
 			remainingPieces.push_back(p->getId());
 	}
 
 	return remainingPieces;
+}
+
+bool Chess::IsInsuficientMaterial()
+{
+	bool isInsuficient = false;
+
+	int idBishop = 2, idKnight = 3, idKing = 6;
+
+	auto materialP1 = GetRemainingPiecesIds(enPlayerNum::PLAYER1);
+	auto materialP2 = GetRemainingPiecesIds(enPlayerNum::PLAYER2);
+
+	if (materialP1.size() > 2 || materialP2.size() > 2)
+		return false;
+
+	else if (materialP1.size() <= 2 && materialP2.size() <= 2)
+	{
+		// roi + fou		vs roi + fou
+		if (IsExisting(materialP1, idBishop) && IsExisting(materialP2, idBishop) &&
+			IsExisting(materialP1, idKing)   && IsExisting(materialP2, idKing)   )
+			return true;
+		
+			// roi vs roi + fou
+		if ((IsExisting(materialP2, idBishop) && materialP1.size() == 1 || IsExisting(materialP1, idBishop) && materialP2.size() == 1) &&
+			(IsExisting(materialP1, idKing) && IsExisting(materialP2, idKing)))
+			return true;
+
+			// roi vs roi + cavalier
+		if ((IsExisting(materialP2, idKnight) && materialP1.size() == 1 || IsExisting(materialP1, idKnight) && materialP2.size() == 1) &&
+			(IsExisting(materialP1, idKing) && IsExisting(materialP2, idKing)))
+			return true;
+
+			// roi vs roi
+		if ((materialP1.size() == 1 || materialP2.size() == 1) && (IsExisting(materialP1, idKing) && IsExisting(materialP2, idKing)))
+			return true;
+	}
+	
+	return false;
+}
+
+bool Chess::IsExisting(std::vector<int> remainingPieces , int const & idPiece)
+{
+	for (auto const& id : remainingPieces)
+		if (id == idPiece)
+			return true;
+
+	return false;
 }
 
 bool Chess::IsValidIdx(int const& row, int const& col) const
@@ -3048,7 +3130,7 @@ bool Chess::GenerateCPUMove()
 {
 	bool moveFound = false;
 
-	do //(auto const& piece : player2) // <<*****ToDo change to for random selection
+	do
 	{
 		// randmom selection :
 		int randomIdx = std::rand() % 16;  // reminder = 0 to 15
@@ -3056,8 +3138,6 @@ bool Chess::GenerateCPUMove()
 		//random cpu think time
 		time_t time1 = time(NULL);
 		int sleepTime = std::rand() % 2 + 1; // 1 or 2 
-
-		// currentPiece = player2[randomIdx]
 
 		if (player2[randomIdx]->IsCaptured() == false)
 		{
@@ -3344,12 +3424,10 @@ void Chess::ChangeTurn()
 
 	// check if current player is in check position
 	if (flag_isPlayer1Turn)				//<*******Todo to be changed by m_currentMoveFlags values
-		flag_player1InCheck = m_currentMoveFlags.isCheck; //IsPlayerInCheckPosition(m_board , enPlayerNum::PLAYER1);
+		flag_player1InCheck = m_currentMoveFlags.isCheck; 
 	else
-		flag_player2InCheck = m_currentMoveFlags.isCheck; //IsPlayerInCheckPosition(m_board, enPlayerNum::PLAYER2);
+		flag_player2InCheck = m_currentMoveFlags.isCheck;
 
-	// reset current move flags
-	m_currentMoveFlags.ResetFlags();
 
 
 	// init t1 for tempo calculation
@@ -3597,10 +3675,13 @@ void Chess::CorrectDragedPiecePosition()
 		MovePieceToNewCase(*player1[selectdPieceID], correspondingCell);
 
 		// is any castle case
-		if (m_currentMoveFlags.isKingCastle)
-			MovePieceToNewCase(*player1[13], GetCellCoordsFromCaseName("F1"));
-		if (m_currentMoveFlags.isQueenCastle)
-			MovePieceToNewCase(*player1[12], GetCellCoordsFromCaseName("D1"));
+		if (m_currentMoveFlags.isLegal)
+		{
+			if (m_currentMoveFlags.isKingCastle)
+				MovePieceToNewCase(*player1[13], GetCellCoordsFromCaseName("F1"));
+			if (m_currentMoveFlags.isQueenCastle)
+				MovePieceToNewCase(*player1[12], GetCellCoordsFromCaseName("D1"));
+		}
 
 		//----------------------------------------end execute
 
@@ -3659,10 +3740,13 @@ void Chess::CorrectDragedPiecePosition()
 		MovePieceToNewCase(*player2[selectdPieceID], correspondingCell);
 
 		// is any castle case
-		if (m_currentMoveFlags.isKingCastle)
-			MovePieceToNewCase(*player2[13], GetCellCoordsFromCaseName("F8"));
-		if (m_currentMoveFlags.isQueenCastle)
-			MovePieceToNewCase(*player2[12], GetCellCoordsFromCaseName("D8"));
+		if (m_currentMoveFlags.isLegal)
+		{
+			if (m_currentMoveFlags.isKingCastle)
+				MovePieceToNewCase(*player2[13], GetCellCoordsFromCaseName("F8"));
+			if (m_currentMoveFlags.isQueenCastle)
+				MovePieceToNewCase(*player2[12], GetCellCoordsFromCaseName("D8"));
+		}
 
 		//----------------------------------------end execute
 
@@ -4127,4 +4211,3 @@ std::string Chess::PrintBoardQuickInfo(std::string infoType, Board const& board)
 
 	return oss.str();
 }
-
