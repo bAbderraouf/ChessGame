@@ -59,8 +59,15 @@ void GameOver::Update()
 
 void GameOver::Draw()
 {
+	Color wht = {0,0,0,100};
+
 	lastMoveSShot->Draw();
+
+	// transparent black bakground
+	DrawRectangle(0,0,m_windowSize.x, m_windowSize.y, wht);
+
 	winnerPic->Draw();
+
 	//winnerText->Draw();
 	restartGameBtn->Draw();
 }

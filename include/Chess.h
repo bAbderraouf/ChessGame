@@ -1281,7 +1281,11 @@ public :  //<<*******ToDo reset public & private fct
 	*---------------------------------------------------------------------------------*/
 	std::vector<int> GetRemainingPiecesIds(enPlayerNum const & side);
 
+	bool Is3TimesSameMove();
+
 	bool IsInsuficientMaterial();
+
+	bool IsNoLegalMovesForCurrentPlayer();
 
 	bool IsExisting(std::vector<int> remainingPieces , int const & idPiece);
 
@@ -1537,13 +1541,13 @@ public :  //<<*******ToDo reset public & private fct
 };
 
 
-/*check mat
+/* x check mat
 * 1 player1 turn + player1 in check // should be the first iff
 * 2 all roi positions are invalide + ( its own position // no need)
 * 3 all player1 pieces possible positions are invalid
 */
 
-/* rock roi side : to be added to roi possible positions
+/* x rock roi side : to be added to roi possible positions
 * 1 selectedPiece = king // no need
 * 2 king never moved && tour 13 never moved
 * 3 empty cells between king & tour && no check on this cases
@@ -1551,13 +1555,13 @@ public :  //<<*******ToDo reset public & private fct
 * 5 tour moves to fou 9 case
 */
 
-// isPat
+// x isPat
 // priseEnPassant
-// 3 times same position
-// materiel insufisant roi vs roi
+// x 3 times same position
+// x materiel insufisant roi vs roi
 
 // x temp, fin de partie en temps,
-// son, mvt, echec, mat
+// x son, mvt, echec, mat
 // orientation du plateaux
 
 // x historique des coups,
@@ -1573,8 +1577,8 @@ public :  //<<*******ToDo reset public & private fct
 * time player   x
 * theme			x
 * with cpu ?	x
-* save file txt 
-* show possible mvt
+* save file txt x
+* show possible mvt x
 */
 
 
@@ -1582,9 +1586,9 @@ public :  //<<*******ToDo reset public & private fct
   x 1- start new game
   x 2- game over window
   x 3- change theme during game
-	4- rock + en passant
+  x 4- rock + en passant
   x 5- promotion full feature
-	6- draw (3times ,...)
+  x 6- draw (3times ,...)
   x 7- finish settings
   x 8- change chess construtor (no need de c1,c2, make it internalà
   x 9- son de chargement / win /

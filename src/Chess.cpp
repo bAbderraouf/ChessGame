@@ -2711,43 +2711,21 @@ bool Chess::IsCheckmat()
 
 bool Chess::IsPat()   //<<********ToDo to be finished
 {
-	bool threeTimesSamePos = false;
 
 	// 3 times same pos
 	//-------------------
-	int numMvoes = m_allMoves.size();
-
-	if (numMvoes > 3)
-	{
-		int startIdx = m_allMoves[numMvoes - 1].find('.');
-		auto move = m_allMoves[numMvoes - 1].substr(startIdx); // last game  1. e2e4 - e7e5
-
-		for (int i = numMvoes - 2; i > numMvoes - 1 - 3; i--)
-		{
-			threeTimesSamePos = true;
-			int idx = m_allMoves[i].find('.');
-			auto i_move = m_allMoves[i].substr(idx); // last game  1. e2e4 - e7e5
-
-			if (move != i_move.substr(1))
-			{
-				threeTimesSamePos = false;
-				break;
-			}
-		}
-	}
+	bool threeTimesSamePos = Is3TimesSameMove();
 
 	// no check but no possible movement
 	// ----------------------------------
-	bool noPossibleMovesForCurrentPlayer = true;
+	bool noPossibleMovesForCurrentPlayer = IsNoLegalMovesForCurrentPlayer();
 
 	// insuficient material
 	//----------------------
 	bool insuficientMaterial = IsInsuficientMaterial();
 
 
-	bool isPat = threeTimesSamePos || insuficientMaterial || noPossibleMovesForCurrentPlayer;
-
-	return ( insuficientMaterial);  //isPat;
+	return threeTimesSamePos || insuficientMaterial || noPossibleMovesForCurrentPlayer;
 }
 
 std::vector<int> Chess::GetRemainingPiecesIds(enPlayerNum const& side)
@@ -2761,6 +2739,39 @@ std::vector<int> Chess::GetRemainingPiecesIds(enPlayerNum const& side)
 	}
 
 	return remainingPieces;
+}
+
+bool Chess::Is3TimesSameMove()
+{
+	bool threeTimesSamePos = false;
+
+	int numMvoes = m_allMoves.size();
+
+	if (numMvoes > 4)
+	{
+		int startIdx = m_allMoves[numMvoes - 1].find('.');
+		auto move = m_allMoves[numMvoes - 1].substr(startIdx); // last game  1. e2e4 - e7e5
+
+		for (int i = numMvoes - 1 - 2; i >= numMvoes - 1 - 4; i -= 2)
+		{
+
+			int idx = m_allMoves[i].find('.');
+			auto i_move = m_allMoves[i].substr(idx); // last game  1. e2e4 - e7e5
+
+			if (move == i_move)
+			{
+				threeTimesSamePos = true;
+				break;
+			}
+			else
+			{
+				threeTimesSamePos = false;
+				break;
+			}
+		}
+
+	}
+	return threeTimesSamePos;
 }
 
 bool Chess::IsInsuficientMaterial()
@@ -2798,6 +2809,129 @@ bool Chess::IsInsuficientMaterial()
 	}
 	
 	return false;
+}
+
+bool Chess::IsNoLegalMovesForCurrentPlayer()
+{
+	// local variable to get possible mouvement for each piece.
+	std::vector<PossibleMouvement> possMvt = {};
+
+
+	if (flag_isPlayer1Turn && flag_player1InCheck == false) // player1 turn + no check
+	{
+		//------------------------------------------------------
+		// check if all possible positions of king 1 are invalid
+		//------------------------------------------------------
+		ChessCase kingCellPos = PosToCase(player1[14]->GetPosition());
+
+		GenerateLegalMoves(kingCellPos, m_board, possMvt, enActionType::MOUVEMENT);
+
+		for (auto const& mvt : possMvt)
+		{
+			if (mvt.movementType != 0) // piece from team side is present
+			{
+				stMove move{ kingCellPos , mvt.possibleCase, player1[14]->GetTeamIndex() ,enPlayerNum::PLAYER1 };
+				MoveFlags moveFlgs;
+				moveFlgs.ResetFlags();
+
+				SetMoveFlags(move, moveFlgs, m_board, possMvt);
+
+				if (moveFlgs.isLegal)
+					return false;
+			}
+		}
+
+		//------------------------------------------------------
+		// check if all possiblePositions of player1 team are invalid
+		//------------------------------------------------------
+
+		for (auto const& piece : player1)
+		{
+			possMvt = {}; // reset vector
+
+			if (piece->GetTeamIndex() != 14 && !piece->IsCaptured())
+			{
+				ChessCase currentPieceCell = PosToCase(piece->GetPosition());
+				GenerateLegalMoves(currentPieceCell, m_board, possMvt, enActionType::MOUVEMENT);
+
+				for (auto const& mvt : possMvt)
+				{
+					if (mvt.movementType != 0) // piece from team side is present
+					{
+						stMove move{ currentPieceCell , mvt.possibleCase, piece->GetTeamIndex() ,enPlayerNum::PLAYER1 };
+
+						MoveFlags moveFlgs;
+						moveFlgs.ResetFlags();
+
+						SetMoveFlags(move, moveFlgs, m_board, possMvt);
+
+						if (moveFlgs.isLegal)
+							return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	else if (flag_isPlayer1Turn == false && flag_player2InCheck == false) // player2 turn + no check
+	{
+		//------------------------------------------------------
+		// check if all possible positions of king 2 are invalid
+		//------------------------------------------------------
+		ChessCase kingCellPos = PosToCase(player2[14]->GetPosition());
+
+		GenerateLegalMoves(kingCellPos, m_board, possMvt, enActionType::MOUVEMENT);
+
+		for (auto const& mvt : possMvt)
+		{
+			if (mvt.movementType != 0) // piece from team side is present
+			{
+				stMove move{ kingCellPos , mvt.possibleCase, player2[14]->GetTeamIndex() ,enPlayerNum::PLAYER2 };
+
+				MoveFlags moveFlgs;
+				moveFlgs.ResetFlags();
+
+				SetMoveFlags(move, moveFlgs, m_board, possMvt);
+
+				if (moveFlgs.isLegal)
+					return false;
+			}
+		}
+
+		//------------------------------------------------------
+		// check if all possiblePositions of player2 team are invalid
+		//------------------------------------------------------
+
+		for (auto const& piece : player2)
+		{
+			possMvt = {}; // reset vector
+
+			if (piece->GetTeamIndex() != 14 && !piece->IsCaptured())
+			{
+				ChessCase currentPieceCell = PosToCase(piece->GetPosition());
+				GenerateLegalMoves(currentPieceCell, m_board, possMvt, enActionType::MOUVEMENT);
+
+				for (auto const& mvt : possMvt)
+				{
+					if (mvt.movementType != 0) // piece from team side is present
+					{
+						stMove move{ currentPieceCell , mvt.possibleCase, piece->GetTeamIndex() ,enPlayerNum::PLAYER2 };
+
+						MoveFlags moveFlgs;
+						moveFlgs.ResetFlags();
+
+						SetMoveFlags(move, moveFlgs, m_board, possMvt);
+
+						if (moveFlgs.isLegal)
+							return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	else
+		return false;
 }
 
 bool Chess::IsExisting(std::vector<int> remainingPieces , int const & idPiece)
