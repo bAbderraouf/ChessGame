@@ -347,12 +347,8 @@ void Chess::UpdateGameWindow()
 		//----------------------------------
 		// update m_board for each piece released (keep last state in m_lastBoard)
 		//----------------------------------
-		UpdateBoardInfo(flag_isPlayer1Turn);
-
-		//----------------------------------
-		// update PionPromotion
-		//----------------------------------
-		PionPromotion();
+		if(flag_isMovementAllowed)
+			UpdateBoardInfo(flag_isPlayer1Turn);
 
 
 		// moves history
@@ -360,13 +356,20 @@ void Chess::UpdateGameWindow()
 		if (flag_isMovementAllowed)
 		{
 			UpdateMovesHistory(m_lastBoard);
-
 		}
 
 		//----------------------------------
 		// save infos
 		//----------------------------------
 		SaveGameSteps();
+
+
+
+		//----------------------------------
+		// update PionPromotion
+		//----------------------------------
+		if (flag_isMovementAllowed)
+			PionPromotion();
 
 
 		//----------------------------------
@@ -531,6 +534,13 @@ void Chess::UpdatePromotionWindow()
 			player1[selectdPieceID]->SetImageSize(cellSize);
 			player1[selectdPieceID]->SetTeamIndex(selectdPieceID);
 
+
+			// make a new movement for the same selected piece
+			// note : fromCell = toCell 
+			// (the validation block will allow the move only for promotionDone case)
+
+			selectedPieceOriginalPos = m_promotionPosition;
+
 			ChessCase cellPos = PosToCase(m_promotionPosition);
 			UpdateCellInfo(*player1[selectdPieceID], cellPos.row, cellPos.col, m_board);
 		}
@@ -541,6 +551,12 @@ void Chess::UpdatePromotionWindow()
 			player2[selectdPieceID]->SetPosition(m_promotionPosition);
 			player2[selectdPieceID]->SetImageSize(cellSize);
 			player2[selectdPieceID]->SetTeamIndex(selectdPieceID);
+
+			// make a new movement for the same selected piece
+			// note : fromCell = toCell 
+			// (the validation block will allow the move only for promotionDone case)
+
+			selectedPieceOriginalPos = m_promotionPosition;
 
 			ChessCase cellPos = PosToCase(m_promotionPosition);
 			UpdateCellInfo(*player2[selectdPieceID], cellPos.row, cellPos.col, m_board);
@@ -555,9 +571,9 @@ void Chess::UpdatePromotionWindow()
 
 		flag_isPromotion = false;
 
-		flag_isMovementAllowed = true;
+//		flag_isMovementAllowed = true;
 
-		selectdPieceID = -1;
+//		selectdPieceID = -1;
 	}
 }
 
@@ -1532,7 +1548,7 @@ bool Chess::IsCellAttacked(ChessCase const& cellCoords, enPlayerNum const& playe
 					GenerateLegalMoves(coords, board, possMvt, enActionType::MOUVEMENT);
 
 					for (auto const& mvt : possMvt)
-						if (IsSameCoordinates(mvt.possibleCase, cellCoords)) // <*****todo check & test results
+						if (IsSameCoordinates(mvt.possibleCase, cellCoords))  
 						{
 							return true;
 						}
@@ -2415,6 +2431,12 @@ void Chess::ValidateCurrentMove(ChessCase& selectedMoveCell)
 			// back to orignal position
 			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
 			flag_isMovementAllowed = false;
+			if (flag_isPromotionDone)
+			{
+				flag_isMovementAllowed = true;
+				// for move history
+				m_lastBoard = m_board; // n-1 state of m_bord
+			}
 		}
 		else if (m_currentMoveFlags.isLegal) // no self check position
 		{
@@ -2463,6 +2485,13 @@ void Chess::ValidateCurrentMove(ChessCase& selectedMoveCell)
 			// back to orignal position
 			selectedMoveCell = PosToCase(selectedPieceOriginalPos); // return the original position (before the drag)
 			flag_isMovementAllowed = false;
+
+			if (flag_isPromotionDone)
+			{
+				flag_isMovementAllowed = true;
+				// for move history
+				m_lastBoard = m_board; // n-1 state of m_bord
+			}
 		}
 		else if (m_currentMoveFlags.isLegal)
 		{
