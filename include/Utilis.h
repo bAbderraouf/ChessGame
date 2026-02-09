@@ -3,6 +3,7 @@
 #include "raylib.h"
 #include "Position.h"
 #include <string>
+#include <ctime>
 
 
 #define RED_COUT   "\033[31m"
@@ -117,8 +118,73 @@ struct MoveFlags {
 bool IsClickedObject(Vector2 const& cursorPos, Rectangle const& objectOutlineRect, bool leftMouseBtnClicked);
 
 
+
+/**------------------------------------------------------------------------------------------------------
+* @brief convert position object to vector2
+* @param pos : possition to be converted
+* @return the converted vector2 value
+------------------------------------------------------------------------------------------------------*/
 Vector2 PosToVect2(Position const & pos);
 
 
+/**------------------------------------------------------------------------------------------------------
+* @brief get PGN notation from pice name exple : "King" => "K"
+* @param name : piece english name
+* @return PGN notation
+------------------------------------------------------------------------------------------------------*/
 std::string GetPGNNameFromPieceName(PieceName const& name);
+
+
+
+
+/*--------------------------------------------------------------------------------
+
+* @brief get system date
+* @return system date hh:min:sec in stDate format
+
+*---------------------------------------------------------------------------------*/
+stDate GetSystemDateTime(void);
+
+
+
+/*--------------------------------------------------------------------------------
+
+* @brief convert Date to string
+* @param sep : separator between min and seconds, default ":"
+* @return system date in string format
+
+*---------------------------------------------------------------------------------*/
+std::string GetDateTimeToString(stDate const& date, std::string sep = ":");
+
+
+
+/*--------------------------------------------------------------------------------
+
+* @brief convert seconds to duration
+* @param seconds : number of seconds
+* @return stDuration
+
+*---------------------------------------------------------------------------------*/
+stDuration SecondsToDuration(time_t seconds);
+
+
+
+/*--------------------------------------------------------------------------------
+
+* @brief convert duration to string
+* @param sep : separator between min and seconds, default ":"
+* @return duration in string format
+
+*---------------------------------------------------------------------------------*/
+std::string GetDurationToString(stDuration const& duration, std::string sep = ":");
+
+
+/*--------------------------------------------------------------------------------
+
+* @brief set duration in min & sec
+* @param duration structure
+
+*---------------------------------------------------------------------------------*/
+void setDuration(stDuration& duration, int const& min, int const& sec);
+
 

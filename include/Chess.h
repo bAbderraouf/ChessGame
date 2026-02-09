@@ -1080,7 +1080,7 @@ public :  //<<*******ToDo reset public & private fct
 	* @return true if the move is legal
 
 	*---------------------------------------------------------------------------------*/
-	bool IsLegalMove(stMove const & move, Board const& board);
+	bool IsLegalMove(stMove const & move, MoveFlags const& mvFlgs, Board const& board);
 
 
 	/*--------------------------------------------------------------------------------
@@ -1210,7 +1210,7 @@ public :  //<<*******ToDo reset public & private fct
 	* @param true : if legal castle move
 
 	*---------------------------------------------------------------------------------*/
-	bool IsLegalCastleMove();
+	bool IsLegalCastleMove(MoveFlags const& mvFlgs);
 
 	
 	/*--------------------------------------------------------------------------------
@@ -1219,7 +1219,7 @@ public :  //<<*******ToDo reset public & private fct
 	* @param true : it its a castle move
 
 	*---------------------------------------------------------------------------------*/
-	bool IsCastleMove();
+	bool IsCastleMove(MoveFlags const& mvFlgs);
 
 
 	/*--------------------------------------------------------------------------------
@@ -1420,59 +1420,6 @@ public :  //<<*******ToDo reset public & private fct
 	*---------------------------------------------------------------------------------*/
 	void DrawLateralTexts();
 
-	// time
-	//----------
-
-	/*--------------------------------------------------------------------------------
-
-	* @brief get system date
-	* @return system date hh:min:sec in stDate format
-
-	*---------------------------------------------------------------------------------*/
-	stDate GetSystemDateTime(void);
-
-
-
-	/*--------------------------------------------------------------------------------
-
-	* @brief convert Date to string
-	* @param sep : separator between min and seconds, default ":" 
-	* @return system date in string format
-
-	*---------------------------------------------------------------------------------*/
-	std::string GetDateTimeToString(stDate const& date, std::string sep = ":");
-
-
-
-	/*--------------------------------------------------------------------------------
-
-	* @brief convert seconds to duration
-	* @param seconds : number of seconds
-	* @return stDuration
-
-	*---------------------------------------------------------------------------------*/
-	stDuration SecondsToDuration(time_t seconds);
-
-
-
-	/*--------------------------------------------------------------------------------
-
-	* @brief convert duration to string
-	* @param sep : separator between min and seconds, default ":" 
-	* @return duration in string format
-
-	*---------------------------------------------------------------------------------*/
-	std::string GetDurationToString(stDuration const& duration , std::string sep = ":");
-
-
-	/*--------------------------------------------------------------------------------
-
-	* @brief set duration in min & sec
-	* @param duration structure
-
-	*---------------------------------------------------------------------------------*/
-	void setDuration(stDuration& duration, int const& min, int const& sec);
-
 
 	/*--------------------------------------------------------------------------------
 
@@ -1482,8 +1429,6 @@ public :  //<<*******ToDo reset public & private fct
 	*---------------------------------------------------------------------------------*/
 	bool IsTimeOver();
 
-	// cpu
-	//---------
 
 	/*--------------------------------------------------------------------------------
 

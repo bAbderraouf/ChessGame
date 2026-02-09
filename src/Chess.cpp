@@ -1320,17 +1320,20 @@ bool Chess::IsKingCastelingAllowed(ChessCase const& cellCoords, Board const& boa
 	// castle needed flags
 	bool	isKingSelected = (idPiece == 6);
 	bool	isKingNeverMoved = false,
-		isRookKingSideNeverMoved = false;
+			isRookKingSideNeverMoved = false;
 	bool	isEmptyCellsKingSide = false;
 	bool	noAttackersInEmptyCases = false;
+	bool	isRookKingCaptured = false;
+
 
 	if (isKingSelected)
 	{
 		if (side)  // player1  ( isRookKingSideNeverMoved && isEmptyCellsKingSide && noAttackersInEmptyCases);
 		{
 			isKingNeverMoved = player1[pieceTeamID]->IsNeverMoved();
+			isRookKingCaptured = player1[13]->IsCaptured();
 
-			if (isKingNeverMoved)
+			if (isKingNeverMoved && !isRookKingCaptured)
 			{
 				// small rook (king side)
 				isEmptyCellsKingSide = (board.at(7).at(5).empty == true && board.at(7).at(6).empty == true); // Bf1 & Ng1 are empty
@@ -1348,8 +1351,9 @@ bool Chess::IsKingCastelingAllowed(ChessCase const& cellCoords, Board const& boa
 		else  //player2
 		{
 			isKingNeverMoved = player2[pieceTeamID]->IsNeverMoved();
+			isRookKingCaptured = player2[13]->IsCaptured();
 
-			if (isKingNeverMoved)
+			if (isKingNeverMoved && !isRookKingCaptured)
 			{
 				// small rook (king side)
 				isEmptyCellsKingSide = (board.at(0).at(5).empty == true && board.at(0).at(6).empty == true); // Bf8 & Ng8 are empty
@@ -1394,6 +1398,7 @@ bool Chess::IsQueenCastelingAllowed(ChessCase const& cellCoords, Board const& bo
 		isRookQueenSideNeverMoved = false;
 	bool	isEmptyCellsQueenSide = false;
 	bool	noAttackersInEmptyCases = false;
+	bool	isRookQueenCaptured = false;
 
 	if (isKingSelected)
 	{
@@ -1401,8 +1406,9 @@ bool Chess::IsQueenCastelingAllowed(ChessCase const& cellCoords, Board const& bo
 		if (side)  // player1
 		{
 			isKingNeverMoved = player1[pieceTeamID]->IsNeverMoved();
+			isRookQueenCaptured = player1[12]->IsCaptured();
 
-			if (isKingNeverMoved)
+			if (isKingNeverMoved && !isRookQueenCaptured)
 			{
 				// big rook (queen side)
 				isEmptyCellsQueenSide = (board.at(7).at(1).empty == true && board.at(7).at(2).empty == true && board.at(7).at(3).empty == true); // Nb1 & Bc1 & Qd1 are empty
@@ -1420,8 +1426,9 @@ bool Chess::IsQueenCastelingAllowed(ChessCase const& cellCoords, Board const& bo
 		else   // player2
 		{
 			isKingNeverMoved = player2[pieceTeamID]->IsNeverMoved();
+			isRookQueenCaptured = player2[12]->IsCaptured();
 
-			if (isKingNeverMoved)
+			if (isKingNeverMoved && !isRookQueenCaptured)
 			{
 				// big rook (queen side)
 				isEmptyCellsQueenSide = (board.at(0).at(1).empty == true && board.at(0).at(2).empty == true && board.at(0).at(3).empty == true); // Nb8 & Bc8 & Qd8 are empty
@@ -2072,7 +2079,7 @@ bool Chess::IsSelectedMoveLegal(Piece const& piece, ChessCase const& nextPositio
 
 }
 
-bool Chess::IsLegalMove(stMove const& move, Board const& board)
+bool Chess::IsLegalMove(stMove const& move, MoveFlags const& mvFlgs,  Board const& board)
 {
 	bool isLegalMove = false;
 
@@ -2112,9 +2119,9 @@ bool Chess::IsLegalMove(stMove const& move, Board const& board)
 	//----------------------
 	bool isLegalCastleMove = true;
 
-	if(IsCastleMove())
+	if(IsCastleMove(mvFlgs))
 	{
-		isLegalCastleMove = IsLegalCastleMove();
+		isLegalCastleMove = IsLegalCastleMove(mvFlgs);
 	}
 
 	return isLegalMove && isLegalCastleMove;
@@ -2173,7 +2180,7 @@ MoveFlags Chess::SetMoveFlags(stMove const& move, MoveFlags& mvFlgs, Board const
 	}
 
 	// call order is important
-	if (IsLegalMove(move, board)) //  move allowed
+	if (IsLegalMove(move, mvFlgs , board)) //  move allowed
 		mvFlgs.isLegal = true;
 
 
@@ -2486,7 +2493,7 @@ void Chess::ValidateCurrentMove(ChessCase& selectedMoveCell)
 	}
 }
 
-bool Chess::IsLegalCastleMove()
+bool Chess::IsLegalCastleMove(MoveFlags const& mvFlgs)
 {
 
 		// validate castle case
@@ -2495,25 +2502,25 @@ bool Chess::IsLegalCastleMove()
 
 	if (flag_isPlayer1Turn)
 	{
-		if (m_currentMoveFlags.isKingCastle)
+		if (mvFlgs.isKingCastle)
 			noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::KingSide, enPlayerNum::PLAYER1);
-		else if (m_currentMoveFlags.isQueenCastle)
+		else if (mvFlgs.isQueenCastle)
 			noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::QueenSide, enPlayerNum::PLAYER1);
 	}
 	else
 	{
-		if (m_currentMoveFlags.isKingCastle)
+		if (mvFlgs.isKingCastle)
 			noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::KingSide, enPlayerNum::PLAYER2);
-		else if (m_currentMoveFlags.isQueenCastle)
+		else if (mvFlgs.isQueenCastle)
 			noAttackersInEmptyCases = IsNoAttackersOnEmptyCastle(CastleSide::QueenSide, enPlayerNum::PLAYER2);
 	}
 
 	return noAttackersInEmptyCases;
 }
 
-bool Chess::IsCastleMove()
+bool Chess::IsCastleMove(MoveFlags const& mvFlgs)
 {
-	return (m_currentMoveFlags.isKingCastle || m_currentMoveFlags.isQueenCastle);
+	return (mvFlgs.isKingCastle || mvFlgs.isQueenCastle);
 }
 
 Chess::stPiece Chess::GetPieceFromBoardCell(infoCase const& cell)
@@ -3184,66 +3191,6 @@ void Chess::DrawLateralTexts()
 
 }
 
-stDate Chess::GetSystemDateTime(void)
-{
-	time_t  t_now = time(NULL); // curent time
-
-	// tm* now = localtime(&t); // unsafe (using static memory)
-
-	struct tm now;  // a buffer to store the curent time
-	localtime_s(&now, &t_now);
-
-	stDate date;
-
-	date.day = now.tm_mday;
-	date.month = now.tm_mon + 1;
-	date.year = now.tm_year + 1900;
-	date.hour = now.tm_hour;
-	date.minute = now.tm_min;
-	date.second = now.tm_sec;
-
-	return date;
-}
-
-std::string Chess::GetDateTimeToString(stDate const& date, std::string sep)
-{
-	std::string dateTime = "";
-
-	dateTime = std::string(date.hour < 10 ? "0" : "") + std::to_string(date.hour) + sep +
-		std::string(date.minute < 10 ? "0" : "") + std::to_string(date.minute) + sep +
-		std::string(date.second < 10 ? "0" : "") + std::to_string(date.second);
-
-	return dateTime;
-}
-
-stDuration Chess::SecondsToDuration(time_t seconds)
-{
-	stDuration diff;
-	int m = 0, s = 0;
-
-	m = seconds / 60;
-	s = seconds % 60;
-
-	setDuration(diff, m, s);
-
-	return diff;
-}
-
-std::string Chess::GetDurationToString(stDuration const& duration, std::string sep)
-{
-	std::string time = (duration.minutes < 10 ? "0" : "") + std::to_string(duration.minutes) + sep
-		+ (duration.seconds < 10 ? "0" : "") + std::to_string(duration.seconds);
-
-
-	return time;
-}
-
-void Chess::setDuration(stDuration& duration, int const& min, int const& sec)
-{
-	duration.minutes = min;
-	duration.seconds = sec;
-}
-
 bool Chess::IsTimeOver()
 {
 	if (m_tMaxPlayer1 <= 0)
@@ -3299,7 +3246,7 @@ bool Chess::GenerateCPUMove()
 
 					stMove move{ fromCoords, toCoords, selectdPieceID, enPlayerNum::PLAYER2 };
 
-					if (IsLegalMove(move, m_board))
+					if (IsLegalMove(move, m_currentMoveFlags, m_board))
 					{
 						moveFound = true;
 
