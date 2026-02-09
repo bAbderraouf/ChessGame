@@ -2,8 +2,7 @@
 ChessGame 2D is a personal C++ project built from scratch to explore game architecture and modern C++ practices.  
 It features a custom chess engine with full rule validation, turn and state management, and a clean object-oriented design (No external chess engine used).
 
-▶️ Full gameplay video:  
-🔗 [Portfolio](https://babderraouf.github.io/portfolio/)
+▶️ Full gameplay video:  🔗 [Portfolio : https://babderraouf.github.io/portfolio/](https://babderraouf.github.io/portfolio/)
 
 # Screenshot
 ![ChessGame Screenshot](assets/screenshots/chessScreen.gif)
