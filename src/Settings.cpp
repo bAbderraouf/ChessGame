@@ -1,8 +1,10 @@
 #include "Settings.h"
 
 
-Settings::Settings()
+Settings::Settings(Vector2 const & windowSize)
 {
+	m_windowSize = windowSize; 
+
 	// init default values
 	Init();
 }
@@ -39,6 +41,8 @@ void Settings::Init()
 	// time = 5min
 	// sound ON
 
+	
+
 	m_flag_isCpuON		= true;
 	m_flag_isSoundON	= true;
 	m_flag_isSaveON		= true;
@@ -52,36 +56,13 @@ void Settings::Init()
 
 	// font
 	m_fontSize = 20;
+	
 
-	// positions
-	posT1 =  { 50 + 80 ,100 + 70 };
-	posT2 =  { 250 + 80,100 + 70 };
-	posT3 =  { 450 + 80,100 + 70 };
-
-	posSoundON	= { 50 + 80 ,300 + 70 };
-	posSoundOFF	= { 250 + 80,300 + 70 };
-
-	posCpuOn  = { 50 + 80 ,350 + 70 };
-	posCpuOFF = { 250 + 80,350 + 70 };
-
-	posBulet = { 50 + 80 ,400 + 70 };
-	posBlitz = { 250 + 80,400 + 70 };
-	posRapid = { 460 + 80,400 + 70 };
-
-	posSaveON	= { 50 + 80 ,450 + 70 };
-	posSaveOFF	= { 250 + 80,450 + 70 };
-
-	posBtnOK = { 630 ,550 };
-	Vector2 posSettings = { 480 + 180,  0 };
-	Vector2 posSettingsTxt = { 240,  0 };
-
-
-	//drawable object
+	//drawable object declaration
 
 	imTheme1	= std::make_unique<ImageObject>(posT1, "assets/images/theme/Blue.png");
 	imTheme2	= std::make_unique<ImageObject>(posT2, "assets/images/theme/Brown.png");
 	imTheme3	= std::make_unique<ImageObject>(posT3,	"assets/images/theme/Magenta.png");
-	imBtnOK		= std::make_unique<MixedObject>(posBtnOK, "Apply", m_fontSize, "assets/images/buttons/check_60.png", 7);
 
 	txtSoundON	= std::make_unique<MixedObject>(posSoundON, "Sound ON", m_fontSize, "assets/images/buttons/sound_on.png", 5);
 	txtSoundOFF = std::make_unique<MixedObject>(posSoundOFF, "Sound OFF", m_fontSize, "assets/images/buttons/mute.png", 5);
@@ -95,8 +76,67 @@ void Settings::Init()
 	txtBulet	= std::make_unique<MixedObject>(posBulet, "Bullet", m_fontSize,"assets/images/buttons/1min.png", 5);
 	txtBlitz	= std::make_unique<MixedObject>(posBlitz, "Blitz", m_fontSize ,"assets/images/buttons/5min.png", 5);
 	txtRapid	= std::make_unique<MixedObject>(posRapid, "Rapid", m_fontSize,"assets/images/buttons/20min.png", 5);
-	imgSettings = std::make_unique<ImageObject>(posSettings, "assets/images/buttons/settings.png");
-	imgSettingsTxt = std::make_unique<ImageObject>(posSettingsTxt, "assets/images/buttons/settings2.png");
+
+
+	imgSettings		= std::make_unique<ImageObject>("assets/images/buttons/settings.png");
+	imgSettingsTxt	= std::make_unique<ImageObject>( "assets/images/buttons/settings2.png");
+	imBtnOK			= std::make_unique<MixedObject>("Apply", m_fontSize, "assets/images/buttons/check_60.png", 7);
+
+
+	// positions calculations
+	posSettings		= GetPosTopRight(m_windowSize, imgSettings->GetSize());
+	posSettingsTxt	= { GetXCenter(m_windowSize, imgSettingsTxt->GetSize()) ,  0 };
+	posBtnOK		= GetPosBottomRight(m_windowSize, imBtnOK->GetSize());
+
+	// layout // xStep // xStep
+	/*---------------------------
+		T1		 T2		  T3   
+		sounon	 sondoff
+		cpu on	 cpu off
+		bulet	 blitz	  rapid
+	------------------------------*/
+
+	int xStep = 50, 
+		yStep = 50;
+	int widthLayout		= 3 * imTheme1->GetSize().x + 2 * xStep;
+	int heightLayout	= imTheme1->GetSize().y + 3 * txtSoundON->GetSize().y + 3 * yStep;
+	Vector2 sizeLayout	= { widthLayout , heightLayout };
+
+	posT1		= {	GetPosCenter(m_windowSize, sizeLayout).x , 
+					GetPosCenter(m_windowSize, sizeLayout).y + imgSettingsTxt->GetSize().y/2 };
+	posT2		= {	posT1.x + imTheme1->GetSize().x + xStep ,	posT1.y };
+	posT3		= { posT2.x + imTheme1->GetSize().x + xStep , 	posT2.y };
+
+	posSoundON	= { posT1.x , posT1.y + yStep + imTheme1->GetSize().y };
+	posSoundOFF = {	posT2.x , posSoundON.y};
+
+	posCpuOn	= {	posSoundON.x , posSoundON.y + yStep };
+	posCpuOFF	= {	posSoundOFF.x, posCpuOn.y};
+
+	posBulet	= { posT1.x , posCpuOn.y + yStep};
+	posBlitz	= { posT2.x , posBulet.y  };
+	posRapid	= { posT3.x , posBulet.y  };
+
+
+	// set positions
+	imgSettingsTxt->SetPosition(posSettingsTxt);
+	imgSettings->SetPosition(posSettings);
+	imBtnOK->SetPosition(posBtnOK);
+
+	imTheme1->SetPosition(posT1);
+	imTheme2->SetPosition(posT2);
+	imTheme3->SetPosition(posT3);
+
+	txtSoundON->SetPosition(posSoundON);
+	txtSoundOFF->SetPosition(posSoundOFF);
+
+	txtCpuOFF->SetPosition(posCpuOFF);
+	txtCpuON->SetPosition(posCpuOn);
+
+	txtBulet->SetPosition(posBulet);
+	txtBlitz->SetPosition(posBlitz);
+	txtRapid->SetPosition(posRapid);
+
 
 }
 

@@ -1,7 +1,6 @@
 #include "Utilis.h"
 
 
-
 bool IsClickedObject(Vector2 const& cursorPos, Rectangle const& objectOutlineRect, bool leftMouseBtnClicked)
 {
 	if (leftMouseBtnClicked)
@@ -108,3 +107,52 @@ void setDuration(stDuration& duration, int const& min, int const& sec)
 	duration.minutes = min;
 	duration.seconds = sec;
 }
+
+float GetXCenter(Vector2 const & parentObjectSize, Vector2 const & childObejctSize)
+{
+	return  (parentObjectSize.x - childObejctSize.x) / 2;
+}
+
+
+float GetYCenter(Vector2 const& parentObjectSize, Vector2 const& childObejctSize)
+{
+	return  (parentObjectSize.y - childObejctSize.y) / 2;
+}
+
+
+Vector2 GetPosCenter(Vector2 const& parentObjectSize, Vector2 const& childObejctSize)
+{
+	Vector2 centerPos = {	GetXCenter(parentObjectSize , childObejctSize) ,
+							GetYCenter(parentObjectSize , childObejctSize) };
+
+	return  centerPos;
+}
+
+Vector2 GetPosTopRight(Vector2 const& parentObjectSize, Vector2 const& childObejctSize)
+{
+	return { parentObjectSize.x - childObejctSize.x , 0 };
+}
+
+Vector2 GetPosBottomRight(Vector2 const& parentObjectSize, Vector2 const& childObejctSize)
+{
+	return { parentObjectSize.x - childObejctSize.x ,  parentObjectSize.y - childObejctSize.y };
+}
+
+void GetWindowDimensions(int & windowHeigh, int & windowWidth, float const &scaleX, float const &scaleY )
+{
+
+	//init window parametres to get monitor size
+	InitWindow(1, 1, "");
+
+	int monitor = GetCurrentMonitor();
+
+	// game window
+	windowWidth = (int)(scaleX * GetMonitorWidth(monitor));
+	if (scaleY == 1)
+		windowHeigh = (int)(scaleY * GetMonitorHeight(monitor)) - YTitleBare - YTaskBare;
+	else
+		windowHeigh = (int)(scaleY * GetMonitorHeight(monitor));
+
+	CloseWindow();
+}
+

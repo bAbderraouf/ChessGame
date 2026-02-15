@@ -1,5 +1,6 @@
 #include "Drawable.h"
 
+
 Drawable::Drawable(Vector2 const & position)
 {
 	m_isClicked				= false;
@@ -48,6 +49,11 @@ void Drawable::SetRectThinkness(int thinkness)
 	m_outlineRecThinkness = thinkness;
 }
 
+void Drawable::SetPosition(Vector2 const& position)
+{
+	m_objectPosition = position;
+}
+
 Rectangle Drawable::GetOutlineRect()
 {
 	return Rectangle{m_objectPosition.x , m_objectPosition.y , m_objectSize.x, m_objectSize.y };
@@ -60,6 +66,22 @@ ImageObject::ImageObject(Vector2 const& position,  const char* fileName) : Drawa
 	if (m_image.data == nullptr)
 	{
 		std::cerr << "error : error while loading image file : " <<  fileName <<std::endl;
+		return;
+	}
+
+	m_objectSize = this->GetSize();
+
+	m_texture = LoadTextureFromImage(m_image);
+
+}
+
+ImageObject::ImageObject(const char* fileName) : Drawable({ 0,0 })
+{
+	m_image = LoadImage(fileName);
+
+	if (m_image.data == nullptr)
+	{
+		std::cerr << "error : error while loading image file : " << fileName << std::endl;
 		return;
 	}
 
@@ -99,6 +121,15 @@ Vector2 ImageObject::GetSize()
 
 
 TextObject::TextObject(Vector2 const& position, const char* text, int fontSize) : Drawable(position)
+{
+	m_objectSize.x = MeasureText(text, fontSize);
+	m_objectSize.y = fontSize;
+
+	m_text = text;
+	m_fontSize = fontSize;
+}
+
+TextObject::TextObject(const char* text, int fontSize) :  Drawable( {0,0} )
 {
 	m_objectSize.x = MeasureText(text, fontSize);
 	m_objectSize.y = fontSize;
@@ -159,6 +190,32 @@ MixedObject::MixedObject(Vector2 const& txtPosition, const char* text, int fontS
 
 	m_distance = distance;
 
+}
+
+MixedObject::MixedObject(const char* text, int fontSize, const char* imgFileName, int const& distance) :Drawable({ 0,0 })
+{
+	// text initialisation
+	m_objectSize.x = MeasureText(text, fontSize);
+	m_objectSize.y = fontSize;
+
+	m_text = text;
+	m_fontSize = fontSize;
+
+	//------------------------------------------------------
+	// img initialization
+	m_image = LoadImage(imgFileName);
+
+	if (m_image.data == nullptr)
+	{
+		std::cerr << "error : error while loading image file : " << imgFileName << std::endl;
+		return;
+	}
+
+	m_imgSize = { (float)m_image.width , (float)m_image.height };
+
+	m_texture = LoadTextureFromImage(m_image);
+
+	m_distance = distance;
 }
 
 MixedObject::~MixedObject()

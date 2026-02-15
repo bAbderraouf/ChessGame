@@ -35,6 +35,7 @@ public :
 	virtual void SetRectThinkness(int thinkness);
 	virtual Rectangle GetOutlineRect();
 	virtual Vector2 GetSize() = 0;
+	virtual void SetPosition(Vector2 const& position);
 
 };
 
@@ -42,7 +43,8 @@ public :
 class ImageObject : public Drawable
 {
 public :
-	ImageObject(Vector2 const& position , const char * fileName);
+	ImageObject(Vector2 const& position, const char* fileName);
+	ImageObject(const char* fileName);
 	~ImageObject();
 
 	void Draw() override;
@@ -59,6 +61,7 @@ class TextObject : public Drawable
 {
 public:
 	TextObject(Vector2 const& position, const char* text, int fontSize);
+	TextObject(const char* text, int fontSize);
 	~TextObject();
 
 	void Draw() override;
@@ -73,6 +76,7 @@ class MixedObject : public Drawable	// image + text
 {
 public:
 	MixedObject(Vector2 const& txtPosition, const char* text, int fontSize,  const char* imgFileName , int const & distance);
+	MixedObject(const char* text, int fontSize, const char* imgFileName, int const& distance);
 	~MixedObject();
 
 	void Draw() override;

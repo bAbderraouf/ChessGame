@@ -6,6 +6,11 @@
 #include <ctime>
 
 
+// title bar size 
+#define YTitleBare 30
+#define YTaskBare 40
+
+// ouptut terminal colors
 #define RED_COUT   "\033[31m"
 #define BLUE_COUT  "\033[34m"
 #define RESET_COUT "\033[0m"
@@ -188,3 +193,99 @@ std::string GetDurationToString(stDuration const& duration, std::string sep = ":
 void setDuration(stDuration& duration, int const& min, int const& sec);
 
 
+
+/*--------------------------------------------------------------------------------
+
+* @brief Get X of centered object inside a parent object
+* @param parentObjectSize : container object size
+* @param childObjectSize : contained object size
+* @return X 
+
+*---------------------------------------------------------------------------------*/
+float GetXCenter(Vector2 const & parentObjectSize, Vector2 const & childObejctSize);
+
+
+/*--------------------------------------------------------------------------------
+
+* @brief Get Y of centered object inside a parent object
+* @param parentObjectSize : container object size
+* @param childObjectSize : contained object size
+* @return Y
+
+*---------------------------------------------------------------------------------*/
+float GetYCenter(Vector2 const& parentObjectSize, Vector2 const& childObejctSize);
+
+
+/*--------------------------------------------------------------------------------
+
+* @brief Get position of centered object inside a parent object
+* @param parentObjectSize : container object size
+* @param childObjectSize : contained object size
+* @return position vector
+
+*---------------------------------------------------------------------------------*/
+Vector2 GetPosCenter(Vector2 const& parentObjectSize, Vector2 const& childObejctSize);
+
+
+/*--------------------------------------------------------------------------------
+
+* @brief Get position of a top loeft positionned object inside a parent object
+* @param parentObjectSize : container object size
+* @param childObjectSize : contained object size
+* @return position vector
+
+*---------------------------------------------------------------------------------*/
+Vector2 GetPosTopRight(Vector2 const& parentObjectSize, Vector2 const& childObejctSize);
+
+
+
+
+/*--------------------------------------------------------------------------------
+
+* @brief Get position of a buttom right positionned object inside a parent object
+* @param parentObjectSize : container object size
+* @param childObjectSize : contained object size
+* @return position vector
+
+*---------------------------------------------------------------------------------*/
+Vector2 GetPosBottomRight(Vector2 const& parentObjectSize, Vector2 const& childObejctSize);
+
+
+/*--------------------------------------------------------------------------------
+
+* @brief Get window dimensions using raylib library
+* @param windowHeigh : window height
+* @param windowWidth : window width
+* @param scaleX : selected scale on x
+* @parma scaleY : selected scale on y
+* @return window width and height
+
+*---------------------------------------------------------------------------------*/
+void GetWindowDimensions(int& windowHeigh, int& windowWidth, float const& scaleX, float const& scaleY);
+
+
+
+/*
+* Copie le raylib.lib que tu as compilé en /MT dans un dossier de ton projet (ex : libs/)
+
+*** Configure ton projet :
+1 - C/C++ → General → Additional Include Directories → raylib/include
+2 - Linker → General → Additional Library Directories → dossier contenant raylib.lib
+3 - Linker → Input → Additional Dependencies → raylib.lib
+4 - Mets ton Runtime Library du projet → /MT
+5 - Rebuild ton projet → ton exe sera complètement autonome, pas besoin de redistributable ni DLL raylib.
+6 - Projet → Propriétés → Linker → Advanced → Entry Point -> main.cpp
+
+
+*** delete terminal
+
+sous windows : 
+	g++ main.cpp -o game.exe -mwindows -lraylib -lopengl32 -lgdi32 -lwinmm
+	L’option importante est : -mwindows
+sous vs:
+	1 - Propriétés -> Linker → System -> Subsystem
+		Choisir Windows (/SUBSYSTEM:WINDOWS) au lieu de Console (/...)
+	3 - Linker -> advanced -> entry point ->
+		ecrire mainCRTStartup
+	4 - check railyb verison 64 -> realease 64
+*/

@@ -1,19 +1,24 @@
 #include "Chess.h"
 
-Chess::Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin, int tMargin)
+Chess::Chess(int winH, int winW, int cSize)
 	: selectedPieceOriginalPos(0, 0), selectedPieceCurrentPos(0, 0), m_promotionPosition(0, 0)
 {
-	// game window
-	windowWidth = w;
-	windowHeigh = h;
-	gameFps = fps;
 
-	//grid
-	numRows = nRows;
-	numCols = nCols;
-	cellSize = cSize;
-	leftMargin = lMargin;
-	topMargin = tMargin;
+	windowHeigh = winH;
+	windowWidth = winW;
+
+	//windw size
+	m_windowSize = { (float)windowWidth , (float)windowHeigh };
+
+
+	// chess grid 8x8
+	numRows = 8;
+	numCols = 8;
+	cellSize	= cSize;
+	leftMargin	= cellSize / 3;
+	topMargin	= cellSize / 3;
+	bottomMargin = m_windowSize.y - 8 * cellSize - topMargin;
+	rightMargin  = m_windowSize.x - 8 * cellSize - leftMargin;
 
 	// colors :
 	// color1,color2,bground, hovered
@@ -64,7 +69,6 @@ void Chess::Init()
 {
 	// Game window
 	InitWindow(windowWidth, windowHeigh, "Raouf's 2D Chess Game");
-	setGameFPS(gameFps);	// frames per second
 
 	//grid
 	grid = new Grid(numRows, numCols, cellSize, m_color1, m_color2);
@@ -132,7 +136,7 @@ void Chess::StartNewGame()
 	m_currentWindowType = enWindow::SETTINGS;
 
 	//settings
-	m_settingsWindow = std::make_unique<Settings>();
+	m_settingsWindow = std::make_unique<Settings>(m_windowSize);
 
 	//clear all pieces
 	player1.clear();
@@ -624,11 +628,6 @@ bool Chess::IsScreenDrawed()
 	return flag_isScreenDrawed;
 }
 
-void Chess::setGameFPS(int fps)
-{
-	gameFps = fps;
-	SetTargetFPS(gameFps);
-}
 
 
 void Chess::DrawPlayerPieces(std::vector<std::unique_ptr<Piece>> const& player)
@@ -3167,7 +3166,10 @@ void Chess::DrawLastMoves()
 
 void Chess::DrawLetters()
 {
-	float xText = 0,
+
+	
+
+	float xText = leftMargin - m_sizeText, // GetXCenter({ (float)leftMargin , 0.f }, { (float)m_sizeText , 0.f }),
 		yText = 0.5f * cellSize + topMargin;
 	int num = 8;
 
@@ -3180,7 +3182,9 @@ void Chess::DrawLetters()
 		num--;
 	}
 
-	yText = topMargin + 8 * cellSize;
+
+	
+	yText = topMargin + 8 * cellSize; // GetYCenter({ 0.f , (float)bottomMargin }, { 0.f , (float)m_sizeText }); 
 	xText = 0.5f * cellSize + leftMargin;
 	char lettre = 'a';
 

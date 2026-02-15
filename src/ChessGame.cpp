@@ -10,22 +10,12 @@
 
 int main()
 {
-	double	lastTime = 0, currentTime = 0, 	timeInterval = 0.25; 
+	float scaleX = 0.6, scaleY = 0.85;
+	int cSize = 75, winH = 0, winW = 0;				/// grid CellSize,  window height & width
 
-	int w = 800, h = 625, nRows = 8, nCols = 8, cSize =75, fps = 60 , leftMargin = 10, topMargin = 10;
+	GetWindowDimensions(winH, winW, scaleX, scaleY);
 
-	//--------------------
-	// window : w, h, fps  
-	//----------------------------------------------------------------------
-	// grid : nRows, nCols, cSize ,leftMargin, topMargin
-	//----------------------------------------------------------------------
-	Chess chessGame(w, h, fps, nRows, nCols, cSize, leftMargin, topMargin);
-
-	// tests
-	Image queenIm = LoadImage("assets/images/black_queen.png");
-	ImageResize(&queenIm, queenIm.width * 0.75, queenIm.height * 0.75);
-	Texture queen = LoadTextureFromImage(queenIm);
-
+	Chess chessGame(winH, winW, cSize);
 
 	while (WindowShouldClose() == false)
 	{
@@ -33,11 +23,6 @@ int main()
 		// check inputs 
 		//--------------
 		chessGame.Input();
-
-		//-----------------
-		//update gameMusic
-		//-----------------
-		//UpdateMusicStream(chessGame.GetGameMusic());
 
 		//---------
 		// update
@@ -58,10 +43,6 @@ int main()
 		ClearBackground(chessGame.GetBackgroundColor());
 		chessGame.Draw();
 		EndDrawing();
-
-		//game over
-		//chessGame.SetScreenShot();
-	
 	}
 
 	CloseWindow();

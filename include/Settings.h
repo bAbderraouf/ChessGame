@@ -41,12 +41,16 @@ private:
 	std::unique_ptr<Drawable> imgSettingsTxt;
 
 	// positions
-	Vector2 posT1	  , posT2		, posT3,
-			posSoundON, posSoundOFF,
-			posCpuOn  , posCpuOFF,
-			posSaveON , posSaveOFF,
-			posBulet  , posBlitz	,posRapid,
-			posBtnOK;
+	Vector2		posT1, posT2, posT3,
+				posSoundON, posSoundOFF,
+				posCpuOn, posCpuOFF,
+				posSaveON, posSaveOFF,
+				posBulet, posBlitz, posRapid,
+				posBtnOK, posSettings, posSettingsTxt;
+
+
+	// windo size 
+	Vector2 m_windowSize;
 
 	// font
 	int m_fontSize;
@@ -57,7 +61,7 @@ private:
 
 
 public:
-	Settings(); // set default values (even without selection)
+	Settings(Vector2 const& windowSize); // set default values (even without selection)
 	~Settings();
 
 

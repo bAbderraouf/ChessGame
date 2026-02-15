@@ -84,6 +84,12 @@ private:
 		// piece info
 		int pieceTeamIndex;			
 		enPlayerNum pieceTeamSide;
+		//stPiece (teamside + teamIndx)
+		//piecePossibleMvts
+		//moveFlags
+		//currentMovePromotion (m_promotionPosition, m_promotionPieceName)
+		// moveTextNotation
+		//m_moveIdx
 	};
 
 	/**
@@ -113,13 +119,15 @@ private:
 		windowHeigh;
 	int gameFps;		/// frames/sec
 	Image m_screenshot; /// a simple screenshot for the window
+	Vector2 m_windowSize;
 
 	//grid
 	//--------
 	int numRows;				///8 rows
 	int numCols;				///8 columns
 	int cellSize;				/// cell size in pixel
-	int leftMargin, topMargin;  /// margins outside of the 8x8 board
+	int leftMargin, topMargin,  /// margins outside of the 8x8 board
+	bottomMargin, rightMargin;
 
 	Color m_color1, m_color2,	/// board chess colors (black & white)
 		  m_hoveredColor,		/// color of possible positions
@@ -159,7 +167,7 @@ private:
 	std::unique_ptr<GameOver> m_gameOverWindow;
 
 
-	// promotion window
+	// promotion 
 	//----------
 	std::unique_ptr<Promotion> m_promotion;
 
@@ -303,7 +311,7 @@ public :  //<<*******ToDo reset public & private fct
 	* @param cSize : grid cell size in pixel.
 	* @param lMargin, tMargin : left margin & top margin (space to add outside of the grid board).
 	* --------------------------------------------------------------------------------*/
-	Chess(int w, int h, int fps, int nRows, int nCols, int cSize, int lMargin, int tMargin);
+	Chess(int winH, int winW, int cSize);
 
 
 	/*--------------------------------------------------------------------------------
@@ -395,11 +403,6 @@ public :  //<<*******ToDo reset public & private fct
 	*---------------------------------------------------------------------------------*/
 	bool IsScreenDrawed();
 
-	/*--------------------------------------------------------------------------------
-	* @brief set game Frames per seconds.
-	* @param fps : numbere of frames/sec
-	*---------------------------------------------------------------------------------*/
-	void setGameFPS(int fps);
 
 
 	/*--------------------------------------------------------------------------------
