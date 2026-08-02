@@ -69,4 +69,13 @@ It features a custom chess engine with full rule validation, turn and state mana
 ```bash
 git clone https://github.com/bAbderraouf/ChessGame.git
 
+
+## 👤 Author
+
+**Abderraouf B.**
+
+GitHub: https://github.com/bAbderraouf
+Portfolio: https://babderraouf.github.io/portfolio/
+
+---
 <!-- TODO: Installation Guide , Exemple d’utilisation , Licence (MIT, Apache, etc.) -->
