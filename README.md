@@ -78,6 +78,8 @@ git clone https://github.com/bAbderraouf/ChessGame.git
 GitHub: https://github.com/bAbderraouf
 Portfolio: https://babderraouf.github.io/portfolio
 
-![](https://komarev.com/ghpvc/?username=bAbderraouf&color=blue)
+# ChessGame 2D (C++)
+
+![Repo Views](https://shieldcn.dev/views/repo/bAbderraouf/ChessGame-2D-Cpp.svg)
 
 <!-- TODO: Installation Guide , Exemple d’utilisation , Licence (MIT, Apache, etc.) -->
