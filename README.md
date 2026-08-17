@@ -78,4 +78,6 @@ git clone https://github.com/bAbderraouf/ChessGame.git
 GitHub: https://github.com/bAbderraouf
 Portfolio: https://babderraouf.github.io/portfolio
 
+![](https://komarev.com/ghpvc/?username=bAbderraouf&color=blue)
+
 <!-- TODO: Installation Guide , Exemple d’utilisation , Licence (MIT, Apache, etc.) -->
