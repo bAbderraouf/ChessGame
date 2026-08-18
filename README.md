@@ -177,7 +177,7 @@ The main objectives of this project were to:
 
 **Abderraouf B.**
 
-**C++ / Qt Software Developer — Automotive & Embedded Systems**
+**C++ / Qt Software Developer **
 
 * GitHub: [@bAbderraouf](https://github.com/bAbderraouf)
 * Portfolio: [babderraouf.github.io/portfolio](https://babderraouf.github.io/portfolio/)
