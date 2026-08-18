@@ -1,4 +1,4 @@
-# ♟️ ChessGame 2D — C++17 / Raylib
+# ♟️ ChessGame 2D — C++ / Raylib
 
 ChessGame 2D is a personal C++ project built from scratch to explore game architecture and modern C++ practices.
 
